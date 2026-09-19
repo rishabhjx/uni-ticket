@@ -329,7 +329,7 @@ export function TicketTable({
                 key={row.id}
                 row={row}
                 data-ticket-row={ticket.id}
-                onClick={onOpenTicket ? () => onOpenTicket(ticket.id) : undefined}
+                onClick={onOpenTicket ? () => onOpenTicket(ticket.key) : undefined}
                 className={cn(
                   "cursor-pointer border-b border-grey-150 transition-colors",
                   isSelected ? "bg-accent-50" : "hover:bg-grey-50",

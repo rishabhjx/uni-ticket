@@ -9,11 +9,16 @@ import { cn } from "@/lib/utils";
  * It never blocks anything and never asks to be dismissed — it says well
  * done and gets out of the way.
  */
-type Celebration = { id: number; emoji: string; message: string };
+type Celebration = {
+  id: number;
+  emoji: string;
+  message: string;
+  undo?: () => void;
+};
 
-const CelebrateContext = React.createContext<((emoji: string, message: string) => void) | null>(
-  null,
-);
+const CelebrateContext = React.createContext<
+  ((emoji: string, message: string, undo?: () => void) => void) | null
+>(null);
 
 const cheers = ["🎉", "🙌", "✨", "🚀", "💫"];
 
@@ -21,15 +26,19 @@ export function CelebrateProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = React.useState<Celebration[]>([]);
   const nextId = React.useRef(0);
 
-  const celebrate = React.useCallback((emoji: string, message: string) => {
-    nextId.current += 1;
-    const id = nextId.current;
-    setItems((current) => [...current, { id, emoji, message }]);
-    window.setTimeout(
-      () => setItems((current) => current.filter((item) => item.id !== id)),
-      2600,
-    );
-  }, []);
+  const celebrate = React.useCallback(
+    (emoji: string, message: string, undo?: () => void) => {
+      nextId.current += 1;
+      const id = nextId.current;
+      setItems((current) => [...current, { id, emoji, message, undo }]);
+      // An undoable action stays up longer, because it is asking a question.
+      window.setTimeout(
+        () => setItems((current) => current.filter((item) => item.id !== id)),
+        undo ? 6000 : 2600,
+      );
+    },
+    [],
+  );
 
   return (
     <CelebrateContext value={celebrate}>
@@ -52,6 +61,20 @@ export function CelebrateProvider({ children }: { children: React.ReactNode }) {
             <span className="text-small font-medium text-grey-900">
               {item.message}
             </span>
+            {item.undo ? (
+              <button
+                type="button"
+                onClick={() => {
+                  item.undo?.();
+                  setItems((current) =>
+                    current.filter((entry) => entry.id !== item.id),
+                  );
+                }}
+                className="pointer-events-auto ml-1 h-6 rounded-md border border-grey-300 px-2 text-caption font-medium text-grey-800 transition-colors hover:border-grey-400"
+              >
+                Undo
+              </button>
+            ) : null}
           </div>
         ))}
       </div>

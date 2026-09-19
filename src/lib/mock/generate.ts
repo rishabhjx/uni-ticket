@@ -3,8 +3,9 @@ import { daysFromToday } from "./dates";
 import { labels } from "./labels";
 import { projects } from "./projects";
 import { createRandom, type Random } from "./random";
+import { sprintsForProject } from "./sprints";
 import { titlesByProject } from "./titles";
-import { REACTIONS } from "./types";
+import { LINK_INVERSE, REACTIONS } from "./types";
 import { TICKET_STATUSES } from "./types";
 import {
   ENVIRONMENTS,
@@ -61,11 +62,12 @@ function slugifyTitle(title: string) {
 }
 
 const statusWeights: Record<TicketStatus, number> = {
-  backlog: 28,
-  todo: 18,
-  in_progress: 16,
-  in_review: 12,
-  done: 26,
+  backlog: 26,
+  todo: 16,
+  in_progress: 15,
+  in_review: 10,
+  resolved: 9,
+  done: 24,
 };
 
 const priorityWeights: Record<TicketPriority, number> = {
@@ -81,6 +83,7 @@ const ageByStatus: Record<TicketStatus, [number, number]> = {
   todo: [2, 70],
   in_progress: [3, 45],
   in_review: [4, 32],
+  resolved: [5, 40],
   done: [18, 130],
 };
 
@@ -90,6 +93,7 @@ const assignedChanceByStatus: Record<TicketStatus, number> = {
   todo: 0.86,
   in_progress: 1,
   in_review: 1,
+  resolved: 1,
   done: 1,
 };
 
@@ -100,6 +104,7 @@ const labelPoolByProject: Record<string, string[]> = {
   "p-hel": ["l-mobile", "l-accessibility", "l-performance", "l-onboarding", "l-customer", "l-regression"],
   "p-orb": ["l-analytics", "l-infra", "l-performance", "l-security", "l-tech-debt", "l-docs"],
   "p-ver": ["l-design-system", "l-accessibility", "l-docs", "l-onboarding", "l-tech-debt"],
+  "p-hlp": ["l-infra", "l-security", "l-onboarding", "l-docs", "l-customer"],
 };
 
 const estimates = [1, 1, 2, 2, 3, 3, 3, 5, 5, 8];
@@ -220,20 +225,21 @@ function buildTickets(random: Random) {
 
       // Work that reached review or done usually has a branch behind it.
       const development =
-        !isService && (status === "in_review" || status === "done")
+        !isService &&
+        (status === "in_review" || status === "resolved" || status === "done")
           ? {
               branch: `${branchPrefix[type] ?? "chore"}/${project.key.toLowerCase()}-${
                 101 + index
               }-${slugifyTitle(title)}`,
               prNumber: 1200 + random.int(1, 899),
               prState:
-                status === "done"
+                status === "done" || status === "resolved"
                   ? ("merged" as const)
                   : random.chance(0.15)
                     ? ("draft" as const)
                     : ("open" as const),
               checks:
-                status === "done"
+                status === "done" || status === "resolved"
                   ? ("passing" as const)
                   : random.weighted({ passing: 70, failing: 18, running: 12 }),
             }
@@ -266,6 +272,9 @@ function buildTickets(random: Random) {
         requesterId,
         slaDueAt,
         development,
+        parentId: null,
+        links: [],
+        sprintId: null,
         attachments: random
           .sample(attachmentPool, attachmentCount)
           .map((file, fileIndex) => ({
@@ -415,9 +424,79 @@ function buildEvents(random: Random, tickets: Ticket[]) {
   return events.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
+/**
+ * Epics, parent links, blockers and sprints, applied once the tickets exist so
+ * every reference points at something real.
+ */
+function relateTickets(random: Random, tickets: Ticket[]) {
+  for (const project of projects) {
+    const scoped = tickets.filter((ticket) => ticket.projectId === project.id);
+    if (scoped.length === 0) continue;
+
+    // A handful of larger items become epics for the rest to hang off.
+    const epicCount = Math.max(1, Math.round(scoped.length / 26));
+    const epics = random.sample(
+      scoped.filter((ticket) => ticket.type === "feature"),
+      epicCount,
+    );
+    for (const epic of epics) {
+      epic.type = "epic";
+      epic.estimate = null;
+    }
+
+    const epicIds = epics.map((epic) => epic.id);
+    const children = scoped.filter((ticket) => !epicIds.includes(ticket.id));
+
+    for (const ticket of children) {
+      if (epicIds.length > 0 && random.chance(0.28)) {
+        ticket.parentId = random.pick(epicIds);
+      }
+
+      // Blockers only make sense between open tickets in the same project.
+      if (random.chance(0.12)) {
+        const candidates = children.filter(
+          (other) => other.id !== ticket.id && other.status !== "done",
+        );
+        if (candidates.length > 0) {
+          const other = random.pick(candidates);
+          const type = random.weighted({
+            blocked_by: 45,
+            blocks: 25,
+            relates_to: 22,
+            duplicates: 8,
+          });
+          if (!ticket.links.some((link) => link.ticketId === other.id)) {
+            ticket.links.push({ type, ticketId: other.id });
+            other.links.push({ type: LINK_INVERSE[type], ticketId: ticket.id });
+          }
+        }
+      }
+    }
+
+    // Sprints: finished work sits in past cycles, live work in the active one.
+    const cycles = sprintsForProject(project.id);
+    if (cycles.length === 0) continue;
+    const past = cycles.find((cycle) => cycle.state === "past");
+    const active = cycles.find((cycle) => cycle.state === "active");
+    const next = cycles.find((cycle) => cycle.state === "upcoming");
+
+    for (const ticket of scoped) {
+      if (ticket.type === "epic") continue;
+      if (ticket.status === "done") {
+        ticket.sprintId = random.chance(0.7) ? (past?.id ?? null) : (active?.id ?? null);
+      } else if (ticket.status === "backlog") {
+        ticket.sprintId = random.chance(0.25) ? (next?.id ?? null) : null;
+      } else {
+        ticket.sprintId = active?.id ?? null;
+      }
+    }
+  }
+}
+
 export function generateDataset() {
   const random = createRandom(SEED);
   const tickets = buildTickets(random);
+  relateTickets(random, tickets);
   const comments = buildComments(random, tickets);
   const events = buildEvents(random, tickets);
 

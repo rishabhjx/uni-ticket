@@ -3,6 +3,7 @@
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { matchesSearch, parseSearch } from "@/lib/search";
 import {
   isOverdue,
   isSlaBreached,
@@ -41,6 +42,9 @@ export const emptyFilters: TicketFilters = {
 };
 
 export type GroupBy = "status" | "assignee" | "priority" | "severity" | "type";
+
+/** A second dimension, drawn as rows while the columns stay the grouping. */
+export type Swimlane = "none" | "assignee" | "priority" | "epic";
 export type Density = "comfortable" | "compact";
 
 const listKeys = [
@@ -104,7 +108,8 @@ export function countActiveFilters(filters: TicketFilters) {
 }
 
 export function applyFilters(tickets: Ticket[], filters: TicketFilters) {
-  const query = filters.search.trim().toLowerCase();
+  const trimmed = filters.search.trim();
+  const parsed = trimmed ? parseSearch(trimmed) : null;
   const now = new Date();
 
   return tickets.filter((ticket) => {
@@ -112,10 +117,7 @@ export function applyFilters(tickets: Ticket[], filters: TicketFilters) {
     if (filters.staleOnly && !isStale(ticket, now)) return false;
     if (filters.breachedOnly && !isSlaBreached(ticket, now)) return false;
 
-    if (query) {
-      const haystack = `${ticket.key} ${ticket.title} ${ticket.description}`.toLowerCase();
-      if (!haystack.includes(query)) return false;
-    }
+    if (parsed && !matchesSearch(ticket, parsed)) return false;
     if (filters.statuses.length > 0 && !filters.statuses.includes(ticket.status)) {
       return false;
     }
@@ -157,6 +159,7 @@ export type SavedView = {
   id: string;
   name: string;
   path: string;
+  /** The full query: filters, plus scope, grouping and layout. */
   query: string;
 };
 
@@ -167,6 +170,8 @@ type ViewStateValue = {
   activeCount: number;
   groupBy: GroupBy;
   setGroupBy: (next: GroupBy) => void;
+  swimlane: Swimlane;
+  setSwimlane: (next: Swimlane) => void;
   density: Density;
   setDensity: (next: Density) => void;
   savedViews: SavedView[];
@@ -206,12 +211,31 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
     router.replace(pathname, { scroll: false });
   }, [router, pathname]);
 
-  const [groupBy, setGroupBy] = React.useState<GroupBy>("status");
   const [selection, setSelection] = React.useState<string[]>([]);
+  const [swimlane, setSwimlane] = React.useState<Swimlane>("none");
+
+  const urlGroupBy = params.get("group") as GroupBy | null;
+  const urlDensity = params.get("density") as Density | null;
+  const [groupByState, setGroupByState] = React.useState<GroupBy>("status");
+
+  // A saved view carries its grouping, so the URL wins where it says something.
+  const groupBy = urlGroupBy ?? groupByState;
+
+  const setGroupBy = React.useCallback(
+    (next: GroupBy) => {
+      setGroupByState(next);
+      const query = new URLSearchParams(params.toString());
+      if (next === "status") query.delete("group");
+      else query.set("group", next);
+      const search = query.toString();
+      router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
+    },
+    [params, router, pathname],
+  );
 
   // Read once, lazily. The server renders the defaults and the first client
   // render reads storage, so nothing is set from inside an effect.
-  const [density, setDensityState] = React.useState<Density>(() => {
+  const [densityState, setDensityState] = React.useState<Density>(() => {
     if (typeof window === "undefined") return "comfortable";
     try {
       const stored = window.localStorage.getItem(DENSITY_KEY);
@@ -230,6 +254,8 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
       return [];
     }
   });
+
+  const density = urlDensity ?? densityState;
 
   const setDensity = React.useCallback((next: Density) => {
     setDensityState(next);
@@ -253,17 +279,27 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
     (name: string) => {
       const trimmed = name.trim();
       if (!trimmed) return;
+
+      // Start from the live URL so page-specific state — the My work scope,
+      // for instance — survives, then layer the view controls on top.
+      const query = new URLSearchParams(params.toString());
+      query.delete("ticket");
+      if (groupBy !== "status") query.set("group", groupBy);
+      else query.delete("group");
+      if (density !== "comfortable") query.set("density", density);
+      else query.delete("density");
+
       persistViews([
         ...savedViews,
         {
           id: `v-${Date.now()}`,
           name: trimmed,
           path: pathname,
-          query: filtersToParams(filters).toString(),
+          query: query.toString(),
         },
       ]);
     },
-    [savedViews, persistViews, pathname, filters],
+    [savedViews, persistViews, pathname, params, groupBy, density],
   );
 
   const removeSavedView = React.useCallback(
@@ -289,6 +325,8 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
       activeCount: countActiveFilters(filters),
       groupBy,
       setGroupBy,
+      swimlane,
+      setSwimlane,
       density,
       setDensity,
       savedViews,
@@ -304,6 +342,7 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
       setFilters,
       clearFilters,
       groupBy,
+      swimlane,
       density,
       setDensity,
       savedViews,

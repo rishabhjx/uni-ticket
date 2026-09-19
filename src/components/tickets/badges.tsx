@@ -5,6 +5,7 @@ import {
   Minus,
   ChevronDown,
   LifeBuoy,
+  Layers,
   Siren,
   Sparkles,
   SquareCheck,
@@ -36,6 +37,7 @@ const statusTint: Record<TicketStatus, string> = {
   todo: "bg-[var(--status-todo-bg)] text-[var(--status-todo-fg)]",
   in_progress: "bg-[var(--status-progress-bg)] text-[var(--status-progress-fg)]",
   in_review: "bg-[var(--status-review-bg)] text-[var(--status-review-fg)]",
+  resolved: "bg-[var(--status-resolved-bg)] text-[var(--status-resolved-fg)]",
   done: "bg-[var(--status-done-bg)] text-[var(--status-done-fg)]",
 };
 
@@ -62,6 +64,7 @@ const typeIcon: Record<TicketType, LucideIcon> = {
   chore: Wrench,
   request: LifeBuoy,
   incident: Siren,
+  epic: Layers,
 };
 
 const badgeBase =

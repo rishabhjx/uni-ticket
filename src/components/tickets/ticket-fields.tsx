@@ -62,11 +62,24 @@ function Field({
   );
 }
 
+/** A viewer sees the value without the affordance to change it. */
+function ReadOnlyValue({ children }: { children: React.ReactNode }) {
+  return <span className="flex items-center gap-2 px-1.5 text-small">{children}</span>;
+}
+
 /** Compact, borderless until hovered — the value is the thing, not the control. */
 const triggerClass =
   "h-7 w-full justify-between border-transparent bg-transparent px-1.5 text-small shadow-none hover:bg-grey-100 focus:border-accent-600 data-[state=open]:bg-grey-100";
 
-export function TicketFields({ ticket }: { ticket: Ticket }) {
+export function TicketFields({
+  ticket,
+  canEdit = true,
+  sprintName,
+}: {
+  ticket: Ticket;
+  canEdit?: boolean;
+  sprintName?: string;
+}) {
   const { updateTicket } = useTicketStore();
   const celebrate = useCelebrate();
   const project = getProject(ticket.projectId);
@@ -76,6 +89,11 @@ export function TicketFields({ ticket }: { ticket: Ticket }) {
   return (
     <div className="flex flex-col gap-2">
       <Field label="Status">
+        {!canEdit ? (
+          <ReadOnlyValue>
+            <StatusBadge status={ticket.status} />
+          </ReadOnlyValue>
+        ) : (
         <Select
           value={ticket.status}
           onValueChange={(status) => {
@@ -96,9 +114,15 @@ export function TicketFields({ ticket }: { ticket: Ticket }) {
             ))}
           </SelectContent>
         </Select>
+        )}
       </Field>
 
       <Field label="Priority">
+        {!canEdit ? (
+          <ReadOnlyValue>
+            <PriorityBadge priority={ticket.priority} />
+          </ReadOnlyValue>
+        ) : (
         <Select
           value={ticket.priority}
           onValueChange={(priority) =>
@@ -116,9 +140,16 @@ export function TicketFields({ ticket }: { ticket: Ticket }) {
             ))}
           </SelectContent>
         </Select>
+        )}
       </Field>
 
       <Field label="Assignee">
+        {!canEdit ? (
+          <ReadOnlyValue>
+            <UserAvatar userId={ticket.assigneeId} />
+            {getUser(ticket.assigneeId)?.name ?? "Unassigned"}
+          </ReadOnlyValue>
+        ) : (
         <Select
           value={ticket.assigneeId ?? "unassigned"}
           onValueChange={(value) =>
@@ -147,6 +178,7 @@ export function TicketFields({ ticket }: { ticket: Ticket }) {
             ))}
           </SelectContent>
         </Select>
+        )}
       </Field>
 
       {isDefect(ticket.type) ? (
@@ -284,6 +316,12 @@ export function TicketFields({ ticket }: { ticket: Ticket }) {
           {formatRelative(ticket.updatedAt)}
         </span>
       </Field>
+
+      {sprintName ? (
+        <Field label="Sprint">
+          <span className="px-1.5 text-small text-grey-700">{sprintName}</span>
+        </Field>
+      ) : null}
 
       <Field label="Project">
         <span className="px-1.5 text-small text-grey-700">{project?.name}</span>

@@ -43,7 +43,7 @@ export function KpiStrip({ kpis }: { kpis: PersonalKpis }) {
   };
 
   return (
-    <div className="hairline-b grid grid-cols-3 gap-2 px-6 py-3 lg:grid-cols-6">
+    <div className="hairline-b grid grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-3 sm:px-6 lg:grid-cols-6">
       {tiles.map((tile) => {
         const active = isActive(tile);
         const value = kpis[tile.key];

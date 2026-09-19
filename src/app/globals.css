@@ -41,6 +41,8 @@
   --status-progress-fg: #5b41c4;
   --status-review-bg: #fdefe3;
   --status-review-fg: #96541a;
+  --status-resolved-bg: #e7f1fb;
+  --status-resolved-fg: #1c5a92;
   --status-done-bg: #e6f3ea;
   --status-done-fg: #256c43;
 

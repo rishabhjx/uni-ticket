@@ -29,6 +29,7 @@ import {
   isDefect,
   labels,
   projects,
+  sprintsForProject,
   SEVERITY_LABEL,
   TICKET_PRIORITIES,
   TICKET_SEVERITIES,
@@ -39,9 +40,12 @@ import {
   type TicketSeverity,
   type TicketType,
 } from "@/lib/mock";
+import { TEMPLATES } from "@/lib/mock/templates";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
+
+const LAST_TYPE_KEY = "uni.lastTicketType";
 
 const fieldClass =
   "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
@@ -65,7 +69,7 @@ export function CreateTicketDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const pathname = usePathname();
-  const { createTicket } = useTicketStore();
+  const { createTicket, tickets } = useTicketStore();
   const { openTicket } = useTicketPanel();
 
   // Default to whichever project you are looking at.
@@ -79,7 +83,16 @@ export function CreateTicketDialog({
   );
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [type, setType] = React.useState<TicketType>("task");
+  // QA files bugs all day and should not re-pick "Bug" every time.
+  const [type, setType] = React.useState<TicketType>(() => {
+    if (typeof window === "undefined") return "task";
+    try {
+      const stored = window.localStorage.getItem(LAST_TYPE_KEY);
+      return (stored as TicketType) ?? "task";
+    } catch {
+      return "task";
+    }
+  });
   const [priority, setPriority] = React.useState<TicketPriority>("medium");
   const [severity, setSeverity] = React.useState<TicketSeverity>("s3");
   const [environment, setEnvironment] = React.useState<Environment>("production");
@@ -87,6 +100,11 @@ export function CreateTicketDialog({
   const [assigneeId, setAssigneeId] = React.useState<string>("unassigned");
   const [labelIds, setLabelIds] = React.useState<string[]>([]);
   const [dueAt, setDueAt] = React.useState("");
+  const [sprintId, setSprintId] = React.useState("none");
+  const [parentId, setParentId] = React.useState("none");
+  // Tracks whether the body is still an untouched template, so switching type
+  // can swap it without destroying anything typed.
+  const [templateType, setTemplateType] = React.useState<TicketType | null>(null);
 
   // Opening the dialog on a different project should follow that project.
   const [lastRouteProject, setLastRouteProject] = React.useState(routeProject?.id);
@@ -97,6 +115,28 @@ export function CreateTicketDialog({
 
   const project = getProject(projectId);
   const defect = isDefect(type);
+  const cycles = sprintsForProject(projectId);
+  const epics = React.useMemo(
+    () =>
+      tickets.filter(
+        (ticket) => ticket.projectId === projectId && ticket.type === "epic",
+      ),
+    [tickets, projectId],
+  );
+
+  const chooseType = (next: TicketType) => {
+    setType(next);
+    try {
+      window.localStorage.setItem(LAST_TYPE_KEY, next);
+    } catch {
+      // Remembering the type is a convenience, not state worth failing over.
+    }
+    const template = TEMPLATES[next];
+    if (template && (description.trim() === "" || templateType === type)) {
+      setDescription(template);
+      setTemplateType(next);
+    }
+  };
   const canSubmit = title.trim().length > 0;
 
   const reset = () => {
@@ -125,6 +165,8 @@ export function CreateTicketDialog({
       dueAt: dueAt ? new Date(`${dueAt}T17:00:00`).toISOString() : null,
       environment: defect ? environment : null,
       buildVersion: defect && buildVersion.trim() ? buildVersion.trim() : null,
+      sprintId: sprintId === "none" ? null : sprintId,
+      parentId: parentId === "none" ? null : parentId,
     });
 
     reset();
@@ -157,8 +199,11 @@ export function CreateTicketDialog({
 
             <textarea
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={5}
+              onChange={(event) => {
+                setDescription(event.target.value);
+                setTemplateType(null);
+              }}
+              rows={10}
               placeholder={
                 defect
                   ? "What happened, what you expected, and the steps to reproduce. Paste logs in ```code fences```."
@@ -184,10 +229,7 @@ export function CreateTicketDialog({
             </Row>
 
             <Row label="Type">
-              <Select
-                value={type}
-                onValueChange={(value) => setType(value as TicketType)}
-              >
+              <Select value={type} onValueChange={(value) => chooseType(value as TicketType)}>
                 <SelectTrigger className="h-8 text-small">
                   <SelectValue />
                 </SelectTrigger>
@@ -295,6 +337,43 @@ export function CreateTicketDialog({
                 </SelectContent>
               </Select>
             </Row>
+
+            {cycles.length > 0 ? (
+              <Row label="Sprint">
+                <Select value={sprintId} onValueChange={setSprintId}>
+                  <SelectTrigger className="h-8 text-small">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Backlog — no sprint</SelectItem>
+                    {cycles.map((cycle) => (
+                      <SelectItem key={cycle.id} value={cycle.id}>
+                        {cycle.name}
+                        {cycle.state === "active" ? " · active" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Row>
+            ) : null}
+
+            {epics.length > 0 && type !== "epic" ? (
+              <Row label="Epic">
+                <Select value={parentId} onValueChange={setParentId}>
+                  <SelectTrigger className="h-8 text-small">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No epic</SelectItem>
+                    {epics.map((epic) => (
+                      <SelectItem key={epic.id} value={epic.id}>
+                        {epic.key} · {epic.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Row>
+            ) : null}
 
             <Row label="Due">
               <input

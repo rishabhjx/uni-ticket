@@ -27,14 +27,21 @@ Then open http://localhost:3000. Node 18.18+ required.
 | `/` | Overview: my KPIs, my team's KPIs, and a card per project I work on |
 | `/my-work` | Assigned to me and My team on one page, with KPIs that filter it |
 | `/boards` | Every board, with its column distribution |
+| `/insights` | Cycle time, throughput and where work is stuck |
 | `/projects` | All projects with stats, lead and members |
 | `/projects/[key]/board` | Kanban with drag and drop, filters and group-by |
 | `/projects/[key]/list` | Sortable, filterable, virtualized table |
 
 The ticket detail panel opens over any of them.
 
-**Filters live in the URL**, so any view is a link you can paste to someone.
-Saved views pin a filter combination into the sidebar.
+**Filters and the open ticket live in the URL**, so any view — and any single
+ticket, `?ticket=APO-142` — is a link you can paste to someone. Browser back
+closes the panel. Saved views pin a whole view, including scope, grouping and
+density, into the sidebar.
+
+Search takes operators alongside free text, in both the list and ⌘K:
+`assignee:me`, `is:open`, `is:blocked`, `status:review`, `severity:s1`,
+`type:bug`, `label:api`.
 
 ## Shortcuts
 
@@ -58,6 +65,20 @@ Ticket types carry the fields their persona needs rather than one flat shape:
   status.
 - **Service desk requests** — a requester who is not on the team, and an SLA
   target derived from severity.
+
+## Workflow
+
+Backlog → To Do → In Progress → In Review → **Ready for QA** → **Verified**.
+"Done" used to mean a developer thought it was finished; now a ticket is only
+closed once someone verifies it, and anything verified can be reopened.
+
+Tickets carry epics (parent/child), blocks / blocked-by / relates-to /
+duplicates links, and sprints. Boards enforce WIP limits and can be split into
+swimlanes.
+
+Project roles are admin, member and viewer. The current user is a viewer on
+Helpdesk, so that project is read-only — which is the quickest way to see
+permissions working.
 
 ## Layout
 

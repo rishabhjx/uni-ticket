@@ -3,6 +3,7 @@
 import { PanelLeftClose } from "lucide-react";
 
 import { CelebrateProvider } from "@/components/shared/celebrate";
+import { InboxProvider } from "@/lib/store/inbox";
 import { AppRail } from "@/components/shell/app-rail";
 import { CommandPaletteProvider } from "@/components/shell/command-palette";
 import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
@@ -39,11 +40,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ShellProvider>
       <CelebrateProvider>
+      <InboxProvider>
       <ViewStateProvider>
       <TicketPanelProvider>
       <CommandPaletteProvider>
       <TooltipProvider delayDuration={300}>
-        <div className="group/shell relative flex h-full">
+        <div className="group/shell relative flex h-full overflow-hidden">
           <AppRail />
           <SectionSidebar />
           <SidebarCollapseButton />
@@ -57,6 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </CommandPaletteProvider>
       </TicketPanelProvider>
       </ViewStateProvider>
+      </InboxProvider>
       </CelebrateProvider>
     </ShellProvider>
   );

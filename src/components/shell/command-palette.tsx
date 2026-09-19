@@ -13,7 +13,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { projectMonogram, projects } from "@/lib/mock";
+import { projects } from "@/lib/mock";
+import { matchesSearch, parseSearch, SEARCH_HINTS, SEARCH_PLACEHOLDER } from "@/lib/search";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { useShell } from "@/hooks/use-shell";
@@ -57,15 +58,10 @@ export function CommandPaletteProvider({
 
   // 228 tickets is too many to render at once, and nobody scrolls a palette.
   const matches = React.useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return [];
-    return tickets
-      .filter(
-        (ticket) =>
-          ticket.title.toLowerCase().includes(term) ||
-          ticket.key.toLowerCase().includes(term),
-      )
-      .slice(0, 8);
+    const trimmed = query.trim();
+    if (!trimmed) return [];
+    const parsed = parseSearch(trimmed);
+    return tickets.filter((ticket) => matchesSearch(ticket, parsed)).slice(0, 8);
   }, [tickets, query]);
 
   const value = React.useMemo(
@@ -92,12 +88,27 @@ export function CommandPaletteProvider({
         <CommandInput
           value={query}
           onValueChange={setQuery}
-          placeholder="Search tickets, or jump to a project"
+          placeholder={SEARCH_PLACEHOLDER}
         />
         <CommandList>
           <CommandEmpty>
-            {query.trim() ? "No tickets match." : "Type to search tickets."}
+            {query.trim() ? "🔍 No tickets match." : "Type to search tickets."}
           </CommandEmpty>
+
+          {query.trim() === "" ? (
+            <CommandGroup heading="Try">
+              {SEARCH_HINTS.map((hint) => (
+                <CommandItem
+                  key={hint}
+                  value={hint}
+                  onSelect={() => setQuery(`${hint} `)}
+                  className="gap-2"
+                >
+                  <code className="font-mono text-[12px] text-grey-600">{hint}</code>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
 
           {matches.length > 0 ? (
             <CommandGroup heading="Tickets">
@@ -105,7 +116,7 @@ export function CommandPaletteProvider({
                 <CommandItem
                   key={ticket.id}
                   value={`${ticket.key} ${ticket.title}`}
-                  onSelect={() => run(() => openTicket(ticket.id))}
+                  onSelect={() => run(() => openTicket(ticket.key))}
                   className="gap-2"
                 >
                   <TypeIcon type={ticket.type} />
@@ -157,8 +168,8 @@ export function CommandPaletteProvider({
                   }
                   className="gap-2"
                 >
-                  <span className="flex size-4 shrink-0 items-center justify-center rounded-md bg-grey-200 text-[9px] font-semibold text-grey-600">
-                    {projectMonogram(project)}
+                  <span aria-hidden className="w-4 shrink-0 text-center">
+                    {project.emoji}
                   </span>
                   <Columns3 className="size-3.5 text-grey-400" strokeWidth={1.75} />
                   {project.name} board
@@ -170,8 +181,8 @@ export function CommandPaletteProvider({
                   }
                   className="gap-2"
                 >
-                  <span className="flex size-4 shrink-0 items-center justify-center rounded-md bg-grey-200 text-[9px] font-semibold text-grey-600">
-                    {projectMonogram(project)}
+                  <span aria-hidden className="w-4 shrink-0 text-center">
+                    {project.emoji}
                   </span>
                   <Rows3 className="size-3.5 text-grey-400" strokeWidth={1.75} />
                   {project.name} list

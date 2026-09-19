@@ -7,7 +7,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useViewState, type GroupBy } from "@/lib/store/view-state";
+import {
+  useViewState,
+  type GroupBy,
+  type Swimlane,
+} from "@/lib/store/view-state";
 
 const options: { value: GroupBy; label: string }[] = [
   { value: "status", label: "Status" },
@@ -17,11 +21,19 @@ const options: { value: GroupBy; label: string }[] = [
   { value: "type", label: "Type" },
 ];
 
+const lanes: { value: Swimlane; label: string }[] = [
+  { value: "none", label: "None" },
+  { value: "assignee", label: "Assignee" },
+  { value: "priority", label: "Priority" },
+  { value: "epic", label: "Epic" },
+];
+
 /** A PM wants the same board grouped by assignee to spot who is overloaded. */
 export function GroupBySelect() {
-  const { groupBy, setGroupBy } = useViewState();
+  const { groupBy, setGroupBy, swimlane, setSwimlane } = useViewState();
 
   return (
+    <>
     <label className="flex items-center gap-1.5">
       <span className="text-caption tracking-wide text-grey-500 uppercase">
         Group
@@ -42,5 +54,30 @@ export function GroupBySelect() {
         </SelectContent>
       </Select>
     </label>
+
+    <label className="flex items-center gap-1.5">
+      <span className="text-caption tracking-wide text-grey-500 uppercase">
+        Lanes
+      </span>
+      <Select
+        value={swimlane}
+        onValueChange={(value) => setSwimlane(value as Swimlane)}
+      >
+        <SelectTrigger
+          className="h-7 w-[104px] border-grey-200 text-small"
+          aria-label="Swimlanes"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {lanes.map((lane) => (
+            <SelectItem key={lane.value} value={lane.value}>
+              {lane.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </label>
+    </>
   );
 }

@@ -37,6 +37,7 @@ import {
   type GroupBy,
 } from "@/lib/store/view-state";
 import { GroupBySelect } from "@/components/board/group-by-select";
+import { cn } from "@/lib/utils";
 
 type BoardCard = {
   id: string;
@@ -82,7 +83,7 @@ function columnsFor(groupBy: GroupBy, project: Project) {
 export function BoardView({ project }: { project: Project }) {
   const { tickets, applyBoardOrder, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
-  const { filters, groupBy } = useViewState();
+  const { filters, groupBy, swimlane } = useViewState();
   const celebrate = useCelebrate();
 
   const scoped = React.useMemo(
@@ -156,6 +157,58 @@ export function BoardView({ project }: { project: Project }) {
     [applyBoardOrder, groupBy, celebrate],
   );
 
+  /**
+   * WIP limits are the one board constraint teams actually enforce, and a
+   * count with no ceiling beside it does not tell you when to stop starting.
+   */
+  const wipLimit = (columnId: string) =>
+    groupBy === "status"
+      ? project.wipLimits?.[columnId as TicketStatus]
+      : undefined;
+
+  const overLimit = (columnId: string) => {
+    const limit = wipLimit(columnId);
+    return limit !== undefined && (counts.get(columnId) ?? 0) > limit;
+  };
+
+  /**
+   * Swimlanes are rows of a second dimension. Drag is disabled inside them —
+   * a drop would have to write two fields at once, and guessing which is worse
+   * than not offering it.
+   */
+  const lanes = React.useMemo(() => {
+    if (swimlane === "none") return [];
+
+    const laneOf = (card: BoardCard) => {
+      if (swimlane === "assignee") return card.ticket.assigneeId ?? "unassigned";
+      if (swimlane === "priority") return card.ticket.priority;
+      return card.ticket.parentId ?? "none";
+    };
+
+    const buckets = new Map<string, BoardCard[]>();
+    for (const card of data) {
+      const key = laneOf(card);
+      const bucket = buckets.get(key);
+      if (bucket) bucket.push(card);
+      else buckets.set(key, [card]);
+    }
+
+    const nameOf = (key: string) => {
+      if (swimlane === "assignee") {
+        return key === "unassigned" ? "Unassigned" : (getUser(key)?.name ?? key);
+      }
+      if (swimlane === "priority") {
+        return PRIORITY_LABEL[key as keyof typeof PRIORITY_LABEL] ?? key;
+      }
+      if (key === "none") return "No epic";
+      return tickets.find((item) => item.id === key)?.title ?? key;
+    };
+
+    return [...buckets.entries()]
+      .map(([id, cards]) => ({ id, name: nameOf(id), cards }))
+      .sort((a, b) => b.cards.length - a.cards.length);
+  }, [data, swimlane, tickets]);
+
   if (isLoading) return <BoardSkeleton />;
 
   return (
@@ -168,7 +221,55 @@ export function BoardView({ project }: { project: Project }) {
         extra={<GroupBySelect />}
       />
 
-      {data.length === 0 ? (
+      {lanes.length > 1 ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
+          {lanes.map((lane) => (
+            <section key={lane.id}>
+              <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold tracking-wide text-grey-600 uppercase">
+                {lane.name}
+                <span className="tnum font-normal text-grey-400">
+                  {lane.cards.length}
+                </span>
+              </h3>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {columns.map((column) => {
+                  const cards = lane.cards.filter(
+                    (card) => card.column === column.id,
+                  );
+                  return (
+                    <div
+                      key={column.id}
+                      className="flex w-[300px] shrink-0 flex-col gap-2 rounded-md border border-grey-200 bg-grey-50 p-2"
+                    >
+                      <span className="px-1 text-caption font-semibold tracking-wide text-grey-600 uppercase">
+                        {column.name}
+                        <span className="tnum ml-1.5 font-normal text-grey-400">
+                          {cards.length}
+                        </span>
+                      </span>
+                      {cards.map((card) => (
+                        <div
+                          key={card.id}
+                          className="rounded-md border border-grey-200 bg-grey-0"
+                        >
+                          <TicketCard
+                            ticket={card.ticket}
+                            onOpen={openTicket}
+                            showStatus={groupBy !== "status"}
+                          />
+                        </div>
+                      ))}
+                      {cards.length === 0 ? (
+                        <p className="px-1 pb-1 text-caption text-grey-400">—</p>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : data.length === 0 ? (
         <EmptyState
           emoji="🧊"
           title={
@@ -197,9 +298,29 @@ export function BoardView({ project }: { project: Project }) {
                   <span className="truncate text-caption font-semibold tracking-wide text-grey-700 uppercase">
                     {column.name}
                   </span>
-                  <span className="tnum text-caption text-grey-500">
+                  <span
+                    className={cn(
+                      "tnum text-caption",
+                      overLimit(column.id) ? "font-semibold" : "text-grey-500",
+                    )}
+                    style={
+                      overLimit(column.id)
+                        ? { color: "var(--priority-urgent-fg)" }
+                        : undefined
+                    }
+                  >
                     {counts.get(column.id) ?? 0}
+                    {wipLimit(column.id) ? ` / ${wipLimit(column.id)}` : ""}
                   </span>
+                  {overLimit(column.id) ? (
+                    <span
+                      title="Over the work-in-progress limit"
+                      className="text-caption"
+                      aria-label="Over the work in progress limit"
+                    >
+                      ⚠️
+                    </span>
+                  ) : null}
                 </KanbanHeader>
 
                 <KanbanCards id={column.id}>

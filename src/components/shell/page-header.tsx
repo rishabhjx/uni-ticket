@@ -22,7 +22,7 @@ export function PageHeader({
   const { sidebarOpen, toggleSidebar, openCreate } = useShell();
 
   return (
-    <header className="glass-strong hairline-b relative z-10 flex h-topbar shrink-0 items-center gap-3 px-6">
+    <header className="glass-strong hairline-b relative z-10 flex h-topbar shrink-0 items-center gap-3 px-4 sm:px-6">
       {!sidebarOpen ? (
         <Tooltip>
           <TooltipTrigger asChild>

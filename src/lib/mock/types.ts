@@ -1,8 +1,14 @@
+/**
+ * "Done" used to mean a developer thought it was finished, which left QA with
+ * nowhere to stand. `resolved` is the fix landing; `done` is someone having
+ * verified it. Reopening sends a ticket back to in_progress.
+ */
 export const TICKET_STATUSES = [
   "backlog",
   "todo",
   "in_progress",
   "in_review",
+  "resolved",
   "done",
 ] as const;
 
@@ -19,6 +25,7 @@ export const TICKET_TYPES = [
   "chore",
   "request",
   "incident",
+  "epic",
 ] as const;
 
 export type TicketType = (typeof TICKET_TYPES)[number];
@@ -65,6 +72,10 @@ export type Project = {
   kind: ProjectKind;
   /** One emoji per project — faster to recognise than a two-letter tile. */
   emoji: string;
+  /** Anyone not listed here is a viewer and cannot change anything. */
+  roles: Record<string, ProjectRole>;
+  /** Cards per column before the board warns you. */
+  wipLimits?: Partial<Record<TicketStatus, number>>;
 };
 
 export type Label = {
@@ -97,12 +108,59 @@ export type Ticket = {
   attachments: Attachment[];
   /** When it last entered its current column, which is what ageing measures. */
   statusChangedAt: string;
+  /** An epic this belongs to, if any. */
+  parentId: string | null;
+  links: TicketLink[];
+  sprintId: string | null;
   createdAt: string;
   updatedAt: string;
   dueAt: string | null;
   /** Position within its status column on the board. */
   order: number;
 };
+
+export const LINK_TYPES = [
+  "blocks",
+  "blocked_by",
+  "relates_to",
+  "duplicates",
+] as const;
+
+export type LinkType = (typeof LINK_TYPES)[number];
+
+export const LINK_LABEL: Record<LinkType, string> = {
+  blocks: "Blocks",
+  blocked_by: "Blocked by",
+  relates_to: "Relates to",
+  duplicates: "Duplicates",
+};
+
+export const LINK_INVERSE: Record<LinkType, LinkType> = {
+  blocks: "blocked_by",
+  blocked_by: "blocks",
+  relates_to: "relates_to",
+  duplicates: "duplicates",
+};
+
+export type TicketLink = {
+  type: LinkType;
+  ticketId: string;
+};
+
+/** A planning window. Tickets belong to at most one. */
+export type Sprint = {
+  id: string;
+  projectId: string;
+  name: string;
+  startsOn: string;
+  endsOn: string;
+  state: "past" | "active" | "upcoming";
+};
+
+/** What a person may do inside a project. */
+export const PROJECT_ROLES = ["admin", "member", "viewer"] as const;
+
+export type ProjectRole = (typeof PROJECT_ROLES)[number];
 
 export type Development = {
   branch: string;
@@ -129,6 +187,9 @@ export const EVENT_KINDS = [
   "assignee",
   "priority",
   "severity",
+  "title",
+  "description",
+  "reopened",
   "comment",
 ] as const;
 
@@ -162,8 +223,14 @@ export const STATUS_LABEL: Record<TicketStatus, string> = {
   todo: "To Do",
   in_progress: "In Progress",
   in_review: "In Review",
-  done: "Done",
+  resolved: "Ready for QA",
+  done: "Verified",
 };
+
+/** Only a verified ticket is finished. */
+export function isClosed(status: TicketStatus) {
+  return status === "done";
+}
 
 export const PRIORITY_LABEL: Record<TicketPriority, string> = {
   urgent: "Urgent",
@@ -179,6 +246,7 @@ export const TYPE_LABEL: Record<TicketType, string> = {
   chore: "Chore",
   request: "Request",
   incident: "Incident",
+  epic: "Epic",
 };
 
 export const SEVERITY_LABEL: Record<TicketSeverity, string> = {

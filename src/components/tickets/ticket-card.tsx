@@ -40,7 +40,7 @@ export function TicketCard({
   return (
     <div
       className="group/card flex flex-col gap-2 p-3"
-      onClick={onOpen ? () => onOpen(ticket.id) : undefined}
+      onClick={onOpen ? () => onOpen(ticket.key) : undefined}
     >
       <div className="flex items-center gap-1.5">
         <TypeIcon type={ticket.type} />

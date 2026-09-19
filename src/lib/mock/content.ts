@@ -37,6 +37,13 @@ export const summariesByType: Record<TicketType, string[]> = {
     "Degraded rather than down: requests succeed but latency is roughly four times normal.",
     "Escalated from the service desk after the third report in an hour.",
   ],
+  epic: [
+    "A quarter's worth of work, tracked here so the individual tickets have somewhere to hang.",
+    "Agreed at planning. Scope will move; the outcome should not.",
+    "Umbrella for the migration. Each child ships on its own.",
+    "Cross-team, so progress depends on more than one board.",
+    "Large enough that it needs a written rollout plan before the first ticket starts.",
+  ],
   chore: [
     "Housekeeping. Low risk, but it keeps biting new joiners during onboarding.",
     "Picked up from the last tidy-up sprint. No urgency, but it is cheap to do now.",
@@ -82,6 +89,13 @@ export const criteriaByType: Record<TicketType, string[]> = {
     "Everyone who reported it has been updated",
     "Follow-up actions raised as their own tickets",
     "Post-incident review scheduled",
+  ],
+  epic: [
+    "Every child ticket is closed or explicitly dropped",
+    "Outcome measured against the number agreed at planning",
+    "Rollout completed in every region",
+    "Documentation updated for the new behaviour",
+    "Retro written up and shared",
   ],
   chore: [
     "The change is reviewed by an owner of this area",

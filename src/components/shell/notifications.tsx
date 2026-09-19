@@ -12,6 +12,7 @@ import {
 import { formatRelative } from "@/lib/format";
 import { CURRENT_USER_ID, getUser } from "@/lib/mock";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
+import { useInbox } from "@/lib/store/inbox";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ import { cn } from "@/lib/utils";
 export function Notifications() {
   const { tickets, comments } = useTicketStore();
   const { openTicket } = useTicketPanel();
-  const [readIds, setReadIds] = React.useState<string[]>([]);
+  const { readIds: read, markRead } = useInbox();
 
   const items = React.useMemo(() => {
     const mine = new Map(
@@ -45,7 +46,6 @@ export function Notifications() {
       .map((comment) => ({ comment, ticket: mine.get(comment.ticketId)! }));
   }, [tickets, comments]);
 
-  const read = React.useMemo(() => new Set(readIds), [readIds]);
   const unread = items.filter((item) => !read.has(item.comment.id)).length;
 
   return (
@@ -71,7 +71,7 @@ export function Notifications() {
           {unread > 0 ? (
             <button
               type="button"
-              onClick={() => setReadIds(items.map((item) => item.comment.id))}
+              onClick={() => markRead(items.map((item) => item.comment.id))}
               className="ml-auto text-caption text-grey-500 transition-colors hover:text-grey-900"
             >
               Mark all read
@@ -92,8 +92,8 @@ export function Notifications() {
                   key={comment.id}
                   type="button"
                   onClick={() => {
-                    setReadIds((current) => [...current, comment.id]);
-                    openTicket(ticket.id);
+                    markRead([comment.id]);
+                    openTicket(ticket.key);
                   }}
                   className={cn(
                     "flex w-full gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-grey-50",

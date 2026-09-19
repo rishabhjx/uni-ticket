@@ -1,7 +1,7 @@
 import { generateDataset } from "./generate";
 import { startOfWeek, TODAY } from "./dates";
 import { projects } from "./projects";
-import type { Comment, Ticket, TicketEvent, TicketStatus } from "./types";
+import { TICKET_STATUSES, type Comment, type Ticket, type TicketEvent, type TicketStatus } from "./types";
 import { CURRENT_USER_ID, reporteeIds } from "./users";
 
 const dataset = generateDataset();
@@ -15,6 +15,7 @@ export * from "./users";
 export * from "./labels";
 export * from "./projects";
 export * from "./dates";
+export * from "./sprints";
 
 /** Open work — everything that has not reached Done. */
 export function isOpen(ticket: Ticket) {
@@ -52,10 +53,134 @@ export function daysInColumn(ticket: Ticket, now: Date = new Date()) {
   );
 }
 
-/** Long enough in one column that somebody should look at it. */
+/**
+ * How long is too long depends on the column. Seven days in In Review is
+ * alarming; seven days in Backlog is Tuesday. A flat threshold fired on more
+ * than half of everything, which taught people to ignore it.
+ */
+export const STALE_AFTER_DAYS: Record<TicketStatus, number | null> = {
+  backlog: null,
+  // Roughly the 80th percentile of how long work actually sits in each
+  // column. A flat seven days fired on more than half of everything, which
+  // teaches people to ignore the signal; this flags the genuine tail.
+  todo: 37,
+  in_progress: 23,
+  in_review: 18,
+  resolved: 12,
+  done: null,
+};
+
 export function isStale(ticket: Ticket, now: Date = new Date()) {
-  if (!isOpen(ticket) || ticket.status === "backlog") return false;
-  return daysInColumn(ticket, now) >= 7;
+  const threshold = STALE_AFTER_DAYS[ticket.status];
+  if (threshold === null) return false;
+  return daysInColumn(ticket, now) >= threshold;
+}
+
+/**
+ * The audit trail records every transition, so how long a ticket spent in each
+ * column is already known — this is what turns it into a number people can act
+ * on.
+ */
+export function timeInStatuses(all: TicketEvent[], ticket: Ticket) {
+  const history = eventsForTicket(all, ticket.id);
+  const spans = new Map<TicketStatus, number>();
+
+  let current: TicketStatus = "backlog";
+  let since = new Date(ticket.createdAt).getTime();
+
+  for (const event of history) {
+    if (event.kind !== "status" || !event.to) continue;
+    const at = new Date(event.createdAt).getTime();
+    spans.set(current, (spans.get(current) ?? 0) + Math.max(0, at - since));
+    current = event.to as TicketStatus;
+    since = at;
+  }
+
+  spans.set(
+    current,
+    (spans.get(current) ?? 0) + Math.max(0, Date.now() - since),
+  );
+  return spans;
+}
+
+/** Days from creation to being verified. Only closed tickets have one. */
+export function cycleTimeDays(all: TicketEvent[], ticket: Ticket) {
+  if (ticket.status !== "done") return null;
+  const closed = eventsForTicket(all, ticket.id)
+    .filter((event) => event.kind === "status" && event.to === "done")
+    .at(-1);
+  if (!closed) return null;
+  return (
+    (new Date(closed.createdAt).getTime() -
+      new Date(ticket.createdAt).getTime()) /
+    86_400_000
+  );
+}
+
+export type FlowMetrics = {
+  /** Median days from created to verified. */
+  cycleTime: number | null;
+  /** Tickets verified in the last 14 days. */
+  throughput: number;
+  /** Median days currently spent in each open column. */
+  medianInStatus: Partial<Record<TicketStatus, number>>;
+  sampleSize: number;
+};
+
+function median(values: number[]) {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
+}
+
+export function flowMetrics(
+  scoped: Ticket[],
+  all: TicketEvent[],
+  now: Date = new Date(),
+): FlowMetrics {
+  const cycles = scoped
+    .map((ticket) => cycleTimeDays(all, ticket))
+    .filter((value): value is number => value !== null);
+
+  const fortnightAgo = now.getTime() - 14 * 86_400_000;
+  const throughput = scoped.filter(
+    (ticket) =>
+      ticket.status === "done" &&
+      new Date(ticket.statusChangedAt).getTime() >= fortnightAgo,
+  ).length;
+
+  const medianInStatus: Partial<Record<TicketStatus, number>> = {};
+  for (const status of TICKET_STATUSES) {
+    if (status === "done") continue;
+    const days = scoped
+      .filter((ticket) => ticket.status === status)
+      .map((ticket) => daysInColumn(ticket, now));
+    const value = median(days);
+    if (value !== null) medianInStatus[status] = value;
+  }
+
+  return {
+    cycleTime: median(cycles),
+    throughput,
+    medianInStatus,
+    sampleSize: cycles.length,
+  };
+}
+
+/** Open tickets this one is waiting on. */
+export function blockersOf(all: Ticket[], ticket: Ticket) {
+  const byId = new Map(all.map((item) => [item.id, item]));
+  return ticket.links
+    .filter((link) => link.type === "blocked_by")
+    .map((link) => byId.get(link.ticketId))
+    .filter((item): item is Ticket => Boolean(item) && item!.status !== "done");
+}
+
+export function childrenOf(all: Ticket[], ticketId: string) {
+  return all.filter((ticket) => ticket.parentId === ticketId);
 }
 
 export function isSlaBreached(ticket: Ticket, now: Date = new Date()) {
@@ -172,6 +297,7 @@ export function countByStatus(scoped: Ticket[]) {
     todo: 0,
     in_progress: 0,
     in_review: 0,
+    resolved: 0,
     done: 0,
   };
   for (const ticket of scoped) counts[ticket.status] += 1;

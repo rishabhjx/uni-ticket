@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import { Check, X } from "lucide-react";
 
 import { PriorityBadge, StatusBadge } from "@/components/tickets/badges";
@@ -29,8 +31,13 @@ import { useViewState } from "@/lib/store/view-state";
  */
 export function BulkBar() {
   const { selection, clearSelection } = useViewState();
-  const { updateMany } = useTicketStore();
+  const { updateMany, undo } = useTicketStore();
   const celebrate = useCelebrate();
+  // Read at click time, since undo only exists after the change is applied.
+  const undoRef = React.useRef(undo);
+  React.useEffect(() => {
+    undoRef.current = undo;
+  }, [undo]);
 
   if (selection.length === 0) return null;
 
@@ -122,6 +129,8 @@ export function BulkBar() {
             celebrate(
               randomCheer(),
               count === 1 ? "One down" : `${count} tickets closed`,
+              // Closing twenty tickets with no way back is not a safe action.
+              () => undoRef.current?.(),
             );
           }}
           className="flex h-7 items-center gap-1.5 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"

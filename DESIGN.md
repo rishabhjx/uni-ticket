@@ -69,6 +69,14 @@ overlays appearing, `--duration-fast` 150ms as the default, `--duration-slow`
 Components opt into a different length; none opt into a different curve.
 `prefers-reduced-motion` disables all of it.
 
+## Ageing
+
+How long is too long depends on the column: seven days in In Review is
+alarming, seven days in Backlog is Tuesday. Thresholds sit at roughly the 80th
+percentile of how long work actually sits in each status, measured from the
+dataset, so the signal flags the tail rather than the middle. A flat threshold
+fired on more than half of everything, which teaches people to ignore it.
+
 ## Glass
 
 Only surfaces that *float over* content use it, and only to say "your work is

@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ChartLine,
   ChevronRight,
   Columns3,
   LayoutDashboard,
@@ -144,8 +145,13 @@ export function SectionSidebar() {
   return (
     <div
       className={cn(
-        "shrink-0 overflow-hidden bg-grey-50 transition-[width] duration-[--duration-slow]",
-        sidebarOpen ? "w-sidebar hairline-r" : "w-0",
+        // Below lg the sidebar floats over the content instead of pushing it,
+        // because there is not enough width to do both.
+        "shrink-0 overflow-hidden bg-grey-50 transition-[width,transform] duration-[--duration-slow]",
+        "max-lg:absolute max-lg:inset-y-0 max-lg:left-rail max-lg:z-30 max-lg:shadow-overlay",
+        sidebarOpen
+          ? "w-sidebar hairline-r max-lg:translate-x-0"
+          : "w-0 max-lg:w-sidebar max-lg:-translate-x-full",
       )}
     >
       <nav
@@ -188,6 +194,15 @@ export function SectionSidebar() {
             <li>
               <NavItem href="/boards" icon={LayoutGrid} active={pathname === "/boards"}>
                 Boards
+              </NavItem>
+            </li>
+            <li>
+              <NavItem
+                href="/insights"
+                icon={ChartLine}
+                active={pathname === "/insights"}
+              >
+                Insights
               </NavItem>
             </li>
           </ul>

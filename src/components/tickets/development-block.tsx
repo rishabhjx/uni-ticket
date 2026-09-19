@@ -1,7 +1,11 @@
-import { GitBranch, GitPullRequest, Paperclip } from "lucide-react";
+"use client";
+
+import * as React from "react";
+import { GitBranch, GitPullRequest, Paperclip, Upload, X } from "lucide-react";
 
 import { formatBytes } from "@/lib/format";
 import type { Attachment, Development } from "@/lib/mock";
+import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
 const checkTone: Record<Development["checks"], string> = {
@@ -57,26 +61,118 @@ export function DevelopmentBlock({ development }: { development: Development }) 
   );
 }
 
-export function AttachmentsBlock({ attachments }: { attachments: Attachment[] }) {
+function kindOf(name: string): Attachment["kind"] {
+  if (/\.(png|jpe?g|gif|webp|svg)$/i.test(name)) return "image";
+  if (/\.(log|txt|har|json)$/i.test(name)) return "log";
+  if (/\.(mp4|mov|webm)$/i.test(name)) return "video";
+  return "document";
+}
+
+/**
+ * A screenshot is most of a bug report's value, so QA has to be able to add
+ * one. Nothing is uploaded anywhere — the file's name and size are recorded,
+ * which is what the prototype needs to show.
+ */
+export function AttachmentsBlock({
+  ticketId,
+  attachments,
+  canEdit,
+}: {
+  ticketId: string;
+  attachments: Attachment[];
+  canEdit: boolean;
+}) {
+  const { addAttachment, removeAttachment } = useTicketStore();
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = React.useState(false);
+
+  const accept = (files: FileList | null) => {
+    if (!files) return;
+    for (const file of Array.from(files)) {
+      addAttachment(ticketId, {
+        name: file.name,
+        size: file.size,
+        kind: kindOf(file.name),
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-caption font-medium tracking-wide text-grey-500 uppercase">
-        Attachments
-      </h3>
+      <div className="flex items-center gap-2">
+        <h3 className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+          Attachments
+        </h3>
+        {canEdit ? (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="ml-auto flex h-6 items-center gap-1 rounded-md border border-grey-200 px-1.5 text-caption text-grey-600 transition-colors hover:border-grey-300 hover:text-grey-900"
+          >
+            <Upload className="size-3" strokeWidth={2} />
+            Add
+          </button>
+        ) : null}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        className="sr-only"
+        onChange={(event) => {
+          accept(event.target.files);
+          event.target.value = "";
+        }}
+      />
+
       <ul className="flex flex-col gap-1">
         {attachments.map((file) => (
           <li
             key={file.id}
-            className="flex items-center gap-2 rounded-md border border-grey-200 px-2.5 py-1.5"
+            className="group/file flex items-center gap-2 rounded-md border border-grey-200 px-2.5 py-1.5"
           >
             <Paperclip className="size-3.5 shrink-0 text-grey-400" strokeWidth={1.75} />
             <span className="truncate text-small text-grey-800">{file.name}</span>
             <span className="tnum ml-auto shrink-0 text-caption text-grey-500">
               {formatBytes(file.size)}
             </span>
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={() => removeAttachment(ticketId, file.id)}
+                aria-label={`Remove ${file.name}`}
+                className="flex size-5 shrink-0 items-center justify-center rounded-md text-grey-400 opacity-0 transition-opacity hover:bg-grey-150 hover:text-grey-700 focus-visible:opacity-100 group-hover/file:opacity-100"
+              >
+                <X className="size-3" strokeWidth={2} />
+              </button>
+            ) : null}
           </li>
         ))}
       </ul>
+
+      {canEdit ? (
+        <div
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            setDragging(false);
+            accept(event.dataTransfer.files);
+          }}
+          className={cn(
+            "rounded-md border border-dashed px-2.5 py-3 text-center text-caption transition-colors",
+            dragging
+              ? "border-accent-600 bg-accent-50 text-accent-700"
+              : "border-grey-200 text-grey-400",
+          )}
+        >
+          Drop a screenshot or log here
+        </div>
+      ) : null}
     </div>
   );
 }

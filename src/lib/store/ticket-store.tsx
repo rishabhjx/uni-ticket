@@ -11,8 +11,11 @@ import {
   type Comment,
   type Ticket,
   type TicketEvent,
+  type Attachment,
+  type LinkType,
   type TicketStatus,
   type TicketType,
+  LINK_INVERSE,
 } from "@/lib/mock";
 
 export type NewTicketInput = {
@@ -29,6 +32,8 @@ export type NewTicketInput = {
   dueAt: string | null;
   environment: Ticket["environment"];
   buildVersion: string | null;
+  parentId: string | null;
+  sprintId: string | null;
 };
 
 /**
@@ -47,21 +52,48 @@ type TicketStoreValue = {
   /** Applies the same patch to many tickets at once. */
   updateMany: (ticketIds: string[], patch: Partial<Ticket>) => void;
   createTicket: (input: NewTicketInput) => Ticket;
+  /** Sends a verified ticket back to be worked on, and says so in the history. */
+  reopenTicket: (ticketId: string) => void;
+  linkTickets: (ticketId: string, otherId: string, type: LinkType) => void;
+  unlinkTickets: (ticketId: string, otherId: string) => void;
+  addAttachment: (ticketId: string, file: Omit<Attachment, "id">) => void;
+  removeAttachment: (ticketId: string, attachmentId: string) => void;
+  /** Restores the snapshot taken before the last bulk change. */
+  undo: (() => void) | null;
   addComment: (ticketId: string, body: string) => void;
   toggleReaction: (commentId: string, emoji: string) => void;
+  editComment: (commentId: string, body: string) => void;
+  deleteComment: (commentId: string) => void;
 };
 
 const TicketStoreContext = React.createContext<TicketStoreValue | null>(null);
 
 /** Field changes worth recording in the history. */
-const trackedFields = ["status", "assigneeId", "priority", "severity"] as const;
+const trackedFields = [
+  "status",
+  "assigneeId",
+  "priority",
+  "severity",
+  "title",
+  "description",
+] as const;
 
 const eventKindForField: Record<(typeof trackedFields)[number], TicketEvent["kind"]> = {
   status: "status",
   assigneeId: "assignee",
   priority: "priority",
   severity: "severity",
+  title: "title",
+  description: "description",
 };
+
+/** Long prose in an audit entry is unreadable, so record that it changed. */
+function auditValue(field: (typeof trackedFields)[number], value: unknown) {
+  if (value === null || value === undefined) return null;
+  const text = String(value);
+  if (field === "description") return null;
+  return text.length > 80 ? `${text.slice(0, 77)}…` : text;
+}
 
 function reorderColumn(
   all: Ticket[],
@@ -125,11 +157,14 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
         .map((field) => ({
           ticketId: ticket.id,
           kind: eventKindForField[field],
-          from: (ticket[field] as string | null) ?? null,
-          to: (patch[field] as string | null) ?? null,
+          from: auditValue(field, ticket[field]),
+          to: auditValue(field, patch[field]),
         })),
     [],
   );
+
+  // One level of undo, which is what a bulk action actually needs.
+  const [undoSnapshot, setUndoSnapshot] = React.useState<Ticket[] | null>(null);
 
   const applyPatch = React.useCallback(
     (ticketIds: string[], patch: Partial<Ticket>) => {
@@ -168,8 +203,112 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
   );
 
   const updateMany = React.useCallback(
-    (ticketIds: string[], patch: Partial<Ticket>) => applyPatch(ticketIds, patch),
+    (ticketIds: string[], patch: Partial<Ticket>) => {
+      setTickets((current) => {
+        setUndoSnapshot(current);
+        return current;
+      });
+      applyPatch(ticketIds, patch);
+    },
     [applyPatch],
+  );
+
+  const undo = React.useCallback(() => {
+    if (!undoSnapshot) return;
+    setTickets(undoSnapshot);
+    setUndoSnapshot(null);
+  }, [undoSnapshot]);
+
+  const reopenTicket = React.useCallback(
+    (ticketId: string) => {
+      const at = new Date().toISOString();
+      setTickets((current) =>
+        current.map((ticket) =>
+          ticket.id === ticketId
+            ? { ...ticket, status: "in_progress", updatedAt: at, statusChangedAt: at }
+            : ticket,
+        ),
+      );
+      queueMicrotask(() =>
+        recordEvents(
+          [{ ticketId, kind: "reopened", from: "done", to: "in_progress" }],
+          at,
+        ),
+      );
+    },
+    [recordEvents],
+  );
+
+  const linkTickets = React.useCallback(
+    (ticketId: string, otherId: string, type: LinkType) => {
+      if (ticketId === otherId) return;
+      setTickets((current) =>
+        current.map((ticket) => {
+          if (ticket.id === ticketId) {
+            if (ticket.links.some((link) => link.ticketId === otherId)) return ticket;
+            return { ...ticket, links: [...ticket.links, { type, ticketId: otherId }] };
+          }
+          if (ticket.id === otherId) {
+            if (ticket.links.some((link) => link.ticketId === ticketId)) return ticket;
+            // Both sides carry the relationship, so either one shows it.
+            return {
+              ...ticket,
+              links: [...ticket.links, { type: LINK_INVERSE[type], ticketId }],
+            };
+          }
+          return ticket;
+        }),
+      );
+    },
+    [],
+  );
+
+  const unlinkTickets = React.useCallback((ticketId: string, otherId: string) => {
+    setTickets((current) =>
+      current.map((ticket) => {
+        if (ticket.id !== ticketId && ticket.id !== otherId) return ticket;
+        const target = ticket.id === ticketId ? otherId : ticketId;
+        return {
+          ...ticket,
+          links: ticket.links.filter((link) => link.ticketId !== target),
+        };
+      }),
+    );
+  }, []);
+
+  const attachmentSeq = React.useRef(0);
+
+  const addAttachment = React.useCallback(
+    (ticketId: string, file: Omit<Attachment, "id">) => {
+      attachmentSeq.current += 1;
+      const id = `a-local-${attachmentSeq.current}`;
+      setTickets((current) =>
+        current.map((ticket) =>
+          ticket.id === ticketId
+            ? { ...ticket, attachments: [...ticket.attachments, { ...file, id }] }
+            : ticket,
+        ),
+      );
+    },
+    [],
+  );
+
+  const removeAttachment = React.useCallback(
+    (ticketId: string, attachmentId: string) => {
+      setTickets((current) =>
+        current.map((ticket) =>
+          ticket.id === ticketId
+            ? {
+                ...ticket,
+                attachments: ticket.attachments.filter(
+                  (file) => file.id !== attachmentId,
+                ),
+              }
+            : ticket,
+        ),
+      );
+    },
+    [],
   );
 
   const moveTicket = React.useCallback(
@@ -290,6 +429,9 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
         createdAt: at,
         updatedAt: at,
         statusChangedAt: at,
+        parentId: input.parentId,
+        links: [],
+        sprintId: input.sprintId,
         dueAt: input.dueAt,
         order: -1,
       };
@@ -350,6 +492,20 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
     );
   }, []);
 
+  const editComment = React.useCallback((commentId: string, body: string) => {
+    const trimmed = body.trim();
+    if (!trimmed) return;
+    setComments((current) =>
+      current.map((comment) =>
+        comment.id === commentId ? { ...comment, body: trimmed } : comment,
+      ),
+    );
+  }, []);
+
+  const deleteComment = React.useCallback((commentId: string) => {
+    setComments((current) => current.filter((comment) => comment.id !== commentId));
+  }, []);
+
   const value = React.useMemo(
     () => ({
       tickets,
@@ -361,8 +517,16 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       updateTicket,
       updateMany,
       createTicket,
+      reopenTicket,
+      linkTickets,
+      unlinkTickets,
+      addAttachment,
+      removeAttachment,
+      undo: undoSnapshot ? undo : null,
       addComment,
       toggleReaction,
+      editComment,
+      deleteComment,
     }),
     [
       tickets,
@@ -374,8 +538,17 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       updateTicket,
       updateMany,
       createTicket,
+      reopenTicket,
+      linkTickets,
+      unlinkTickets,
+      addAttachment,
+      removeAttachment,
+      undoSnapshot,
+      undo,
       addComment,
       toggleReaction,
+      editComment,
+      deleteComment,
     ],
   );
 

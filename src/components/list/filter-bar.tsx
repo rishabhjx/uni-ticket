@@ -40,6 +40,7 @@ import {
   users,
   type Project,
 } from "@/lib/mock";
+import { SEARCH_PLACEHOLDER } from "@/lib/search";
 import { useViewState } from "@/lib/store/view-state";
 import { cn } from "@/lib/utils";
 
@@ -167,8 +168,8 @@ export function FilterBar({
   ];
 
   return (
-    <div className="hairline-b flex flex-wrap items-center gap-2 px-6 py-2.5">
-      <div className="relative">
+    <div className="hairline-b flex flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
+      <div className="relative min-w-0 flex-1 sm:flex-none">
         <Search
           className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-grey-400"
           strokeWidth={1.75}
@@ -179,9 +180,9 @@ export function FilterBar({
           onChange={(event) =>
             setFilters({ ...filters, search: event.target.value })
           }
-          placeholder="Search title, key or description"
+          placeholder={SEARCH_PLACEHOLDER}
           aria-label="Search tickets"
-          className="h-7 w-64 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+          className="h-7 w-full min-w-48 rounded-md sm:w-80 border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
         />
       </div>
 

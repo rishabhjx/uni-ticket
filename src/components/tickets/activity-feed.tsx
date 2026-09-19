@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { Reactions } from "@/components/tickets/reactions";
+import { CommentBody } from "@/components/tickets/comment-body";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import { formatRelative } from "@/lib/format";
 import {
@@ -49,6 +50,12 @@ function describe(event: TicketEvent) {
       return `changed priority to ${valueLabel(event, event.to)}`;
     case "severity":
       return `changed severity to ${valueLabel(event, event.to)}`;
+    case "title":
+      return `renamed it to "${event.to}"`;
+    case "description":
+      return "edited the description";
+    case "reopened":
+      return "reopened it";
     default:
       return "updated it";
   }
@@ -116,9 +123,7 @@ export function ActivityFeed({
                   {formatRelative(entry.comment.createdAt)}
                 </span>
               </div>
-              <p className="mt-0.5 text-small leading-[20px] text-grey-700">
-                {entry.comment.body}
-              </p>
+              <CommentBody comment={entry.comment} />
               <Reactions comment={entry.comment} />
             </div>
           </li>

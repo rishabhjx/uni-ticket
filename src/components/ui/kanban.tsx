@@ -240,9 +240,15 @@ export const KanbanProvider = <
 }: KanbanProviderProps<T, C>) => {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
 
+  // Without an activation constraint the mouse sensor starts a drag on
+  // mousedown and swallows the click, so a card could never be opened.
+  // A few pixels of movement separates a drag from a click; touch uses a
+  // short press so scrolling the column still works.
   const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 180, tolerance: 6 },
+    }),
     useSensor(KeyboardSensor)
   );
 

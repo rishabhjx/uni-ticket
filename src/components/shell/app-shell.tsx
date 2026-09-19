@@ -4,7 +4,9 @@ import { PanelLeftClose } from "lucide-react";
 
 import { AppRail } from "@/components/shell/app-rail";
 import { SectionSidebar } from "@/components/shell/section-sidebar";
+import { TicketPanel } from "@/components/tickets/ticket-panel";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { TicketPanelProvider } from "@/lib/store/ticket-panel";
 import { ShellProvider, useShell } from "@/hooks/use-shell";
 
 function SidebarCollapseButton() {
@@ -27,16 +29,19 @@ function SidebarCollapseButton() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ShellProvider>
+      <TicketPanelProvider>
       <TooltipProvider delayDuration={300}>
         <div className="group/shell relative flex h-full">
           <AppRail />
           <SectionSidebar />
           <SidebarCollapseButton />
-          <main className="flex min-w-0 flex-1 flex-col bg-background">
+          <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
             {children}
+            <TicketPanel />
           </main>
         </div>
       </TooltipProvider>
+      </TicketPanelProvider>
     </ShellProvider>
   );
 }

@@ -10,6 +10,7 @@ import {
   KanbanProvider,
 } from "@/components/ui/kanban";
 import { TicketCard } from "@/components/tickets/ticket-card";
+import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import {
   STATUS_LABEL,
@@ -40,6 +41,7 @@ export function BoardView({
   onOpenTicket?: (ticketId: string) => void;
 }) {
   const { tickets, applyBoardOrder } = useTicketStore();
+  const { openTicket } = useTicketPanel();
 
   /**
    * Grouped by column, then ordered within it. `order` is only meaningful
@@ -110,7 +112,7 @@ export function BoardView({
             <KanbanCards id={column.id}>
               {(card: BoardCard) => (
                 <KanbanCard key={card.id} {...card}>
-                  <TicketCard ticket={card.ticket} onOpen={onOpenTicket} />
+                  <TicketCard ticket={card.ticket} onOpen={onOpenTicket ?? openTicket} />
                 </KanbanCard>
               )}
             </KanbanCards>

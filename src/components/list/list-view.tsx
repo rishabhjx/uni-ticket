@@ -10,6 +10,7 @@ import {
   type TicketFilters,
 } from "@/components/list/filter-bar";
 import { TicketTable } from "@/components/list/ticket-table";
+import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import type { Project, Ticket } from "@/lib/mock";
 
@@ -29,6 +30,7 @@ export function ListView({
   emptyState?: React.ReactNode;
 }) {
   const { tickets: allTickets } = useTicketStore();
+  const { openTicket } = useTicketPanel();
   const [filters, setFilters] = React.useState<TicketFilters>(emptyFilters);
 
   const scoped = React.useMemo(() => {
@@ -56,7 +58,7 @@ export function ListView({
       <TicketTable
         tickets={filtered}
         showProject={showProject}
-        onOpenTicket={onOpenTicket}
+        onOpenTicket={onOpenTicket ?? openTicket}
         empty={
           scoped.length === 0 ? (
             emptyState

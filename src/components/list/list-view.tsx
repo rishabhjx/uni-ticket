@@ -11,6 +11,7 @@ import {
 } from "@/components/list/filter-bar";
 import { TicketTable } from "@/components/list/ticket-table";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
+import { RowsSkeleton } from "@/components/shared/skeletons";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import type { Project, Ticket } from "@/lib/mock";
 
@@ -20,6 +21,7 @@ export function ListView({
   showProject = false,
   onOpenTicket,
   emptyState,
+  initialFilters,
 }: {
   /** Scopes the assignee facet when the list belongs to one project. */
   project?: Project;
@@ -28,10 +30,15 @@ export function ListView({
   showProject?: boolean;
   onOpenTicket?: (ticketId: string) => void;
   emptyState?: React.ReactNode;
+  /** Home's KPI cards link straight into a pre-filtered list. */
+  initialFilters?: Partial<TicketFilters>;
 }) {
-  const { tickets: allTickets } = useTicketStore();
+  const { tickets: allTickets, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
-  const [filters, setFilters] = React.useState<TicketFilters>(emptyFilters);
+  const [filters, setFilters] = React.useState<TicketFilters>({
+    ...emptyFilters,
+    ...initialFilters,
+  });
 
   const scoped = React.useMemo(() => {
     if (provided) return provided;
@@ -45,6 +52,15 @@ export function ListView({
     () => applyFilters(scoped, filters),
     [scoped, filters],
   );
+
+  if (isLoading) {
+    return (
+      <>
+        <div className="hairline-b h-[45px] shrink-0" />
+        <RowsSkeleton rows={12} />
+      </>
+    );
+  }
 
   return (
     <>

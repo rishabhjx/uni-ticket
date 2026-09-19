@@ -19,6 +19,13 @@ import {
 type TicketStoreValue = {
   tickets: Ticket[];
   comments: Comment[];
+  /**
+   * The prototype has no backend, so nothing is genuinely pending — but a tool
+   * like this always loads its data, and the loading state is part of the
+   * design. It resolves once, shortly after mount, so prerendered HTML shows
+   * skeletons and navigation afterwards is instant.
+   */
+  isLoading: boolean;
   /** Moves a ticket into a status at a given index within that column. */
   moveTicket: (
     ticketId: string,
@@ -61,6 +68,13 @@ function reorderColumn(
 export function TicketStoreProvider({ children }: { children: React.ReactNode }) {
   const [tickets, setTickets] = React.useState<Ticket[]>(seedTickets);
   const [comments, setComments] = React.useState<Comment[]>(seedComments);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // setState lands in the timer callback, not the effect body.
+    const timer = window.setTimeout(() => setIsLoading(false), 450);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const moveTicket = React.useCallback(
     (ticketId: string, status: TicketStatus, toIndex: number) => {
@@ -158,12 +172,21 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
     () => ({
       tickets,
       comments,
+      isLoading,
       moveTicket,
       applyBoardOrder,
       updateTicket,
       addComment,
     }),
-    [tickets, comments, moveTicket, applyBoardOrder, updateTicket, addComment],
+    [
+      tickets,
+      comments,
+      isLoading,
+      moveTicket,
+      applyBoardOrder,
+      updateTicket,
+      addComment,
+    ],
   );
 
   return <TicketStoreContext value={value}>{children}</TicketStoreContext>;

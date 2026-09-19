@@ -1,11 +1,13 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { CalendarClock, Search, X } from "lucide-react";
 
 import { FacetFilter, type FacetOption } from "@/components/list/facet-filter";
 import { PriorityBadge, StatusBadge } from "@/components/tickets/badges";
 import { UserAvatar } from "@/components/tickets/user-avatar";
+import { cn } from "@/lib/utils";
 import {
+  isOverdue,
   labels,
   PRIORITY_LABEL,
   STATUS_LABEL,
@@ -13,6 +15,7 @@ import {
   TICKET_STATUSES,
   users,
   type Project,
+  type Ticket,
 } from "@/lib/mock";
 
 export type TicketFilters = {
@@ -21,6 +24,8 @@ export type TicketFilters = {
   assignees: string[];
   priorities: string[];
   labels: string[];
+  /** Derived rather than a field, so it gets its own toggle. */
+  overdueOnly: boolean;
 };
 
 export const emptyFilters: TicketFilters = {
@@ -29,6 +34,7 @@ export const emptyFilters: TicketFilters = {
   assignees: [],
   priorities: [],
   labels: [],
+  overdueOnly: false,
 };
 
 export function countActiveFilters(filters: TicketFilters) {
@@ -37,7 +43,8 @@ export function countActiveFilters(filters: TicketFilters) {
     filters.assignees.length +
     filters.priorities.length +
     filters.labels.length +
-    (filters.search.trim() ? 1 : 0)
+    (filters.search.trim() ? 1 : 0) +
+    (filters.overdueOnly ? 1 : 0)
   );
 }
 
@@ -145,6 +152,21 @@ export function FilterBar({
         searchable
       />
 
+      <button
+        type="button"
+        aria-pressed={filters.overdueOnly}
+        onClick={() => onChange({ ...filters, overdueOnly: !filters.overdueOnly })}
+        className={cn(
+          "flex h-7 items-center gap-1.5 rounded-md border px-2 text-small transition-colors",
+          filters.overdueOnly
+            ? "border-accent-200 bg-accent-50 text-accent-700"
+            : "border-grey-200 text-grey-600 hover:border-grey-300 hover:text-grey-900",
+        )}
+      >
+        <CalendarClock className="size-3.5" strokeWidth={1.75} />
+        Overdue
+      </button>
+
       {active > 0 ? (
         <button
           type="button"
@@ -166,19 +188,12 @@ export function FilterBar({
 }
 
 /** Shared by the project list, My tickets and search. */
-export function applyFilters<
-  T extends {
-    title: string;
-    key: string;
-    status: string;
-    priority: string;
-    assigneeId: string | null;
-    labelIds: string[];
-  },
->(tickets: T[], filters: TicketFilters) {
+export function applyFilters(tickets: Ticket[], filters: TicketFilters) {
   const query = filters.search.trim().toLowerCase();
+  const now = new Date();
 
   return tickets.filter((ticket) => {
+    if (filters.overdueOnly && !isOverdue(ticket, now)) return false;
     if (
       query &&
       !ticket.title.toLowerCase().includes(query) &&

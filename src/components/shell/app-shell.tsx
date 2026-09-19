@@ -3,6 +3,7 @@
 import { PanelLeftClose } from "lucide-react";
 
 import { AppRail } from "@/components/shell/app-rail";
+import { CommandPaletteProvider } from "@/components/shell/command-palette";
 import { SectionSidebar } from "@/components/shell/section-sidebar";
 import { TicketPanel } from "@/components/tickets/ticket-panel";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ShellProvider>
       <TicketPanelProvider>
+      <CommandPaletteProvider>
       <TooltipProvider delayDuration={300}>
         <div className="group/shell relative flex h-full">
           <AppRail />
@@ -41,6 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </TooltipProvider>
+      </CommandPaletteProvider>
       </TicketPanelProvider>
     </ShellProvider>
   );

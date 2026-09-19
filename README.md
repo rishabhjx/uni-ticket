@@ -20,6 +20,19 @@ Then open http://localhost:3000. Node 18.18+ required.
   `src/components/ui` so every component is editable in-repo
 - Light theme only. See [DESIGN.md](./DESIGN.md) for the token system.
 
+## Screens
+
+| Route | What it is |
+| --- | --- |
+| `/` | Personal KPIs and a summary per project you are assigned to |
+| `/my-tickets` | Everything assigned to you, across projects |
+| `/boards` | Every board, with its column distribution |
+| `/projects` | All projects with stats, lead and members |
+| `/projects/[key]/board` | Kanban with drag and drop |
+| `/projects/[key]/list` | Sortable, filterable, virtualized table |
+
+The ticket detail panel opens over any of them. ⌘K opens search from anywhere.
+
 ## Layout
 
 ```
@@ -28,7 +41,8 @@ src/
   components/shell/   app rail, section sidebar, page header
   components/ui/      shadcn/ui primitives
   lib/mock/           the dataset: projects, users, tickets, comments
-  lib/store/          client state — drag and drop, comments
+  components/shared/  empty states and skeletons
+  lib/store/          client state — drag and drop, comments, panel
 ```
 
 ## Mock data

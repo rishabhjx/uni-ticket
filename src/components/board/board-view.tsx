@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Columns3 } from "lucide-react";
 
 import {
   KanbanBoard,
@@ -9,6 +10,8 @@ import {
   KanbanHeader,
   KanbanProvider,
 } from "@/components/ui/kanban";
+import { BoardSkeleton } from "@/components/shared/skeletons";
+import { EmptyState } from "@/components/shared/empty-state";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
@@ -40,7 +43,7 @@ export function BoardView({
   project: Project;
   onOpenTicket?: (ticketId: string) => void;
 }) {
-  const { tickets, applyBoardOrder } = useTicketStore();
+  const { tickets, applyBoardOrder, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
 
   /**
@@ -86,6 +89,18 @@ export function BoardView({
     },
     [applyBoardOrder],
   );
+
+  if (isLoading) return <BoardSkeleton />;
+
+  if (data.length === 0) {
+    return (
+      <EmptyState
+        icon={Columns3}
+        title="This board is empty"
+        description={`No tickets in ${project.name} yet. Tickets added to this project show up in Backlog.`}
+      />
+    );
+  }
 
   return (
     <div className="min-h-0 flex-1 px-6 py-4">

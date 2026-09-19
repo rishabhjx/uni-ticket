@@ -12,6 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { useCommandPalette } from "@/components/shell/command-palette";
 import { projectMonogram, projects, type Project } from "@/lib/mock";
 import { useShell } from "@/hooks/use-shell";
 import { cn } from "@/lib/utils";
@@ -133,6 +134,7 @@ function ProjectItem({
 export function SectionSidebar() {
   const pathname = usePathname();
   const { sidebarOpen } = useShell();
+  const { open: openCommandPalette } = useCommandPalette();
 
   return (
     <div
@@ -153,6 +155,7 @@ export function SectionSidebar() {
         <div className="px-3 pb-3">
           <button
             type="button"
+            onClick={openCommandPalette}
             className="flex h-8 w-full items-center gap-2 rounded-md bg-grey-0 px-2.5 text-small text-grey-500 ring-1 ring-grey-200 transition-colors hover:ring-grey-300"
           >
             <Search className="size-3.5 shrink-0" strokeWidth={1.75} />

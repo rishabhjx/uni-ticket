@@ -1,13 +1,14 @@
 import { generateDataset } from "./generate";
 import { startOfWeek, TODAY } from "./dates";
 import { projects } from "./projects";
-import type { Comment, Ticket, TicketStatus } from "./types";
-import { CURRENT_USER_ID } from "./users";
+import type { Comment, Ticket, TicketEvent, TicketStatus } from "./types";
+import { CURRENT_USER_ID, reporteeIds } from "./users";
 
 const dataset = generateDataset();
 
 export const tickets: Ticket[] = dataset.tickets;
 export const comments: Comment[] = dataset.comments;
+export const events: TicketEvent[] = dataset.events;
 
 export * from "./types";
 export * from "./users";
@@ -38,6 +39,39 @@ export function commentsForTicket(all: Comment[], ticketId: string) {
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
+export function eventsForTicket(all: TicketEvent[], ticketId: string) {
+  return all
+    .filter((event) => event.ticketId === ticketId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Whole days a ticket has sat in its current column. */
+export function daysInColumn(ticket: Ticket, now: Date = new Date()) {
+  return Math.floor(
+    (now.getTime() - new Date(ticket.statusChangedAt).getTime()) / 86_400_000,
+  );
+}
+
+/** Long enough in one column that somebody should look at it. */
+export function isStale(ticket: Ticket, now: Date = new Date()) {
+  if (!isOpen(ticket) || ticket.status === "backlog") return false;
+  return daysInColumn(ticket, now) >= 7;
+}
+
+export function isSlaBreached(ticket: Ticket, now: Date = new Date()) {
+  return (
+    isOpen(ticket) && ticket.slaDueAt !== null && new Date(ticket.slaDueAt) < now
+  );
+}
+
+/** Everything assigned to the people who report to this person. */
+export function ticketsForTeam(all: Ticket[], userId: string = CURRENT_USER_ID) {
+  const team = new Set(reporteeIds(userId));
+  return all.filter(
+    (ticket) => ticket.assigneeId !== null && team.has(ticket.assigneeId),
+  );
+}
+
 export function countCommentsByTicket(all: Comment[]) {
   const counts = new Map<string, number>();
   for (const comment of all) {
@@ -51,6 +85,8 @@ export type PersonalKpis = {
   inProgress: number;
   overdue: number;
   assignedThisWeek: number;
+  stale: number;
+  total: number;
 };
 
 /** The four numbers on the Home screen. */
@@ -73,6 +109,29 @@ export function personalKpis(
     assignedThisWeek: mine.filter(
       (ticket) => new Date(ticket.updatedAt) >= weekStart,
     ).length,
+    stale: mine.filter((ticket) => isStale(ticket, now)).length,
+    total: mine.length,
+  };
+}
+
+/** The same four numbers, for whatever set of tickets you hand it. */
+export function kpisFor(scoped: Ticket[]): PersonalKpis {
+  const now = new Date();
+  const weekStart = startOfWeek(TODAY);
+
+  return {
+    pending: scoped.filter(
+      (ticket) => ticket.status === "backlog" || ticket.status === "todo",
+    ).length,
+    inProgress: scoped.filter(
+      (ticket) => ticket.status === "in_progress" || ticket.status === "in_review",
+    ).length,
+    overdue: scoped.filter((ticket) => isOverdue(ticket, now)).length,
+    assignedThisWeek: scoped.filter(
+      (ticket) => new Date(ticket.updatedAt) >= weekStart,
+    ).length,
+    stale: scoped.filter((ticket) => isStale(ticket, now)).length,
+    total: scoped.length,
   };
 }
 

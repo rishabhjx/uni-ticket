@@ -12,9 +12,32 @@ export const TICKET_PRIORITIES = ["urgent", "high", "medium", "low"] as const;
 
 export type TicketPriority = (typeof TICKET_PRIORITIES)[number];
 
-export const TICKET_TYPES = ["bug", "feature", "task", "chore"] as const;
+export const TICKET_TYPES = [
+  "bug",
+  "feature",
+  "task",
+  "chore",
+  "request",
+  "incident",
+] as const;
 
 export type TicketType = (typeof TICKET_TYPES)[number];
+
+/**
+ * Severity is how bad it is; priority is when we will deal with it. A crash
+ * affecting three people is high severity and low priority, and QA cannot file
+ * accurately when the two are collapsed into one field.
+ */
+export const TICKET_SEVERITIES = ["s1", "s2", "s3", "s4"] as const;
+
+export type TicketSeverity = (typeof TICKET_SEVERITIES)[number];
+
+export const ENVIRONMENTS = ["production", "staging", "local", "unknown"] as const;
+
+export type Environment = (typeof ENVIRONMENTS)[number];
+
+/** Software projects track work; service desks track inbound requests. */
+export type ProjectKind = "software" | "service";
 
 export type User = {
   id: string;
@@ -24,6 +47,8 @@ export type User = {
   role: string;
   /** 0–3 — a neutral grey step for the avatar. Colour is never used here. */
   tone: 0 | 1 | 2 | 3;
+  /** Who this person reports to, which is what drives the team view. */
+  managerId: string | null;
 };
 
 export type Project = {
@@ -37,6 +62,7 @@ export type Project = {
   leadId: string;
   memberIds: string[];
   startedOn: string;
+  kind: ProjectKind;
 };
 
 export type Label = {
@@ -58,11 +84,62 @@ export type Ticket = {
   reporterId: string;
   labelIds: string[];
   estimate: number | null;
+  /** Bugs and incidents only. */
+  severity: TicketSeverity | null;
+  environment: Environment | null;
+  buildVersion: string | null;
+  /** Service desk only — the person who asked, who is not on the team. */
+  requesterId: string | null;
+  slaDueAt: string | null;
+  development: Development | null;
+  attachments: Attachment[];
+  /** When it last entered its current column, which is what ageing measures. */
+  statusChangedAt: string;
   createdAt: string;
   updatedAt: string;
   dueAt: string | null;
   /** Position within its status column on the board. */
   order: number;
+};
+
+export type Development = {
+  branch: string;
+  prNumber: number;
+  prState: "open" | "merged" | "draft";
+  checks: "passing" | "failing" | "running";
+};
+
+export type Attachment = {
+  id: string;
+  name: string;
+  /** Bytes. */
+  size: number;
+  kind: "image" | "log" | "video" | "document";
+};
+
+/**
+ * The audit trail. QA and IT need to know who changed what and when, which
+ * comments alone never tell you.
+ */
+export const EVENT_KINDS = [
+  "created",
+  "status",
+  "assignee",
+  "priority",
+  "severity",
+  "comment",
+] as const;
+
+export type EventKind = (typeof EVENT_KINDS)[number];
+
+export type TicketEvent = {
+  id: string;
+  ticketId: string;
+  actorId: string;
+  kind: EventKind;
+  from: string | null;
+  to: string | null;
+  createdAt: string;
 };
 
 export type Comment = {
@@ -93,4 +170,32 @@ export const TYPE_LABEL: Record<TicketType, string> = {
   feature: "Feature",
   task: "Task",
   chore: "Chore",
+  request: "Request",
+  incident: "Incident",
 };
+
+export const SEVERITY_LABEL: Record<TicketSeverity, string> = {
+  s1: "S1 · Critical",
+  s2: "S2 · Major",
+  s3: "S3 · Minor",
+  s4: "S4 · Trivial",
+};
+
+export const SEVERITY_SHORT: Record<TicketSeverity, string> = {
+  s1: "S1",
+  s2: "S2",
+  s3: "S3",
+  s4: "S4",
+};
+
+export const ENVIRONMENT_LABEL: Record<Environment, string> = {
+  production: "Production",
+  staging: "Staging",
+  local: "Local",
+  unknown: "Unknown",
+};
+
+/** Bugs and incidents carry severity, environment and a build. */
+export function isDefect(type: TicketType) {
+  return type === "bug" || type === "incident";
+}

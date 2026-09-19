@@ -11,6 +11,7 @@ export const projects: Project[] = [
     description: "Core services, the public API gateway and platform reliability.",
     leadId: "u-2",
     memberIds: ["u-1", "u-2", "u-3", "u-5", "u-8"],
+    kind: "software" as const,
     startedOn: isoDaysAgo(420),
   },
   {
@@ -21,6 +22,7 @@ export const projects: Project[] = [
     description: "Subscriptions, invoicing, tax and revenue reporting.",
     leadId: "u-5",
     memberIds: ["u-1", "u-3", "u-5", "u-7", "u-8"],
+    kind: "software" as const,
     startedOn: isoDaysAgo(300),
   },
   {
@@ -31,6 +33,7 @@ export const projects: Project[] = [
     description: "The iOS and Android clients, plus the shared mobile core.",
     leadId: "u-6",
     memberIds: ["u-1", "u-3", "u-4", "u-6", "u-8"],
+    kind: "software" as const,
     startedOn: isoDaysAgo(260),
   },
   {
@@ -41,6 +44,7 @@ export const projects: Project[] = [
     description: "Ingest pipelines, the warehouse and internal analytics.",
     leadId: "u-7",
     memberIds: ["u-1", "u-2", "u-5", "u-7"],
+    kind: "software" as const,
     startedOn: isoDaysAgo(190),
   },
   {
@@ -51,9 +55,26 @@ export const projects: Project[] = [
     description: "The design system, brand and the marketing site.",
     leadId: "u-4",
     memberIds: ["u-1", "u-4", "u-6", "u-8"],
+    kind: "software" as const,
     startedOn: isoDaysAgo(150),
   },
+  {
+    id: "p-hlp",
+    key: "HLP",
+    slug: "hlp",
+    name: "Helpdesk",
+    description: "Internal IT service desk: access, hardware and incidents.",
+    leadId: "u-3",
+    memberIds: ["u-1", "u-3", "u-8"],
+    kind: "service" as const,
+    startedOn: isoDaysAgo(240),
+  },
 ];
+
+/** Service desks behave differently enough to be worth asking about. */
+export function isServiceDesk(project: Project) {
+  return project.kind === "service";
+}
 
 export const projectsById = new Map(projects.map((project) => [project.id, project]));
 export const projectsBySlug = new Map(projects.map((project) => [project.slug, project]));

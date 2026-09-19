@@ -3,12 +3,15 @@ import type { TicketType } from "./types";
 /**
  * Ticket titles, grouped per project and per type so generated tickets read
  * like real work on that project. Counts here decide how many tickets each
- * project gets: 104 + 32 + 36 + 28 + 28 = 228. Apollo Platform is deliberately
- * the big one, so the list view is exercised past 100 rows.
+ * project gets: 104 + 32 + 36 + 28 + 28 + 32 = 260. Apollo Platform is
+ * deliberately the big one, so the list view is exercised past 100 rows, and
+ * Helpdesk carries the service desk types.
  */
 export type TitlePool = Record<TicketType, string[]>;
 
-export const titlesByProject: Record<string, TitlePool> = {
+export type TitlePoolPartial = Partial<TitlePool>;
+
+export const titlesByProject: Record<string, TitlePoolPartial> = {
   "p-apo": {
     bug: [
       "Gateway returns 502 when the upstream keepalive expires",
@@ -285,6 +288,48 @@ export const titlesByProject: Record<string, TitlePool> = {
       "Accessibility annotations in the Figma handoff",
       "Design review checklist for engineering",
       "Update the brand photography guidelines",
+    ],
+  },
+  "p-hlp": {
+    request: [
+      "VPN access for a new joiner in the Berlin office",
+      "Laptop replacement — battery no longer holds charge",
+      "Add the design team to the Figma organisation licence",
+      "Shared mailbox for the billing alias",
+      "Second monitor for a new desk setup",
+      "Access to the analytics warehouse for a new analyst",
+      "Restore a file deleted from the shared drive",
+      "Admin rights to install a local database client",
+      "Phone number ported for the on-call rotation",
+      "Guest wifi credentials for an all-day workshop",
+      "Increase the mailbox quota for the support alias",
+      "Set up a loaner laptop for a contractor",
+      "Add a meeting room display to the booking system",
+      "Move a licence from a leaver to a new starter",
+    ],
+    incident: [
+      "Single sign-on is rejecting valid credentials",
+      "Office wifi dropping on the third floor",
+      "Email delivery delayed by roughly forty minutes",
+      "Shared drive is read-only for the whole marketing team",
+      "VPN concentrator at capacity during the morning peak",
+      "Printer queue stuck across the London office",
+      "Password reset emails are not arriving",
+      "Video calls failing for everyone on the guest network",
+    ],
+    task: [
+      "Quarterly access review for the finance systems",
+      "Patch the remaining laptops to the current OS",
+      "Rotate the shared service account credentials",
+      "Decommission the old file server",
+      "Audit dormant accounts and disable them",
+      "Update the asset register after the hardware refresh",
+    ],
+    chore: [
+      "Document the new starter IT checklist",
+      "Publish the incident escalation path",
+      "Refresh the device encryption policy page",
+      "Tidy the shared drive folder structure",
     ],
   },
 };

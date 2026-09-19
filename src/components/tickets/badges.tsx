@@ -4,6 +4,8 @@ import {
   ChevronUp,
   Minus,
   ChevronDown,
+  LifeBuoy,
+  Siren,
   Sparkles,
   SquareCheck,
   Wrench,
@@ -53,6 +55,8 @@ const typeIcon: Record<TicketType, LucideIcon> = {
   feature: Sparkles,
   task: SquareCheck,
   chore: Wrench,
+  request: LifeBuoy,
+  incident: Siren,
 };
 
 const badgeBase =

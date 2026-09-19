@@ -4,18 +4,61 @@ import { labels } from "./labels";
 import { projects } from "./projects";
 import { createRandom, type Random } from "./random";
 import { titlesByProject } from "./titles";
+import { TICKET_STATUSES } from "./types";
 import {
+  ENVIRONMENTS,
+  isDefect,
+  TICKET_SEVERITIES,
   TICKET_TYPES,
   type Comment,
   type Project,
   type Ticket,
   type TicketPriority,
+  type TicketEvent,
+  type TicketSeverity,
   type TicketStatus,
   type TicketType,
 } from "./types";
-import { CURRENT_USER_ID } from "./users";
+import { CURRENT_USER_ID, users } from "./users";
 
 const SEED = 20260919;
+
+/** Severity skews low: most defects are not critical. */
+const severityWeights: Record<TicketSeverity, number> = {
+  s1: 6,
+  s2: 22,
+  s3: 46,
+  s4: 26,
+};
+
+const branchPrefix: Record<string, string> = {
+  bug: "fix",
+  incident: "hotfix",
+  feature: "feat",
+  task: "chore",
+  chore: "chore",
+  request: "ops",
+};
+
+const attachmentPool: { name: string; kind: "image" | "log" | "video" | "document" }[] = [
+  { name: "screenshot-failure.png", kind: "image" },
+  { name: "console-output.log", kind: "log" },
+  { name: "network-trace.har", kind: "log" },
+  { name: "screen-recording.mp4", kind: "video" },
+  { name: "repro-steps.pdf", kind: "document" },
+  { name: "before-after.png", kind: "image" },
+  { name: "stacktrace.txt", kind: "log" },
+];
+
+function slugifyTitle(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .split("-")
+    .slice(0, 5)
+    .join("-");
+}
 
 const statusWeights: Record<TicketStatus, number> = {
   backlog: 28,
@@ -24,6 +67,9 @@ const statusWeights: Record<TicketStatus, number> = {
   in_review: 12,
   done: 26,
 };
+
+/** Types that only appear on a service desk, and vice versa. */
+const typeWeightsByKind: Record<string, number> = {};
 
 const priorityWeights: Record<TicketPriority, number> = {
   urgent: 7,
@@ -67,16 +113,21 @@ const estimates = [1, 1, 2, 2, 3, 3, 3, 5, 5, 8];
  */
 function interleaveTitles(project: Project) {
   const pool = titlesByProject[project.id];
-  const cursors: Record<TicketType, number> = { bug: 0, feature: 0, task: 0, chore: 0 };
-  const total = TICKET_TYPES.reduce((sum, type) => sum + pool[type].length, 0);
+  const cursors = new Map<TicketType, number>();
+  const total = TICKET_TYPES.reduce(
+    (sum, type) => sum + (pool[type]?.length ?? 0),
+    0,
+  );
   const ordered: { title: string; type: TicketType }[] = [];
 
   while (ordered.length < total) {
     for (const type of TICKET_TYPES) {
-      const cursor = cursors[type];
-      if (cursor < pool[type].length) {
-        ordered.push({ title: pool[type][cursor], type });
-        cursors[type] = cursor + 1;
+      const titles = pool[type];
+      if (!titles) continue;
+      const cursor = cursors.get(type) ?? 0;
+      if (cursor < titles.length) {
+        ordered.push({ title: titles[cursor], type });
+        cursors.set(type, cursor + 1);
       }
     }
   }
@@ -151,6 +202,52 @@ function buildTickets(random: Random) {
         ),
       );
 
+      const defect = isDefect(type);
+      const severity = defect ? random.weighted(severityWeights) : null;
+
+      // A service desk request comes from someone outside the team and runs
+      // against a response target rather than a sprint.
+      const isService = project.kind === "service";
+      const requesterId = isService
+        ? random.pick(
+            users
+              .filter((user) => !project.memberIds.includes(user.id))
+              .map((user) => user.id),
+          )
+        : null;
+      const slaHours = severity === "s1" ? 4 : severity === "s2" ? 24 : 72;
+      const slaDueAt =
+        isService && status !== "done"
+          ? new Date(createdAt.getTime() + slaHours * 36e5).toISOString()
+          : null;
+
+      // Work that reached review or done usually has a branch behind it.
+      const development =
+        !isService && (status === "in_review" || status === "done")
+          ? {
+              branch: `${branchPrefix[type] ?? "chore"}/${project.key.toLowerCase()}-${
+                101 + index
+              }-${slugifyTitle(title)}`,
+              prNumber: 1200 + random.int(1, 899),
+              prState:
+                status === "done"
+                  ? ("merged" as const)
+                  : random.chance(0.15)
+                    ? ("draft" as const)
+                    : ("open" as const),
+              checks:
+                status === "done"
+                  ? ("passing" as const)
+                  : random.weighted({ passing: 70, failing: 18, running: 12 }),
+            }
+          : null;
+
+      const attachmentCount = defect
+        ? random.int(0, 3)
+        : random.chance(0.15)
+          ? 1
+          : 0;
+
       tickets.push({
         id: `t-${project.slug}-${index + 1}`,
         key: `${project.key}-${101 + index}`,
@@ -164,6 +261,23 @@ function buildTickets(random: Random) {
         reporterId,
         labelIds: random.sample(labelPool, random.int(0, 3)),
         estimate: random.chance(0.78) ? random.pick(estimates) : null,
+        severity,
+        environment: defect ? random.pick(ENVIRONMENTS) : null,
+        buildVersion: defect
+          ? `${random.int(3, 4)}.${random.int(0, 9)}.${random.int(0, 4)}`
+          : null,
+        requesterId,
+        slaDueAt,
+        development,
+        attachments: random
+          .sample(attachmentPool, attachmentCount)
+          .map((file, fileIndex) => ({
+            id: `a-${project.slug}-${index + 1}-${fileIndex}`,
+            name: file.name,
+            kind: file.kind,
+            size: random.int(12, 4800) * 1024,
+          })),
+        statusChangedAt: updatedAt.toISOString(),
         createdAt: createdAt.toISOString(),
         updatedAt: updatedAt.toISOString(),
         dueAt,
@@ -224,9 +338,95 @@ function buildComments(random: Random, tickets: Ticket[]) {
   return comments;
 }
 
+/**
+ * The audit trail behind each ticket: created, then the transitions that got
+ * it to where it is. Reconstructed backwards from the current state so the
+ * history always agrees with the ticket.
+ */
+function buildEvents(random: Random, tickets: Ticket[]) {
+  const events: TicketEvent[] = [];
+  let sequence = 0;
+
+  const add = (
+    ticket: Ticket,
+    kind: TicketEvent["kind"],
+    from: string | null,
+    to: string | null,
+    at: number,
+  ) => {
+    sequence += 1;
+    events.push({
+      id: `e-${sequence}`,
+      ticketId: ticket.id,
+      actorId: ticket.assigneeId ?? ticket.reporterId,
+      kind,
+      from,
+      to,
+      createdAt: new Date(at).toISOString(),
+    });
+  };
+
+  for (const ticket of tickets) {
+    const createdMs = new Date(ticket.createdAt).getTime();
+    const updatedMs = new Date(ticket.updatedAt).getTime();
+    const span = Math.max(updatedMs - createdMs, 36e5);
+
+    sequence += 1;
+    events.push({
+      id: `e-${sequence}`,
+      ticketId: ticket.id,
+      actorId: ticket.reporterId,
+      kind: "created",
+      from: null,
+      to: null,
+      createdAt: ticket.createdAt,
+    });
+
+    // The columns it passed through on the way to its current one.
+    const target = TICKET_STATUSES.indexOf(ticket.status);
+    const path = TICKET_STATUSES.slice(0, target + 1);
+    path.forEach((status, index) => {
+      if (index === 0) return;
+      add(
+        ticket,
+        "status",
+        path[index - 1],
+        status,
+        createdMs + (span * index) / (path.length + 1),
+      );
+    });
+
+    if (ticket.assigneeId) {
+      add(ticket, "assignee", null, ticket.assigneeId, createdMs + span * 0.2);
+    }
+    if (random.chance(0.28)) {
+      add(ticket, "priority", "medium", ticket.priority, createdMs + span * 0.5);
+    }
+    if (ticket.severity && random.chance(0.2)) {
+      add(ticket, "severity", "s3", ticket.severity, createdMs + span * 0.6);
+    }
+  }
+
+  return events.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
 export function generateDataset() {
   const random = createRandom(SEED);
   const tickets = buildTickets(random);
   const comments = buildComments(random, tickets);
-  return { tickets, comments };
+  const events = buildEvents(random, tickets);
+
+  // Ageing is measured from the last transition, so take it from the history.
+  const lastStatusChange = new Map<string, string>();
+  for (const event of events) {
+    if (event.kind === "status" || event.kind === "created") {
+      lastStatusChange.set(event.ticketId, event.createdAt);
+    }
+  }
+  for (const ticket of tickets) {
+    ticket.statusChangedAt =
+      lastStatusChange.get(ticket.id) ?? ticket.createdAt;
+  }
+
+  return { tickets, comments, events };
 }

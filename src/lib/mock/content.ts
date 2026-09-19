@@ -23,6 +23,20 @@ export const summariesByType: Record<TicketType, string[]> = {
     "Needs a maintenance window if we take the straightforward path; otherwise it is a two-phase rollout.",
     "Straightforward once the dependency lands. Worth doing while the surrounding code is fresh.",
   ],
+  request: [
+    "Raised through the service desk. Standard access request, needs manager approval first.",
+    "Second time this has come up this month — worth turning into a self-serve option.",
+    "Blocking the requester's first day, so it wants handling before the end of the week.",
+    "Routine hardware request. Stock is available; it just needs assigning and shipping.",
+    "Asked for by the whole team rather than one person, so it may need a licence review.",
+  ],
+  incident: [
+    "Reported by several people within a few minutes of each other. Suspected shared cause.",
+    "Paging fired overnight. Service recovered on its own, but the cause is still unknown.",
+    "Partial outage — one region only. Failover worked, so customer impact was limited.",
+    "Degraded rather than down: requests succeed but latency is roughly four times normal.",
+    "Escalated from the service desk after the third report in an hour.",
+  ],
   chore: [
     "Housekeeping. Low risk, but it keeps biting new joiners during onboarding.",
     "Picked up from the last tidy-up sprint. No urgency, but it is cheap to do now.",
@@ -54,6 +68,20 @@ export const criteriaByType: Record<TicketType, string[]> = {
     "Benchmarks recorded before and after",
     "All call sites migrated; the old path is removed",
     "Runbook updated for the on-call rotation",
+  ],
+  request: [
+    "Requester's manager has approved",
+    "Access granted follows least privilege",
+    "The requester has been told it is done",
+    "Licence count updated in the asset register",
+    "Closed within the agreed response time",
+  ],
+  incident: [
+    "Service is confirmed healthy from outside the network",
+    "Timeline reconstructed on the incident record",
+    "Everyone who reported it has been updated",
+    "Follow-up actions raised as their own tickets",
+    "Post-incident review scheduled",
   ],
   chore: [
     "The change is reviewed by an owner of this area",

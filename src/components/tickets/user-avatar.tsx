@@ -1,13 +1,23 @@
-import { getUser, type User } from "@/lib/mock";
+import { getUser } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
-/** Avatars stay greyscale — four neutral steps keep eight people distinguishable. */
-const toneClass: Record<User["tone"], string> = {
-  0: "bg-grey-200 text-grey-700",
-  1: "bg-grey-300 text-grey-800",
-  2: "bg-grey-150 text-grey-600",
-  3: "bg-grey-800 text-grey-0",
+/**
+ * Avatars carry a hue per person now. Eight people in one list are hard to
+ * tell apart in greyscale, and an avatar is identity rather than status — so
+ * this does not compete with the status and priority colours.
+ */
+const paletteById: Record<string, string> = {
+  "u-1": "bg-[#e8e2ff] text-[#4c3a9e]",
+  "u-2": "bg-[#ffe3e8] text-[#9c2f45]",
+  "u-3": "bg-[#dff0e4] text-[#26663f]",
+  "u-4": "bg-[#ffe8d4] text-[#95531b]",
+  "u-5": "bg-[#d9ecf7] text-[#1f5876]",
+  "u-6": "bg-[#fdeacb] text-[#87621a]",
+  "u-7": "bg-[#e6e6f5] text-[#454585]",
+  "u-8": "bg-[#f7dff0] text-[#8a2f72]",
 };
+
+const fallback = "bg-grey-200 text-grey-700";
 
 const sizeClass = {
   sm: "size-5 text-[9px]",
@@ -46,8 +56,8 @@ export function UserAvatar({
     <span
       title={user.name}
       className={cn(
-        "inline-flex items-center justify-center rounded-full font-medium",
-        toneClass[user.tone],
+        "inline-flex items-center justify-center rounded-full font-semibold",
+        paletteById[user.id] ?? fallback,
         sizeClass[size],
         className,
       )}

@@ -62,7 +62,7 @@ export function TicketPanel() {
       aria-hidden={!open}
       inert={!open}
       className={cn(
-        "absolute inset-y-0 right-0 z-20 flex w-panel max-w-full flex-col border-l border-grey-200 bg-grey-0 transition-transform duration-[--duration-slow]",
+        "glass absolute inset-y-0 right-0 z-20 flex w-panel max-w-full flex-col border-l border-grey-200 transition-transform duration-[--duration-slow]",
         open ? "translate-x-0 shadow-overlay" : "translate-x-full",
       )}
     >

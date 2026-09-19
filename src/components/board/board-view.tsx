@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Columns3 } from "lucide-react";
 
+import { randomCheer, useCelebrate } from "@/components/shared/celebrate";
 import { FilterBar } from "@/components/list/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { BoardSkeleton } from "@/components/shared/skeletons";
@@ -83,6 +83,7 @@ export function BoardView({ project }: { project: Project }) {
   const { tickets, applyBoardOrder, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
   const { filters, groupBy } = useViewState();
+  const celebrate = useCelebrate();
 
   const scoped = React.useMemo(
     () => tickets.filter((ticket) => ticket.projectId === project.id),
@@ -138,11 +139,21 @@ export function BoardView({ project }: { project: Project }) {
   const handleDataChange = React.useCallback(
     (next: BoardCard[]) => {
       if (groupBy !== "status") return;
+
+      // Only cheer for work that actually crossed into Done.
+      const justFinished = next.filter(
+        (card) => card.column === "done" && card.ticket.status !== "done",
+      );
+
       applyBoardOrder(
         next.map(({ id, column }) => ({ id, column: column as TicketStatus })),
       );
+
+      if (justFinished.length > 0) {
+        celebrate(randomCheer(), "Nice — that's done");
+      }
     },
-    [applyBoardOrder, groupBy],
+    [applyBoardOrder, groupBy, celebrate],
   );
 
   if (isLoading) return <BoardSkeleton />;
@@ -159,7 +170,7 @@ export function BoardView({ project }: { project: Project }) {
 
       {data.length === 0 ? (
         <EmptyState
-          icon={Columns3}
+          emoji="🧊"
           title={
             scoped.length === 0
               ? "This board is empty"
@@ -194,7 +205,11 @@ export function BoardView({ project }: { project: Project }) {
                 <KanbanCards id={column.id}>
                   {(card: BoardCard) => (
                     <KanbanCard key={card.id} {...card}>
-                      <TicketCard ticket={card.ticket} onOpen={openTicket} />
+                      <TicketCard
+                        ticket={card.ticket}
+                        onOpen={openTicket}
+                        showStatus={groupBy !== "status"}
+                      />
                     </KanbanCard>
                   )}
                 </KanbanCards>

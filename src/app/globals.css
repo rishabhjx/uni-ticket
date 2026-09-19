@@ -11,37 +11,37 @@
 :root {
   /* --- Neutral ramp (the entire UI is built from this) -------------------- */
   --grey-0: #ffffff;
-  --grey-25: #fcfcfc;
-  --grey-50: #f7f7f8;
-  --grey-100: #f1f1f2;
-  --grey-150: #e9e9eb;
-  --grey-200: #e2e2e5;
-  --grey-300: #cfcfd3;
-  --grey-400: #a1a1a8;
-  --grey-500: #7b7b82;
-  --grey-600: #5c5c63;
-  --grey-700: #43434a;
-  --grey-800: #2a2a30;
-  --grey-900: #17171b;
+  --grey-25: #fdfcfb;
+  --grey-50: #faf8f6;
+  --grey-100: #f4f1ee;
+  --grey-150: #edeae5;
+  --grey-200: #e5e0da;
+  --grey-300: #d4cec6;
+  --grey-400: #a8a29a;
+  --grey-500: #827c74;
+  --grey-600: #635d56;
+  --grey-700: #4a453f;
+  --grey-800: #2e2a26;
+  --grey-900: #1c1917;
 
   /* --- The one accent ----------------------------------------------------- */
-  --accent-50: #eff4ff;
-  --accent-100: #dde8fd;
-  --accent-200: #c3d7fb;
-  --accent-500: #2f6ae8;
-  --accent-600: #1f5fdb;   /* primary accent */
-  --accent-700: #1a4eb4;   /* pressed */
+  --accent-50: #f6f3ff;
+  --accent-100: #ece5ff;
+  --accent-200: #d9ccff;
+  --accent-500: #8b6df2;
+  --accent-600: #7355e8;   /* primary accent */
+  --accent-700: #5b41c4;   /* pressed */
 
   /* --- Status (badges only) ----------------------------------------------- */
-  --status-backlog-bg: #f1f1f2;
-  --status-backlog-fg: #5c5c63;
-  --status-todo-bg: #eceff4;
-  --status-todo-fg: #455168;
-  --status-progress-bg: #e7f0fd;
-  --status-progress-fg: #1a4eb4;
-  --status-review-bg: #f0ecfb;
-  --status-review-fg: #5741ae;
-  --status-done-bg: #e7f3ec;
+  --status-backlog-bg: #f1eeea;
+  --status-backlog-fg: #635d56;
+  --status-todo-bg: #edeef3;
+  --status-todo-fg: #4a5169;
+  --status-progress-bg: #eeeaff;
+  --status-progress-fg: #5b41c4;
+  --status-review-bg: #fdefe3;
+  --status-review-fg: #96541a;
+  --status-done-bg: #e6f3ea;
   --status-done-fg: #256c43;
 
   /* --- Priority (badges only) --------------------------------------------- */
@@ -51,8 +51,8 @@
   --priority-high-fg: #9a5312;
   --priority-medium-bg: #fbf5e4;
   --priority-medium-fg: #7a5b12;
-  --priority-low-bg: #eef1f5;
-  --priority-low-fg: #55606f;
+  --priority-low-bg: #f1eeea;
+  --priority-low-fg: #635d56;
 
   /* --- Feedback ----------------------------------------------------------- */
   --danger: #b4342a;
@@ -81,7 +81,7 @@
   --ring: var(--accent-600);
 
   /* --- One radius --------------------------------------------------------- */
-  --radius: 8px;
+  --radius: 10px;
 
   /* --- Layout metrics ----------------------------------------------------- */
   --rail-w: 56px;
@@ -98,6 +98,15 @@
   --duration-fast: 150ms;
   --duration-slow: 220ms;
 
+  /* --- Glass -------------------------------------------------------------
+     Only surfaces that float over content use it, and only to say "your work
+     is still underneath". The opacity floor keeps text legible; saturate
+     stops the blur washing the colour out of what shows through.            */
+  --glass-bg: rgb(255 255 255 / 0.86);
+  --glass-bg-strong: rgb(255 255 255 / 0.92);
+  --glass-border: rgb(255 255 255 / 0.6);
+  --glass-blur: saturate(180%) blur(20px);
+
   /* --- The only elevation in the system (overlays / dragged cards) -------- */
   --shadow-overlay: 0 10px 28px -8px rgb(23 23 27 / 0.14),
     0 2px 6px -2px rgb(23 23 27 / 0.07);
@@ -106,7 +115,7 @@
 
 @theme inline {
   /* Type — one family, everywhere */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 
   /* Type scale — 5 steps, nothing else */
   --text-caption: 12px;
@@ -279,6 +288,30 @@
 }
 
 @layer utilities {
+  /*
+     Floating layers only. Never on cards or rows: a person reads those all
+     day and translucency costs them contrast.
+  */
+  .glass {
+    background-color: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+
+  .glass-strong {
+    background-color: var(--glass-bg-strong);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+
+  /* Where the effect is unsupported, fall back to an opaque surface. */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass,
+    .glass-strong {
+      background-color: var(--grey-0);
+    }
+  }
+
   /* The hairline is the system's only divider treatment */
   .hairline-b {
     box-shadow: inset 0 -1px 0 0 var(--border);

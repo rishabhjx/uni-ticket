@@ -4,6 +4,7 @@ import { labels } from "./labels";
 import { projects } from "./projects";
 import { createRandom, type Random } from "./random";
 import { titlesByProject } from "./titles";
+import { REACTIONS } from "./types";
 import { TICKET_STATUSES } from "./types";
 import {
   ENVIRONMENTS,
@@ -321,12 +322,20 @@ function buildComments(random: Random, tickets: Ticket[]) {
       sequence += 1;
       // Spread the thread evenly between creation and last activity.
       const at = createdMs + (span * (index + 1)) / (count + 1);
+      // A light sprinkle, so reactions read as a feature rather than noise.
+      const reactions: Record<string, string[]> = {};
+      if (random.chance(0.3)) {
+        const emoji = random.pick(REACTIONS);
+        reactions[emoji] = random.sample(project.memberIds, random.int(1, 3));
+      }
+
       comments.push({
         id: `c-${sequence}`,
         ticketId: ticket.id,
         authorId: random.pick(project.memberIds),
         body,
         createdAt: new Date(at).toISOString(),
+        reactions,
       });
     });
   }

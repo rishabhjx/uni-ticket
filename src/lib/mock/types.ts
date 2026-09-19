@@ -63,6 +63,8 @@ export type Project = {
   memberIds: string[];
   startedOn: string;
   kind: ProjectKind;
+  /** One emoji per project — faster to recognise than a two-letter tile. */
+  emoji: string;
 };
 
 export type Label = {
@@ -148,7 +150,12 @@ export type Comment = {
   authorId: string;
   body: string;
   createdAt: string;
+  /** emoji -> the people who reacted with it. */
+  reactions: Record<string, string[]>;
 };
+
+/** The reactions offered on a comment. Deliberately a short list. */
+export const REACTIONS = ["👍", "🎉", "👀", "🔥", "🤔"] as const;
 
 export const STATUS_LABEL: Record<TicketStatus, string> = {
   backlog: "Backlog",

@@ -311,7 +311,7 @@ export function TicketTable({
                   key={header.id}
                   header={header}
                   className={cn(
-                    "h-9 border-b border-grey-200 bg-grey-0 px-3 text-caption font-medium tracking-wide text-grey-500 uppercase",
+                    "glass-strong h-9 border-b border-grey-200 px-3 text-caption font-medium tracking-wide text-grey-500 uppercase",
                     widthFor[header.column.id],
                   )}
                 />

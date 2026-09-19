@@ -82,7 +82,7 @@ export function Notifications() {
         <div className="max-h-80 overflow-y-auto">
           {items.length === 0 ? (
             <p className="px-3 py-6 text-center text-small text-grey-500">
-              Nothing new. Replies on your tickets show up here.
+              🌤️ All quiet. Replies on your tickets show up here.
             </p>
           ) : (
             items.map(({ comment, ticket }) => {

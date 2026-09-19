@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { History } from "lucide-react";
 
+import { Reactions } from "@/components/tickets/reactions";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import { formatRelative } from "@/lib/format";
 import {
@@ -88,7 +88,7 @@ export function ActivityFeed({
   if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center gap-1 py-8 text-center">
-        <History className="size-5 text-grey-300" strokeWidth={1.5} />
+        <span aria-hidden className="text-xl">💬</span>
         <p className="text-small font-medium text-grey-900">Nothing yet</p>
         <p className="text-small text-grey-500">
           Comments and changes to this ticket will appear here.
@@ -101,7 +101,7 @@ export function ActivityFeed({
     <ul className="flex flex-col gap-4">
       {entries.map((entry) =>
         entry.kind === "comment" ? (
-          <li key={entry.comment.id} className="flex gap-2.5">
+          <li key={entry.comment.id} className="group/comment flex gap-2.5">
             <UserAvatar
               userId={entry.comment.authorId}
               size="md"
@@ -119,6 +119,7 @@ export function ActivityFeed({
               <p className="mt-0.5 text-small leading-[20px] text-grey-700">
                 {entry.comment.body}
               </p>
+              <Reactions comment={entry.comment} />
             </div>
           </li>
         ) : (

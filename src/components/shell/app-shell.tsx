@@ -2,6 +2,7 @@
 
 import { PanelLeftClose } from "lucide-react";
 
+import { CelebrateProvider } from "@/components/shared/celebrate";
 import { AppRail } from "@/components/shell/app-rail";
 import { CommandPaletteProvider } from "@/components/shell/command-palette";
 import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
@@ -37,6 +38,7 @@ function SidebarCollapseButton() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ShellProvider>
+      <CelebrateProvider>
       <ViewStateProvider>
       <TicketPanelProvider>
       <CommandPaletteProvider>
@@ -55,6 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </CommandPaletteProvider>
       </TicketPanelProvider>
       </ViewStateProvider>
+      </CelebrateProvider>
     </ShellProvider>
   );
 }

@@ -19,6 +19,7 @@ import {
   type TicketPriority,
   type TicketStatus,
 } from "@/lib/mock";
+import { randomCheer, useCelebrate } from "@/components/shared/celebrate";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { useViewState } from "@/lib/store/view-state";
 
@@ -29,6 +30,7 @@ import { useViewState } from "@/lib/store/view-state";
 export function BulkBar() {
   const { selection, clearSelection } = useViewState();
   const { updateMany } = useTicketStore();
+  const celebrate = useCelebrate();
 
   if (selection.length === 0) return null;
 
@@ -42,7 +44,7 @@ export function BulkBar() {
 
   return (
     <div className="absolute inset-x-0 bottom-4 z-30 flex justify-center px-6">
-      <div className="flex items-center gap-2 rounded-md border border-grey-200 bg-grey-0 px-3 py-2 shadow-overlay">
+      <div className="glass-strong flex items-center gap-2 rounded-md border border-grey-200 px-3 py-2 shadow-overlay">
         <span className="tnum text-small font-medium text-grey-900">
           {selection.length} selected
         </span>
@@ -114,7 +116,14 @@ export function BulkBar() {
 
         <button
           type="button"
-          onClick={() => apply({ status: "done" })}
+          onClick={() => {
+            const count = selection.length;
+            apply({ status: "done" });
+            celebrate(
+              randomCheer(),
+              count === 1 ? "One down" : `${count} tickets closed`,
+            );
+          }}
           className="flex h-7 items-center gap-1.5 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"
         >
           <Check className="size-3.5" strokeWidth={2.25} />

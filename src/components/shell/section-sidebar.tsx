@@ -8,7 +8,6 @@ import {
   Columns3,
   LayoutDashboard,
   LayoutGrid,
-  LifeBuoy,
   Rows3,
   Search,
   Star,
@@ -17,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { useCommandPalette } from "@/components/shell/command-palette";
-import { projectMonogram, projects, type Project } from "@/lib/mock";
+import { projects, type Project } from "@/lib/mock";
 import { useViewState } from "@/lib/store/view-state";
 import { useShell } from "@/hooks/use-shell";
 import { cn } from "@/lib/utils";
@@ -95,16 +94,9 @@ function ProjectItem({
             active ? "font-medium text-grey-900" : itemIdle,
           )}
         >
-          {project.kind === "service" ? (
-            <LifeBuoy
-              className="size-4 shrink-0 text-grey-500"
-              strokeWidth={1.75}
-            />
-          ) : (
-            <span className="flex size-4 shrink-0 items-center justify-center rounded-md bg-grey-200 text-[9px] font-semibold text-grey-600">
-              {projectMonogram(project)}
+            <span aria-hidden className="w-4 shrink-0 text-center text-[13px] leading-4">
+              {project.emoji}
             </span>
-          )}
           <span className="truncate">{project.name}</span>
         </Link>
       </div>

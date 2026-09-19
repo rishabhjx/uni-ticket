@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutGrid } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { CardsSkeleton } from "@/components/shared/skeletons";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   countByStatus,
-  projectMonogram,
   projects,
   STATUS_LABEL,
   TICKET_STATUSES,
@@ -24,7 +22,7 @@ export function BoardsView() {
   if (projects.length === 0) {
     return (
       <EmptyState
-        icon={LayoutGrid}
+        emoji="🗃️"
         title="No boards yet"
         description="Every project gets a board. Create a project and its board appears here."
         action={{ label: "Go to projects", href: "/projects" }}
@@ -47,8 +45,8 @@ export function BoardsView() {
               className="flex flex-col gap-4 rounded-md border border-grey-200 p-4 transition-colors hover:border-grey-300"
             >
               <div className="flex items-center gap-2.5">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-grey-200 text-caption font-semibold text-grey-600">
-                  {projectMonogram(project)}
+                <span aria-hidden className="shrink-0 text-lg leading-6">
+                  {project.emoji}
                 </span>
                 <span className="truncate text-heading font-semibold text-grey-900">
                   {project.name}

@@ -162,7 +162,7 @@ export const KanbanCard = <T extends KanbanItemProps = KanbanItemProps>({
         <t.In>
           <Card
             className={cn(
-              "cursor-grabbing gap-0 rounded-md border-grey-300 bg-grey-0 p-0 shadow-drag",
+              "cursor-grabbing gap-0 rotate-[1.5deg] scale-[1.02] rounded-md border-grey-300 bg-grey-0 p-0 shadow-drag",
               className
             )}
           >

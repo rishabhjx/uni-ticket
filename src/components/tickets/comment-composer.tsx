@@ -26,7 +26,7 @@ export function CommentComposer({ ticketId }: { ticketId: string }) {
   };
 
   return (
-    <div className="hairline-t bg-grey-0 px-5 py-3">
+    <div className="glass-strong hairline-t px-5 py-3">
       <div className="flex gap-2.5">
         <UserAvatar userId={CURRENT_USER_ID} size="md" className="mt-0.5" />
         <div className="min-w-0 flex-1">

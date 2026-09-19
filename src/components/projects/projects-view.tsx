@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Columns3, FolderOpen, Rows3 } from "lucide-react";
+import { Columns3, Rows3 } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { CardsSkeleton } from "@/components/shared/skeletons";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   getUser,
-  projectMonogram,
   projects,
   projectStats,
   type Project,
@@ -39,8 +38,8 @@ function ProjectCard({
   return (
     <div className="flex flex-col gap-4 rounded-md border border-grey-200 p-4 transition-colors hover:border-grey-300">
       <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md bg-grey-200 text-caption font-semibold text-grey-600">
-          {projectMonogram(project)}
+        <span aria-hidden className="mt-0.5 shrink-0 text-lg leading-6">
+          {project.emoji}
         </span>
         <div className="min-w-0 flex-1">
           <Link
@@ -106,7 +105,7 @@ export function ProjectsView() {
   if (projects.length === 0) {
     return (
       <EmptyState
-        icon={FolderOpen}
+        emoji="📁"
         title="No projects yet"
         description="Projects group tickets, boards and the people working on them. Create one to start organising work."
       />

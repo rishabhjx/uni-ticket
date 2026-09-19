@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Inbox } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { CardsSkeleton, KpiSkeleton } from "@/components/shared/skeletons";
@@ -10,7 +9,6 @@ import {
   kpisFor,
   myProjects,
   personalKpis,
-  projectMonogram,
   reporteesOf,
   ticketsForTeam,
   type ProjectStats,
@@ -91,7 +89,7 @@ function ProjectSummary({
       className="flex flex-col gap-3 rounded-md border border-grey-200 p-4 transition-colors hover:border-grey-300"
     >
       <div className="flex items-center gap-2">
-        <span className="flex size-5 items-center justify-center rounded-md bg-grey-200 text-[10px] font-semibold text-grey-600">
+        <span aria-hidden className="text-base leading-5">
           {monogram}
         </span>
         <span className="truncate text-heading font-medium text-grey-900">
@@ -239,7 +237,7 @@ export function OverviewView() {
 
         {projects.length === 0 ? (
           <EmptyState
-            icon={Inbox}
+            emoji="🗂️"
             title="No projects assigned"
             description="Once tickets are assigned to you, the projects they belong to show up here."
             action={{ label: "Browse projects", href: "/projects" }}
@@ -252,7 +250,7 @@ export function OverviewView() {
                 key={project.id}
                 name={project.name}
                 slug={project.slug}
-                monogram={projectMonogram(project)}
+                monogram={project.emoji}
                 stats={stats}
               />
             ))}

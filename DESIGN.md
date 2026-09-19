@@ -69,6 +69,28 @@ overlays appearing, `--duration-fast` 150ms as the default, `--duration-slow`
 Components opt into a different length; none opt into a different curve.
 `prefers-reduced-motion` disables all of it.
 
+## Glass
+
+Only surfaces that *float over* content use it, and only to say "your work is
+still underneath": the ticket panel, the command palette, the bulk action bar,
+the page and table headers that content scrolls under, and the menus.
+
+Never on cards, rows or KPI tiles. People read those all day, and translucency
+costs them contrast for nothing.
+
+`--glass-bg` holds an opacity floor of 0.86 so text stays legible, and
+`saturate(180%)` stops the blur washing the colour out of what shows through.
+A `@supports` fallback makes it opaque where `backdrop-filter` is unavailable.
+Measured against the 104-row virtualized table in a production build: 32fps
+with the blurred sticky header and 32fps without, so it costs nothing here.
+
+## Emoji
+
+Used in four places and no more: project identity (faster to recognise than a
+two-letter tile), empty states, comment reactions, and the moment work is
+finished. Never on status, priority, severity or in table cells — the data has
+to stay scannable.
+
 ## Colour, revisited
 
 The original rule reserved colour for status and priority badges. Two

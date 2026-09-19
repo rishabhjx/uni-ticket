@@ -26,9 +26,12 @@ import { cn } from "@/lib/utils";
 export function TicketCard({
   ticket,
   onOpen,
+  /** False when the column already is the status, which most boards are. */
+  showStatus = true,
 }: {
   ticket: Ticket;
   onOpen?: (ticketId: string) => void;
+  showStatus?: boolean;
 }) {
   const overdue = isOverdue(ticket);
   const breached = isSlaBreached(ticket);
@@ -45,7 +48,15 @@ export function TicketCard({
         {ticket.severity ? (
           <SeverityBadge severity={ticket.severity} short />
         ) : null}
-        <span className="ml-auto">
+        <span
+          className={cn(
+            "ml-auto",
+            // Repeating the column name on every card is noise; the control
+            // is still there on hover for changing it.
+            !showStatus &&
+              "opacity-0 transition-opacity group-hover/card:opacity-100 focus-within:opacity-100",
+          )}
+        >
           <QuickStatus ticket={ticket} />
         </span>
       </div>

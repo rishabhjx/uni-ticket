@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { SearchX } from "lucide-react";
 
 import { BulkBar } from "@/components/list/bulk-bar";
 import { ColumnChooser } from "@/components/list/column-chooser";
@@ -150,7 +149,7 @@ export function ListView({
             emptyState
           ) : (
             <span className="flex flex-col items-center gap-1 py-12 text-center">
-              <SearchX className="size-5 text-grey-300" strokeWidth={1.5} />
+              <span aria-hidden className="text-2xl">🔍</span>
               <span className="text-heading font-medium text-grey-900">
                 No tickets match these filters
               </span>

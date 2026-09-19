@@ -39,6 +39,7 @@ import {
   type TicketSeverity,
   type TicketStatus,
 } from "@/lib/mock";
+import { randomCheer, useCelebrate } from "@/components/shared/celebrate";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +68,7 @@ const triggerClass =
 
 export function TicketFields({ ticket }: { ticket: Ticket }) {
   const { updateTicket } = useTicketStore();
+  const celebrate = useCelebrate();
   const project = getProject(ticket.projectId);
   const reporter = getUser(ticket.reporterId);
   const overdue = isOverdue(ticket);
@@ -76,9 +78,12 @@ export function TicketFields({ ticket }: { ticket: Ticket }) {
       <Field label="Status">
         <Select
           value={ticket.status}
-          onValueChange={(status) =>
-            updateTicket(ticket.id, { status: status as TicketStatus })
-          }
+          onValueChange={(status) => {
+            updateTicket(ticket.id, { status: status as TicketStatus });
+            if (status === "done" && ticket.status !== "done") {
+              celebrate(randomCheer(), "Nice — that's done");
+            }
+          }}
         >
           <SelectTrigger className={triggerClass} aria-label="Status">
             <SelectValue />

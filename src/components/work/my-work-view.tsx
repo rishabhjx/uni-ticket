@@ -95,14 +95,14 @@ export function MyWorkView() {
         emptyState={
           scope === "team" ? (
             <EmptyState
-              icon={Users}
+              emoji="🧑‍🤝‍🧑"
               title="Your team has nothing assigned"
               description="Work assigned to the people reporting to you shows up here, so you can see load at a glance."
               action={{ label: "Go to projects", href: "/projects" }}
             />
           ) : (
             <EmptyState
-              icon={CircleCheck}
+              emoji="🎯"
               title="Nothing assigned to you"
               description="Tickets assigned to you across every project land here. Pick one up from a board to get started."
               action={{ label: "Go to projects", href: "/projects" }}

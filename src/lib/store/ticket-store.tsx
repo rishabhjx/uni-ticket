@@ -48,6 +48,7 @@ type TicketStoreValue = {
   updateMany: (ticketIds: string[], patch: Partial<Ticket>) => void;
   createTicket: (input: NewTicketInput) => Ticket;
   addComment: (ticketId: string, body: string) => void;
+  toggleReaction: (commentId: string, emoji: string) => void;
 };
 
 const TicketStoreContext = React.createContext<TicketStoreValue | null>(null);
@@ -318,6 +319,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
           authorId: CURRENT_USER_ID,
           body: trimmed,
           createdAt: at,
+          reactions: {},
         },
       ]);
       setTickets((current) =>
@@ -328,6 +330,25 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
     },
     [],
   );
+
+  const toggleReaction = React.useCallback((commentId: string, emoji: string) => {
+    setComments((current) =>
+      current.map((comment) => {
+        if (comment.id !== commentId) return comment;
+        const reacted = comment.reactions[emoji] ?? [];
+        const mine = reacted.includes(CURRENT_USER_ID);
+        const next = mine
+          ? reacted.filter((id) => id !== CURRENT_USER_ID)
+          : [...reacted, CURRENT_USER_ID];
+
+        const reactions = { ...comment.reactions };
+        if (next.length === 0) delete reactions[emoji];
+        else reactions[emoji] = next;
+
+        return { ...comment, reactions };
+      }),
+    );
+  }, []);
 
   const value = React.useMemo(
     () => ({
@@ -341,6 +362,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       updateMany,
       createTicket,
       addComment,
+      toggleReaction,
     }),
     [
       tickets,
@@ -353,6 +375,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       updateMany,
       createTicket,
       addComment,
+      toggleReaction,
     ],
   );
 

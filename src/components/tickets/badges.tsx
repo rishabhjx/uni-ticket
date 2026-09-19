@@ -116,7 +116,9 @@ export function LabelChip({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center rounded-md bg-grey-100 px-1.5 py-0.5 text-caption text-grey-600",
+        // inline-block rather than inline-flex so a truncated chip actually
+        // gets an ellipsis: text-overflow has no effect on a flex container.
+        "inline-block shrink-0 rounded-md bg-grey-100 px-1.5 py-0.5 align-middle text-caption leading-4 text-grey-600",
         className,
       )}
     >

@@ -142,7 +142,11 @@ function buildTickets(random: Random) {
       // Same-day tickets can otherwise land their update before their creation.
       const updatedAt = new Date(
         Math.max(
-          daysFromToday(-updatedDaysAgo, random.int(9, 18) * 60).getTime(),
+          daysFromToday(
+            -updatedDaysAgo,
+            // Same-day updates land early so they read as the past.
+            (updatedDaysAgo === 0 ? random.int(6, 9) : random.int(9, 18)) * 60,
+          ).getTime(),
           createdAt.getTime() + 36e5,
         ),
       );

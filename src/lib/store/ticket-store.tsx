@@ -25,6 +25,11 @@ type TicketStoreValue = {
     status: TicketStatus,
     toIndex: number,
   ) => void;
+  /**
+   * Commits a whole board arrangement: entries arrive in board order, and each
+   * ticket takes the status and position the drag left it in.
+   */
+  applyBoardOrder: (entries: { id: string; column: TicketStatus }[]) => void;
   updateTicket: (ticketId: string, patch: Partial<Ticket>) => void;
   addComment: (ticketId: string, body: string) => void;
 };
@@ -79,6 +84,40 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
     [],
   );
 
+  const applyBoardOrder = React.useCallback(
+    (entries: { id: string; column: TicketStatus }[]) => {
+      // Computed outside the updater so a double-invoked render can't produce
+      // two different timestamps.
+      const movedAt = new Date().toISOString();
+
+      const placement = new Map<string, { status: TicketStatus; order: number }>();
+      const nextOrder = new Map<TicketStatus, number>();
+      for (const entry of entries) {
+        const order = nextOrder.get(entry.column) ?? 0;
+        placement.set(entry.id, { status: entry.column, order });
+        nextOrder.set(entry.column, order + 1);
+      }
+
+      setTickets((current) =>
+        current.map((ticket) => {
+          const next = placement.get(ticket.id);
+          if (!next) return ticket;
+          if (ticket.status === next.status && ticket.order === next.order) {
+            return ticket;
+          }
+          return {
+            ...ticket,
+            status: next.status,
+            order: next.order,
+            updatedAt:
+              ticket.status === next.status ? ticket.updatedAt : movedAt,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
   const updateTicket = React.useCallback(
     (ticketId: string, patch: Partial<Ticket>) => {
       setTickets((current) =>
@@ -116,8 +155,15 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const value = React.useMemo(
-    () => ({ tickets, comments, moveTicket, updateTicket, addComment }),
-    [tickets, comments, moveTicket, updateTicket, addComment],
+    () => ({
+      tickets,
+      comments,
+      moveTicket,
+      applyBoardOrder,
+      updateTicket,
+      addComment,
+    }),
+    [tickets, comments, moveTicket, applyBoardOrder, updateTicket, addComment],
   );
 
   return <TicketStoreContext value={value}>{children}</TicketStoreContext>;

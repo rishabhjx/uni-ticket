@@ -35,7 +35,11 @@ jobs:
           GITHUB_PAGES_BASE_PATH: /${{ github.event.repository.name }}
         run: npm run build
 
+      # enablement turns the Pages site on the first time this runs, so the
+      # repository needs no manual setup.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

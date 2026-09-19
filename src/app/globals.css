@@ -1,0 +1,269 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ============================================================================
+   UNI · Ticketing — design tokens
+   Light theme only. One font, one spacing scale, one radius.
+   Neutral greys everywhere; colour is reserved for status + priority badges
+   and a single accent used sparingly.
+   ========================================================================= */
+
+:root {
+  /* --- Neutral ramp (the entire UI is built from this) -------------------- */
+  --grey-0: #ffffff;
+  --grey-25: #fcfcfc;
+  --grey-50: #f7f7f8;
+  --grey-100: #f1f1f2;
+  --grey-150: #e9e9eb;
+  --grey-200: #e2e2e5;
+  --grey-300: #cfcfd3;
+  --grey-400: #a1a1a8;
+  --grey-500: #7b7b82;
+  --grey-600: #5c5c63;
+  --grey-700: #43434a;
+  --grey-800: #2a2a30;
+  --grey-900: #17171b;
+
+  /* --- The one accent ----------------------------------------------------- */
+  --accent-50: #eff4ff;
+  --accent-100: #dde8fd;
+  --accent-200: #c3d7fb;
+  --accent-500: #2f6ae8;
+  --accent-600: #1f5fdb;   /* primary accent */
+  --accent-700: #1a4eb4;   /* pressed */
+
+  /* --- Status (badges only) ----------------------------------------------- */
+  --status-backlog-bg: #f1f1f2;
+  --status-backlog-fg: #5c5c63;
+  --status-todo-bg: #eceff4;
+  --status-todo-fg: #455168;
+  --status-progress-bg: #e7f0fd;
+  --status-progress-fg: #1a4eb4;
+  --status-review-bg: #f0ecfb;
+  --status-review-fg: #5741ae;
+  --status-done-bg: #e7f3ec;
+  --status-done-fg: #256c43;
+
+  /* --- Priority (badges only) --------------------------------------------- */
+  --priority-urgent-bg: #fdecea;
+  --priority-urgent-fg: #a8322a;
+  --priority-high-bg: #fdf0e6;
+  --priority-high-fg: #9a5312;
+  --priority-medium-bg: #fbf5e4;
+  --priority-medium-fg: #7a5b12;
+  --priority-low-bg: #eef1f5;
+  --priority-low-fg: #55606f;
+
+  /* --- Feedback ----------------------------------------------------------- */
+  --danger: #b4342a;
+  --danger-bg: #fdecea;
+  --success: #256c43;
+
+  /* --- shadcn semantic tokens (mapped onto the ramp above) ---------------- */
+  --background: var(--grey-0);
+  --foreground: var(--grey-900);
+  --card: var(--grey-0);
+  --card-foreground: var(--grey-900);
+  --popover: var(--grey-0);
+  --popover-foreground: var(--grey-900);
+  --primary: var(--grey-900);
+  --primary-foreground: var(--grey-0);
+  --secondary: var(--grey-100);
+  --secondary-foreground: var(--grey-800);
+  --muted: var(--grey-50);
+  --muted-foreground: var(--grey-500);
+  --accent: var(--grey-100);
+  --accent-foreground: var(--grey-900);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--grey-0);
+  --border: var(--grey-200);
+  --input: var(--grey-200);
+  --ring: var(--accent-600);
+
+  /* --- One radius --------------------------------------------------------- */
+  --radius: 8px;
+
+  /* --- Layout metrics ----------------------------------------------------- */
+  --rail-w: 56px;
+  --sidebar-w: 248px;
+  --topbar-h: 52px;
+  --row-h: 44px;
+  --panel-w: 460px;
+
+  /* --- The only elevation in the system (overlays / dragged cards) -------- */
+  --shadow-overlay: 0 10px 28px -8px rgb(23 23 27 / 0.14),
+    0 2px 6px -2px rgb(23 23 27 / 0.07);
+  --shadow-drag: 0 12px 24px -8px rgb(23 23 27 / 0.18);
+}
+
+@theme inline {
+  /* Type — one family, everywhere */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Type scale — 5 steps, nothing else */
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--letter-spacing: 0.02em;
+  --text-small: 13px;
+  --text-small--line-height: 18px;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-heading: 15px;
+  --text-heading--line-height: 20px;
+  --text-heading--letter-spacing: -0.006em;
+  --text-title: 20px;
+  --text-title--line-height: 28px;
+  --text-title--letter-spacing: -0.014em;
+  --text-metric: 28px;
+  --text-metric--line-height: 34px;
+  --text-metric--letter-spacing: -0.02em;
+
+  /* Spacing — 4px base, Tailwind's default scale, used 1/2/3/4/5/6/8/10/12/16 */
+  --spacing: 4px;
+
+  /* Radius — a single value, collapsed across every shadcn size alias */
+  --radius-xs: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+
+  /* Shadows — no decorative elevation exists */
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-overlay: var(--shadow-overlay);
+  --shadow-drag: var(--shadow-drag);
+
+  /* Colours exposed to utilities */
+  --color-grey-0: var(--grey-0);
+  --color-grey-25: var(--grey-25);
+  --color-grey-50: var(--grey-50);
+  --color-grey-100: var(--grey-100);
+  --color-grey-150: var(--grey-150);
+  --color-grey-200: var(--grey-200);
+  --color-grey-300: var(--grey-300);
+  --color-grey-400: var(--grey-400);
+  --color-grey-500: var(--grey-500);
+  --color-grey-600: var(--grey-600);
+  --color-grey-700: var(--grey-700);
+  --color-grey-800: var(--grey-800);
+  --color-grey-900: var(--grey-900);
+
+  --color-accent-50: var(--accent-50);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Layout metrics as utilities */
+  --spacing-rail: var(--rail-w);
+  --spacing-sidebar: var(--sidebar-w);
+  --spacing-topbar: var(--topbar-h);
+  --spacing-row: var(--row-h);
+  --spacing-panel: var(--panel-w);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-feature-settings: "cv05" 1, "cv11" 1;
+  }
+
+  /* One focus treatment across the whole product */
+  :focus-visible {
+    outline: 2px solid var(--accent-600);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* Numbers line up in every table, KPI and ticket key */
+  .tnum,
+  th,
+  td {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background-color: var(--accent-100);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* The hairline is the system's only divider treatment */
+  .hairline-b {
+    box-shadow: inset 0 -1px 0 0 var(--border);
+  }
+  .hairline-r {
+    box-shadow: inset -1px 0 0 0 var(--border);
+  }
+}
+
+/* Restrained, uniform scrollbars — this tool is scrolled all day */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--grey-300) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--grey-300);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--grey-400);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}

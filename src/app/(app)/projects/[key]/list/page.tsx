@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/shell/page-header";
 import { Placeholder } from "@/components/shell/placeholder";
-import { getProjectBySlug } from "@/lib/mock";
+import { getProjectBySlug, projects } from "@/lib/mock";
+
+/** Every project route is known up front, so the export covers all of them. */
+export function generateStaticParams() {
+  return projects.map((project) => ({ key: project.slug }));
+}
 
 export default async function ProjectListPage({
   params,

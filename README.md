@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UNI Tickets — UI prototype
 
-## Getting Started
+A ticketing app (Jira/Monday style) built as a front-end prototype: no backend,
+no database, no auth. Every screen reads from `src/lib/mock`, and interactions
+such as moving a card or posting a comment mutate local state.
 
-First, run the development server:
+## Run it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000. Node 18.18+ required.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js (App Router) · TypeScript · Tailwind v4
+- shadcn/ui as the only base component system, vendored into
+  `src/components/ui` so every component is editable in-repo
+- Light theme only. See [DESIGN.md](./DESIGN.md) for the token system.
 
-## Learn More
+## Layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/(app)/          routes, all wrapped in the navigation shell
+  components/shell/   app rail, section sidebar, page header
+  components/ui/      shadcn/ui primitives
+  lib/mock/           the dataset: projects, users, tickets, comments
+  lib/store/          client state — drag and drop, comments
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Mock data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Generated from one seeded PRNG, so it is identical on every render: 5 projects,
+8 users, 168 tickets and 232 comments. Dates are offsets from the build date
+rather than fixed timestamps, so tickets stay genuinely overdue and recently
+updated however long after the build you open it.
 
-## Deploy on Vercel
+## Deploying
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`npm run build` produces a normal Next.js build. Setting `GITHUB_PAGES=true`
+switches it to a static export in `out/`, which is what the Pages workflow in
+`.github/workflows/` publishes.

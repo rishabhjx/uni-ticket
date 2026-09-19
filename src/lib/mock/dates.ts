@@ -3,10 +3,15 @@
  * prototype stays fresh whenever it runs: things are overdue, due this week,
  * and updated recently regardless of the date.
  *
- * The anchor is midnight local time, resolved once per module load. Routes
- * under /(app) are rendered per request so the server and the browser agree.
+ * The anchor is midnight on the build date, which next.config.ts resolves once
+ * and inlines into both bundles, so prerendered HTML and hydration agree.
  */
 function startOfToday() {
+  const stamped = process.env.NEXT_PUBLIC_BUILD_DATE;
+  if (stamped) {
+    const [year, month, day] = stamped.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }

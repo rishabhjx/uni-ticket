@@ -12,7 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { navProjects, type NavProject } from "@/components/shell/nav-data";
+import { projectMonogram, projects, type Project } from "@/lib/mock";
 import { useShell } from "@/hooks/use-shell";
 import { cn } from "@/lib/utils";
 
@@ -51,10 +51,10 @@ function ProjectItem({
   project,
   pathname,
 }: {
-  project: NavProject;
+  project: Project;
   pathname: string;
 }) {
-  const base = `/projects/${project.key}`;
+  const base = `/projects/${project.slug}`;
   const active = pathname.startsWith(base);
 
   // Navigating into a project expands it; adjusting during render rather than
@@ -90,7 +90,7 @@ function ProjectItem({
           )}
         >
           <span className="flex size-4 shrink-0 items-center justify-center rounded-md bg-grey-200 text-[9px] font-semibold text-grey-600">
-            {project.monogram}
+            {projectMonogram(project)}
           </span>
           <span className="truncate">{project.name}</span>
         </Link>
@@ -188,8 +188,8 @@ export function SectionSidebar() {
           </div>
 
           <ul className="flex flex-col gap-px">
-            {navProjects.map((project) => (
-              <ProjectItem key={project.key} project={project} pathname={pathname} />
+            {projects.map((project) => (
+              <ProjectItem key={project.id} project={project} pathname={pathname} />
             ))}
           </ul>
         </div>

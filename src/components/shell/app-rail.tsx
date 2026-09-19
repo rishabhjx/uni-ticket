@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { currentUser } from "@/components/shell/nav-data";
+import { getUser, CURRENT_USER_ID } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 type WorkspaceApp = {
@@ -85,6 +85,8 @@ function RailItem({ app }: { app: WorkspaceApp }) {
 }
 
 export function AppRail() {
+  const currentUser = getUser(CURRENT_USER_ID);
+
   return (
     <nav
       aria-label="Workspace apps"
@@ -129,14 +131,14 @@ export function AppRail() {
           <TooltipTrigger asChild>
             <button
               type="button"
-              aria-label={currentUser.name}
+              aria-label={currentUser?.name ?? "Account"}
               className="flex size-8 items-center justify-center rounded-full bg-grey-300 text-caption font-medium text-grey-800"
             >
-              {currentUser.initials}
+              {currentUser?.initials}
             </button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            {currentUser.name}
+            {currentUser?.name}
           </TooltipContent>
         </Tooltip>
       </div>

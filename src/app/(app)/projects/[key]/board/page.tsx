@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/shell/page-header";
 import { Placeholder } from "@/components/shell/placeholder";
-import { navProjects } from "@/components/shell/nav-data";
+import { getProjectBySlug } from "@/lib/mock";
 
 export default async function ProjectBoardPage({
   params,
@@ -10,7 +10,7 @@ export default async function ProjectBoardPage({
   params: Promise<{ key: string }>;
 }) {
   const { key } = await params;
-  const project = navProjects.find((item) => item.key === key);
+  const project = getProjectBySlug(key);
   if (!project) notFound();
 
   return (

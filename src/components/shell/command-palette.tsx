@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Columns3, Rows3 } from "lucide-react";
+import { Columns3, Plus, Rows3, UserRound, Users } from "lucide-react";
 
 import { PriorityBadge, StatusBadge, TypeIcon } from "@/components/tickets/badges";
 import {
@@ -16,6 +16,7 @@ import {
 import { projectMonogram, projects } from "@/lib/mock";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
+import { useShell } from "@/hooks/use-shell";
 
 type CommandPaletteValue = {
   open: () => void;
@@ -40,6 +41,7 @@ export function CommandPaletteProvider({
   const [query, setQuery] = React.useState("");
   const router = useRouter();
   const { tickets } = useTicketStore();
+  const { openCreate } = useShell();
   const { openTicket } = useTicketPanel();
 
   React.useEffect(() => {
@@ -117,6 +119,33 @@ export function CommandPaletteProvider({
               ))}
             </CommandGroup>
           ) : null}
+
+          <CommandGroup heading="Actions">
+            <CommandItem
+              value="new ticket create"
+              onSelect={() => run(openCreate)}
+              className="gap-2"
+            >
+              <Plus className="size-3.5 text-grey-400" strokeWidth={2} />
+              New ticket
+            </CommandItem>
+            <CommandItem
+              value="my work assigned to me"
+              onSelect={() => run(() => router.push("/my-work"))}
+              className="gap-2"
+            >
+              <UserRound className="size-3.5 text-grey-400" strokeWidth={1.75} />
+              My work
+            </CommandItem>
+            <CommandItem
+              value="my team reportees"
+              onSelect={() => run(() => router.push("/my-work?scope=team"))}
+              className="gap-2"
+            >
+              <Users className="size-3.5 text-grey-400" strokeWidth={1.75} />
+              My team&apos;s work
+            </CommandItem>
+          </CommandGroup>
 
           <CommandGroup heading="Go to">
             {projects.map((project) => (

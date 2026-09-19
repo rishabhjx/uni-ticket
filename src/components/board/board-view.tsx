@@ -3,6 +3,10 @@
 import * as React from "react";
 import { Columns3 } from "lucide-react";
 
+import { FilterBar } from "@/components/list/filter-bar";
+import { EmptyState } from "@/components/shared/empty-state";
+import { BoardSkeleton } from "@/components/shared/skeletons";
+import { TicketCard } from "@/components/tickets/ticket-card";
 import {
   KanbanBoard,
   KanbanCard,
@@ -10,136 +14,201 @@ import {
   KanbanHeader,
   KanbanProvider,
 } from "@/components/ui/kanban";
-import { BoardSkeleton } from "@/components/shared/skeletons";
-import { EmptyState } from "@/components/shared/empty-state";
-import { TicketCard } from "@/components/tickets/ticket-card";
-import { useTicketPanel } from "@/lib/store/ticket-panel";
-import { useTicketStore } from "@/lib/store/ticket-store";
 import {
+  getUser,
+  PRIORITY_LABEL,
+  SEVERITY_SHORT,
   STATUS_LABEL,
+  TICKET_PRIORITIES,
+  TICKET_SEVERITIES,
   TICKET_STATUSES,
+  TICKET_TYPES,
+  TYPE_LABEL,
   type Project,
   type Ticket,
   type TicketStatus,
 } from "@/lib/mock";
+import { useTicketPanel } from "@/lib/store/ticket-panel";
+import { useTicketStore } from "@/lib/store/ticket-store";
+import {
+  applyFilters,
+  groupKeyOf,
+  useViewState,
+  type GroupBy,
+} from "@/lib/store/view-state";
+import { GroupBySelect } from "@/components/board/group-by-select";
 
-/** The shape Kibo's kanban works in: one flat list keyed by column. */
 type BoardCard = {
   id: string;
   name: string;
-  column: TicketStatus;
+  column: string;
   ticket: Ticket;
 };
 
-const columns = TICKET_STATUSES.map((status) => ({
-  id: status,
-  name: STATUS_LABEL[status],
-}));
+/** Columns depend on what the board is grouped by. */
+function columnsFor(groupBy: GroupBy, project: Project) {
+  switch (groupBy) {
+    case "assignee":
+      return [
+        { id: "unassigned", name: "Unassigned" },
+        ...project.memberIds.map((id) => ({
+          id,
+          name: getUser(id)?.name ?? id,
+        })),
+      ];
+    case "priority":
+      return TICKET_PRIORITIES.map((priority) => ({
+        id: priority,
+        name: PRIORITY_LABEL[priority],
+      }));
+    case "severity":
+      return [
+        ...TICKET_SEVERITIES.map((severity) => ({
+          id: severity,
+          name: SEVERITY_SHORT[severity],
+        })),
+        { id: "none", name: "No severity" },
+      ];
+    case "type":
+      return TICKET_TYPES.map((type) => ({ id: type, name: TYPE_LABEL[type] }));
+    default:
+      return TICKET_STATUSES.map((status) => ({
+        id: status,
+        name: STATUS_LABEL[status],
+      }));
+  }
+}
 
-export function BoardView({
-  project,
-  onOpenTicket,
-}: {
-  project: Project;
-  onOpenTicket?: (ticketId: string) => void;
-}) {
+export function BoardView({ project }: { project: Project }) {
   const { tickets, applyBoardOrder, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
+  const { filters, groupBy } = useViewState();
+
+  const scoped = React.useMemo(
+    () => tickets.filter((ticket) => ticket.projectId === project.id),
+    [tickets, project.id],
+  );
+
+  const filtered = React.useMemo(
+    () => applyFilters(scoped, filters),
+    [scoped, filters],
+  );
+
+  const columns = React.useMemo(
+    () => columnsFor(groupBy, project),
+    [groupBy, project],
+  );
 
   /**
    * Grouped by column, then ordered within it. `order` is only meaningful
-   * inside a column — two tickets in different columns share order 0 — so
-   * sorting the whole project by it would reshuffle on every drag and the
-   * board would never settle.
+   * inside a column, so sorting the whole project by it would reshuffle on
+   * every drag and the board would never settle.
    */
   const data = React.useMemo<BoardCard[]>(() => {
-    const byStatus = new Map<TicketStatus, Ticket[]>();
-    for (const ticket of tickets) {
-      if (ticket.projectId !== project.id) continue;
-      const column = byStatus.get(ticket.status);
-      if (column) column.push(ticket);
-      else byStatus.set(ticket.status, [ticket]);
+    const byColumn = new Map<string, Ticket[]>();
+    for (const ticket of filtered) {
+      const key = groupKeyOf(ticket, groupBy);
+      const bucket = byColumn.get(key);
+      if (bucket) bucket.push(ticket);
+      else byColumn.set(key, [ticket]);
     }
 
-    return TICKET_STATUSES.flatMap((status) =>
-      (byStatus.get(status) ?? [])
+    return columns.flatMap((column) =>
+      (byColumn.get(column.id) ?? [])
         .sort((a, b) => a.order - b.order)
         .map((ticket) => ({
           id: ticket.id,
           name: ticket.title,
-          column: ticket.status,
+          column: column.id,
           ticket,
         })),
     );
-  }, [tickets, project.id]);
+  }, [filtered, columns, groupBy]);
 
   const counts = React.useMemo(() => {
-    const totals = new Map<TicketStatus, number>();
+    const totals = new Map<string, number>();
     for (const card of data) {
       totals.set(card.column, (totals.get(card.column) ?? 0) + 1);
     }
     return totals;
   }, [data]);
 
-  // The kanban hands back the full arrangement; the store is the source of
-  // truth, so every drag — including the live cross-column preview — lands here.
+  // Only a status board can commit a drag: the other groupings would need a
+  // different field written, which the brief does not ask for.
   const handleDataChange = React.useCallback(
     (next: BoardCard[]) => {
-      applyBoardOrder(next.map(({ id, column }) => ({ id, column })));
+      if (groupBy !== "status") return;
+      applyBoardOrder(
+        next.map(({ id, column }) => ({ id, column: column as TicketStatus })),
+      );
     },
-    [applyBoardOrder],
+    [applyBoardOrder, groupBy],
   );
 
   if (isLoading) return <BoardSkeleton />;
 
-  if (data.length === 0) {
-    return (
-      <EmptyState
-        icon={Columns3}
-        title="This board is empty"
-        description={`No tickets in ${project.name} yet. Tickets added to this project show up in Backlog.`}
-      />
-    );
-  }
-
   return (
-    <div className="min-h-0 flex-1 px-6 py-4">
-      <KanbanProvider
-        // dnd-kit derives its aria-describedby id from this; without a stable
-        // value the server and client disagree and hydration warns.
-        id={`board-${project.id}`}
-        columns={columns}
-        data={data}
-        onDataChange={handleDataChange}
-        className="h-full"
-      >
-        {(column) => (
-          <KanbanBoard key={column.id} id={column.id}>
-            <KanbanHeader className="flex h-10 items-center gap-2 border-b border-grey-200 px-3">
-              <span className="text-caption font-semibold tracking-wide text-grey-700 uppercase">
-                {column.name}
-              </span>
-              <span className="tnum text-caption text-grey-500">
-                {counts.get(column.id as TicketStatus) ?? 0}
-              </span>
-            </KanbanHeader>
+    <>
+      <FilterBar
+        project={project}
+        resultCount={filtered.length}
+        totalCount={scoped.length}
+        hideStatus={groupBy === "status"}
+        extra={<GroupBySelect />}
+      />
 
-            <KanbanCards id={column.id}>
-              {(card: BoardCard) => (
-                <KanbanCard key={card.id} {...card}>
-                  <TicketCard ticket={card.ticket} onOpen={onOpenTicket ?? openTicket} />
-                </KanbanCard>
-              )}
-            </KanbanCards>
+      {data.length === 0 ? (
+        <EmptyState
+          icon={Columns3}
+          title={
+            scoped.length === 0
+              ? "This board is empty"
+              : "No tickets match these filters"
+          }
+          description={
+            scoped.length === 0
+              ? `No tickets in ${project.name} yet. Tickets added to this project show up in Backlog.`
+              : "Try removing a filter or widening your search."
+          }
+        />
+      ) : (
+        <div className="min-h-0 flex-1 px-6 py-4">
+          <KanbanProvider
+            id={`board-${project.id}-${groupBy}`}
+            columns={columns}
+            data={data}
+            onDataChange={handleDataChange}
+            className="h-full"
+          >
+            {(column) => (
+              <KanbanBoard key={column.id} id={column.id}>
+                <KanbanHeader className="flex h-10 items-center gap-2 border-b border-grey-200 px-3">
+                  <span className="truncate text-caption font-semibold tracking-wide text-grey-700 uppercase">
+                    {column.name}
+                  </span>
+                  <span className="tnum text-caption text-grey-500">
+                    {counts.get(column.id) ?? 0}
+                  </span>
+                </KanbanHeader>
 
-            {(counts.get(column.id as TicketStatus) ?? 0) === 0 ? (
-              <p className="px-3 pb-3 text-caption text-grey-400">
-                Drag a ticket here.
-              </p>
-            ) : null}
-          </KanbanBoard>
-        )}
-      </KanbanProvider>
-    </div>
+                <KanbanCards id={column.id}>
+                  {(card: BoardCard) => (
+                    <KanbanCard key={card.id} {...card}>
+                      <TicketCard ticket={card.ticket} onOpen={openTicket} />
+                    </KanbanCard>
+                  )}
+                </KanbanCards>
+
+                {(counts.get(column.id) ?? 0) === 0 ? (
+                  <p className="px-3 pb-3 text-caption text-grey-400">
+                    {groupBy === "status" ? "Drag a ticket here." : "Nothing here."}
+                  </p>
+                ) : null}
+              </KanbanBoard>
+            )}
+          </KanbanProvider>
+        </div>
+      )}
+    </>
   );
 }

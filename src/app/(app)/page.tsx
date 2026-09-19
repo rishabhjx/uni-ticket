@@ -1,11 +1,11 @@
-import { HomeView } from "@/components/home/home-view";
+import { OverviewView } from "@/components/overview/overview-view";
 import { PageHeader } from "@/components/shell/page-header";
 
-export default function HomePage() {
+export default function OverviewPage() {
   return (
     <>
-      <PageHeader title="Home" />
-      <HomeView />
+      <PageHeader title="Overview" />
+      <OverviewView />
     </>
   );
 }

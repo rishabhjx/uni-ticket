@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Mock descriptions are plain text with the occasional "- " bullet run.
- * Rendering those as a real list reads far better than a pre-wrapped blob.
+ * Descriptions are plain text with "- " bullet runs and ``` fences. Any
+ * technical user pastes a stack trace into the first ticket they file, so
+ * fenced blocks render as monospace instead of collapsing into prose.
  */
 export function Description({
   text,
@@ -13,23 +14,54 @@ export function Description({
 }) {
   const blocks: React.ReactNode[] = [];
   let bullets: string[] = [];
+  let code: string[] = [];
+  let inCode = false;
 
   const flushBullets = () => {
     if (bullets.length === 0) return;
+    const items = bullets;
+    bullets = [];
     blocks.push(
       <ul key={`ul-${blocks.length}`} className="flex flex-col gap-1 pl-1">
-        {bullets.map((item) => (
+        {items.map((item) => (
           <li key={item} className="flex gap-2 text-small text-grey-700">
-            <span aria-hidden className="mt-[7px] size-1 shrink-0 rounded-full bg-grey-400" />
+            <span
+              aria-hidden
+              className="mt-[7px] size-1 shrink-0 rounded-full bg-grey-400"
+            />
             {item}
           </li>
         ))}
       </ul>,
     );
-    bullets = [];
+  };
+
+  const flushCode = () => {
+    if (code.length === 0) return;
+    const lines = code;
+    code = [];
+    blocks.push(
+      <pre
+        key={`pre-${blocks.length}`}
+        className="overflow-x-auto rounded-md bg-grey-50 p-3 font-mono text-[12px] leading-[18px] text-grey-800"
+      >
+        <code>{lines.join("\n")}</code>
+      </pre>,
+    );
   };
 
   for (const line of text.split("\n")) {
+    if (line.trim().startsWith("```")) {
+      if (inCode) flushCode();
+      else flushBullets();
+      inCode = !inCode;
+      continue;
+    }
+    if (inCode) {
+      code.push(line);
+      continue;
+    }
+
     const trimmed = line.trim();
     if (trimmed.startsWith("- ")) {
       bullets.push(trimmed.slice(2));
@@ -37,21 +69,28 @@ export function Description({
     }
     flushBullets();
     if (!trimmed) continue;
-    // A short line with no trailing punctuation is a heading in this data.
+
     const isHeading = trimmed.length < 40 && !/[.:!?]$/.test(trimmed);
     blocks.push(
       isHeading ? (
-        <p key={`h-${blocks.length}`} className="text-small font-medium text-grey-900">
+        <p
+          key={`h-${blocks.length}`}
+          className="text-small font-medium text-grey-900"
+        >
           {trimmed}
         </p>
       ) : (
-        <p key={`p-${blocks.length}`} className="text-small leading-[20px] text-grey-700">
+        <p
+          key={`p-${blocks.length}`}
+          className="text-small leading-[20px] text-grey-700"
+        >
           {trimmed}
         </p>
       ),
     );
   }
   flushBullets();
+  flushCode();
 
   return <div className={cn("flex flex-col gap-3", className)}>{blocks}</div>;
 }

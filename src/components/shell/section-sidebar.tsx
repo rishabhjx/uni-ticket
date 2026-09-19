@@ -6,14 +6,19 @@ import { usePathname } from "next/navigation";
 import {
   ChevronRight,
   Columns3,
+  LayoutDashboard,
   LayoutGrid,
+  LifeBuoy,
   Rows3,
   Search,
+  Star,
   UserRound,
+  X,
 } from "lucide-react";
 
 import { useCommandPalette } from "@/components/shell/command-palette";
 import { projectMonogram, projects, type Project } from "@/lib/mock";
+import { useViewState } from "@/lib/store/view-state";
 import { useShell } from "@/hooks/use-shell";
 import { cn } from "@/lib/utils";
 
@@ -90,9 +95,16 @@ function ProjectItem({
             active ? "font-medium text-grey-900" : itemIdle,
           )}
         >
-          <span className="flex size-4 shrink-0 items-center justify-center rounded-md bg-grey-200 text-[9px] font-semibold text-grey-600">
-            {projectMonogram(project)}
-          </span>
+          {project.kind === "service" ? (
+            <LifeBuoy
+              className="size-4 shrink-0 text-grey-500"
+              strokeWidth={1.75}
+            />
+          ) : (
+            <span className="flex size-4 shrink-0 items-center justify-center rounded-md bg-grey-200 text-[9px] font-semibold text-grey-600">
+              {projectMonogram(project)}
+            </span>
+          )}
           <span className="truncate">{project.name}</span>
         </Link>
       </div>
@@ -135,11 +147,12 @@ export function SectionSidebar() {
   const pathname = usePathname();
   const { sidebarOpen } = useShell();
   const { open: openCommandPalette } = useCommandPalette();
+  const { savedViews, removeSavedView } = useViewState();
 
   return (
     <div
       className={cn(
-        "shrink-0 overflow-hidden bg-grey-50 transition-[width] duration-150 ease-out",
+        "shrink-0 overflow-hidden bg-grey-50 transition-[width] duration-[--duration-slow]",
         sidebarOpen ? "w-sidebar hairline-r" : "w-0",
       )}
     >
@@ -167,8 +180,17 @@ export function SectionSidebar() {
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pb-4">
           <ul className="flex flex-col gap-px">
             <li>
-              <NavItem href="/my-tickets" icon={UserRound} active={pathname === "/my-tickets"}>
-                My tickets
+              <NavItem href="/" icon={LayoutDashboard} active={pathname === "/"}>
+                Overview
+              </NavItem>
+            </li>
+            <li>
+              <NavItem
+                href="/my-work"
+                icon={UserRound}
+                active={pathname === "/my-work"}
+              >
+                My work
               </NavItem>
             </li>
             <li>
@@ -177,6 +199,40 @@ export function SectionSidebar() {
               </NavItem>
             </li>
           </ul>
+
+          {savedViews.length > 0 ? (
+            <>
+              <div className="mt-6 mb-1 px-2">
+                <span className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+                  Saved views
+                </span>
+              </div>
+              <ul className="flex flex-col gap-px">
+                {savedViews.map((view) => (
+                  <li key={view.id} className="group/view flex items-center">
+                    <Link
+                      href={view.query ? `${view.path}?${view.query}` : view.path}
+                      className={cn(itemBase, itemIdle, "min-w-0 flex-1")}
+                    >
+                      <Star
+                        className="size-3.5 shrink-0 text-grey-400"
+                        strokeWidth={1.75}
+                      />
+                      <span className="truncate">{view.name}</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => removeSavedView(view.id)}
+                      aria-label={`Remove ${view.name}`}
+                      className="flex size-5 shrink-0 items-center justify-center rounded-md text-grey-400 opacity-0 transition-opacity hover:bg-grey-150 hover:text-grey-700 focus-visible:opacity-100 group-hover/view:opacity-100"
+                    >
+                      <X className="size-3" strokeWidth={2} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
 
           <div className="mt-6 mb-1 flex items-center justify-between px-2">
             <span className="text-caption font-medium tracking-wide text-grey-500 uppercase">

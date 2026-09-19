@@ -1,52 +1,47 @@
 "use client";
 
-import { CalendarClock, Search, X } from "lucide-react";
+import * as React from "react";
+import {
+  AlarmClock,
+  CalendarClock,
+  Hourglass,
+  Rows2,
+  Rows3,
+  Search,
+  Star,
+  X,
+} from "lucide-react";
 
 import { FacetFilter, type FacetOption } from "@/components/list/facet-filter";
-import { PriorityBadge, StatusBadge } from "@/components/tickets/badges";
-import { UserAvatar } from "@/components/tickets/user-avatar";
-import { cn } from "@/lib/utils";
 import {
-  isOverdue,
+  PriorityBadge,
+  SeverityBadge,
+  StatusBadge,
+  TypeIcon,
+} from "@/components/tickets/badges";
+import { UserAvatar } from "@/components/tickets/user-avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  ENVIRONMENT_LABEL,
+  ENVIRONMENTS,
   labels,
   PRIORITY_LABEL,
+  SEVERITY_LABEL,
   STATUS_LABEL,
   TICKET_PRIORITIES,
+  TICKET_SEVERITIES,
   TICKET_STATUSES,
+  TICKET_TYPES,
+  TYPE_LABEL,
   users,
   type Project,
-  type Ticket,
 } from "@/lib/mock";
-
-export type TicketFilters = {
-  search: string;
-  statuses: string[];
-  assignees: string[];
-  priorities: string[];
-  labels: string[];
-  /** Derived rather than a field, so it gets its own toggle. */
-  overdueOnly: boolean;
-};
-
-export const emptyFilters: TicketFilters = {
-  search: "",
-  statuses: [],
-  assignees: [],
-  priorities: [],
-  labels: [],
-  overdueOnly: false,
-};
-
-export function countActiveFilters(filters: TicketFilters) {
-  return (
-    filters.statuses.length +
-    filters.assignees.length +
-    filters.priorities.length +
-    filters.labels.length +
-    (filters.search.trim() ? 1 : 0) +
-    (filters.overdueOnly ? 1 : 0)
-  );
-}
+import { useViewState } from "@/lib/store/view-state";
+import { cn } from "@/lib/utils";
 
 const statusOptions: FacetOption[] = TICKET_STATUSES.map((status) => ({
   value: status,
@@ -60,25 +55,90 @@ const priorityOptions: FacetOption[] = TICKET_PRIORITIES.map((priority) => ({
   render: <PriorityBadge priority={priority} />,
 }));
 
+const severityOptions: FacetOption[] = TICKET_SEVERITIES.map((severity) => ({
+  value: severity,
+  label: SEVERITY_LABEL[severity],
+  render: <SeverityBadge severity={severity} />,
+}));
+
+const typeOptions: FacetOption[] = TICKET_TYPES.map((type) => ({
+  value: type,
+  label: TYPE_LABEL[type],
+  render: (
+    <span className="flex items-center gap-2">
+      <TypeIcon type={type} />
+      {TYPE_LABEL[type]}
+    </span>
+  ),
+}));
+
+const environmentOptions: FacetOption[] = ENVIRONMENTS.map((environment) => ({
+  value: environment,
+  label: ENVIRONMENT_LABEL[environment],
+}));
+
 const labelOptions: FacetOption[] = labels.map((label) => ({
   value: label.id,
   label: label.name,
 }));
 
+const chipBase =
+  "flex h-7 items-center gap-1.5 rounded-md border px-2 text-small transition-colors";
+const chipIdle =
+  "border-grey-200 text-grey-600 hover:border-grey-300 hover:text-grey-900";
+const chipOn = "border-accent-200 bg-accent-50 text-accent-700";
+
+function ToggleChip({
+  active,
+  onClick,
+  icon: Icon,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(chipBase, active ? chipOn : chipIdle)}
+    >
+      <Icon className="size-3.5" strokeWidth={1.75} />
+      {children}
+    </button>
+  );
+}
+
 export function FilterBar({
-  filters,
-  onChange,
   project,
   resultCount,
   totalCount,
+  /** The board hides status, since its columns already are the statuses. */
+  hideStatus = false,
+  extra,
 }: {
-  filters: TicketFilters;
-  onChange: (next: TicketFilters) => void;
-  /** Limits the assignee list to a project's members when scoped to one. */
   project?: Project;
   resultCount: number;
   totalCount: number;
+  hideStatus?: boolean;
+  extra?: React.ReactNode;
 }) {
+  const {
+    filters,
+    setFilters,
+    clearFilters,
+    activeCount,
+    density,
+    setDensity,
+    saveCurrentView,
+  } = useViewState();
+
+  const [naming, setNaming] = React.useState(false);
+  const [viewName, setViewName] = React.useState("");
+
   const memberIds = project ? project.memberIds : users.map((user) => user.id);
   const assigneeOptions: FacetOption[] = [
     {
@@ -106,8 +166,6 @@ export function FilterBar({
     }),
   ];
 
-  const active = countActiveFilters(filters);
-
   return (
     <div className="hairline-b flex flex-wrap items-center gap-2 px-6 py-2.5">
       <div className="relative">
@@ -118,108 +176,165 @@ export function FilterBar({
         <input
           type="search"
           value={filters.search}
-          onChange={(event) => onChange({ ...filters, search: event.target.value })}
-          placeholder="Search title or key"
+          onChange={(event) =>
+            setFilters({ ...filters, search: event.target.value })
+          }
+          placeholder="Search title, key or description"
           aria-label="Search tickets"
-          className="h-7 w-56 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+          className="h-7 w-64 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
         />
       </div>
 
-      <FacetFilter
-        title="Status"
-        options={statusOptions}
-        selected={filters.statuses}
-        onChange={(statuses) => onChange({ ...filters, statuses })}
-      />
+      {hideStatus ? null : (
+        <FacetFilter
+          title="Status"
+          options={statusOptions}
+          selected={filters.statuses}
+          onChange={(statuses) => setFilters({ ...filters, statuses })}
+        />
+      )}
       <FacetFilter
         title="Assignee"
         options={assigneeOptions}
         selected={filters.assignees}
-        onChange={(assignees) => onChange({ ...filters, assignees })}
+        onChange={(assignees) => setFilters({ ...filters, assignees })}
         searchable
       />
       <FacetFilter
         title="Priority"
         options={priorityOptions}
         selected={filters.priorities}
-        onChange={(priorities) => onChange({ ...filters, priorities })}
+        onChange={(priorities) => setFilters({ ...filters, priorities })}
+      />
+      <FacetFilter
+        title="Severity"
+        options={severityOptions}
+        selected={filters.severities}
+        onChange={(severities) => setFilters({ ...filters, severities })}
+      />
+      <FacetFilter
+        title="Type"
+        options={typeOptions}
+        selected={filters.types}
+        onChange={(types) => setFilters({ ...filters, types })}
       />
       <FacetFilter
         title="Label"
         options={labelOptions}
         selected={filters.labels}
-        onChange={(next) => onChange({ ...filters, labels: next })}
+        onChange={(next) => setFilters({ ...filters, labels: next })}
         searchable
       />
+      <FacetFilter
+        title="Env"
+        options={environmentOptions}
+        selected={filters.environments}
+        onChange={(environments) => setFilters({ ...filters, environments })}
+      />
 
-      <button
-        type="button"
-        aria-pressed={filters.overdueOnly}
-        onClick={() => onChange({ ...filters, overdueOnly: !filters.overdueOnly })}
-        className={cn(
-          "flex h-7 items-center gap-1.5 rounded-md border px-2 text-small transition-colors",
-          filters.overdueOnly
-            ? "border-accent-200 bg-accent-50 text-accent-700"
-            : "border-grey-200 text-grey-600 hover:border-grey-300 hover:text-grey-900",
-        )}
+      <ToggleChip
+        active={filters.overdueOnly}
+        onClick={() => setFilters({ ...filters, overdueOnly: !filters.overdueOnly })}
+        icon={CalendarClock}
       >
-        <CalendarClock className="size-3.5" strokeWidth={1.75} />
         Overdue
-      </button>
-
-      {active > 0 ? (
-        <button
-          type="button"
-          onClick={() => onChange(emptyFilters)}
-          className="flex h-7 items-center gap-1 rounded-md px-2 text-small text-grey-600 transition-colors hover:bg-grey-100 hover:text-grey-900"
+      </ToggleChip>
+      <ToggleChip
+        active={filters.staleOnly}
+        onClick={() => setFilters({ ...filters, staleOnly: !filters.staleOnly })}
+        icon={Hourglass}
+      >
+        Stale
+      </ToggleChip>
+      {project?.kind === "service" ? (
+        <ToggleChip
+          active={filters.breachedOnly}
+          onClick={() =>
+            setFilters({ ...filters, breachedOnly: !filters.breachedOnly })
+          }
+          icon={AlarmClock}
         >
-          <X className="size-3.5" strokeWidth={1.75} />
-          Clear
-        </button>
+          SLA breached
+        </ToggleChip>
       ) : null}
 
-      <span className="tnum ml-auto text-small text-grey-500">
-        {resultCount === totalCount
-          ? `${totalCount} tickets`
-          : `${resultCount} of ${totalCount}`}
-      </span>
+      {activeCount > 0 ? (
+        <>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex h-7 items-center gap-1 rounded-md px-2 text-small text-grey-600 transition-colors hover:bg-grey-100 hover:text-grey-900"
+          >
+            <X className="size-3.5" strokeWidth={1.75} />
+            Clear
+          </button>
+
+          {naming ? (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                saveCurrentView(viewName);
+                setViewName("");
+                setNaming(false);
+              }}
+              className="flex items-center gap-1"
+            >
+              <input
+                autoFocus
+                value={viewName}
+                onChange={(event) => setViewName(event.target.value)}
+                onBlur={() => setNaming(false)}
+                placeholder="View name"
+                aria-label="Name this view"
+                className="h-7 w-32 rounded-md border border-accent-600 px-2 text-small focus:outline-none"
+              />
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setNaming(true)}
+              className={cn(chipBase, chipIdle)}
+            >
+              <Star className="size-3.5" strokeWidth={1.75} />
+              Save view
+            </button>
+          )}
+        </>
+      ) : null}
+
+      <div className="ml-auto flex items-center gap-2">
+        {extra}
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={
+                density === "compact" ? "Comfortable rows" : "Compact rows"
+              }
+              onClick={() =>
+                setDensity(density === "compact" ? "comfortable" : "compact")
+              }
+              className="flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+            >
+              {density === "compact" ? (
+                <Rows3 className="size-4" strokeWidth={1.75} />
+              ) : (
+                <Rows2 className="size-4" strokeWidth={1.75} />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" sideOffset={8}>
+            {density === "compact" ? "Comfortable rows" : "Compact rows"}
+          </TooltipContent>
+        </Tooltip>
+
+        <span className="tnum text-small text-grey-500">
+          {resultCount === totalCount
+            ? `${totalCount} tickets`
+            : `${resultCount} of ${totalCount}`}
+        </span>
+      </div>
     </div>
   );
-}
-
-/** Shared by the project list, My tickets and search. */
-export function applyFilters(tickets: Ticket[], filters: TicketFilters) {
-  const query = filters.search.trim().toLowerCase();
-  const now = new Date();
-
-  return tickets.filter((ticket) => {
-    if (filters.overdueOnly && !isOverdue(ticket, now)) return false;
-    if (
-      query &&
-      !ticket.title.toLowerCase().includes(query) &&
-      !ticket.key.toLowerCase().includes(query)
-    ) {
-      return false;
-    }
-    if (filters.statuses.length > 0 && !filters.statuses.includes(ticket.status)) {
-      return false;
-    }
-    if (
-      filters.priorities.length > 0 &&
-      !filters.priorities.includes(ticket.priority)
-    ) {
-      return false;
-    }
-    if (filters.assignees.length > 0) {
-      const key = ticket.assigneeId ?? "unassigned";
-      if (!filters.assignees.includes(key)) return false;
-    }
-    if (
-      filters.labels.length > 0 &&
-      !ticket.labelIds.some((id) => filters.labels.includes(id))
-    ) {
-      return false;
-    }
-    return true;
-  });
 }

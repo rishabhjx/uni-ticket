@@ -90,6 +90,14 @@
   --row-h: 44px;
   --panel-w: 460px;
 
+  /* --- Motion ------------------------------------------------------------
+     One easing curve and three durations. The curve decelerates hard, which
+     is what makes a panel feel like it settles rather than stops.            */
+  --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-slow: 220ms;
+
   /* --- The only elevation in the system (overlays / dragged cards) -------- */
   --shadow-overlay: 0 10px 28px -8px rgb(23 23 27 / 0.14),
     0 2px 6px -2px rgb(23 23 27 / 0.07);
@@ -127,6 +135,10 @@
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
   --radius-xl: var(--radius);
+
+  /* Motion, exposed as utilities */
+  --ease-standard: var(--ease-standard);
+  --animate-duration: var(--duration-fast);
 
   /* Shadows — no decorative elevation exists */
   --shadow-2xs: none;
@@ -206,6 +218,36 @@
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
     font-feature-settings: "cv05" 1, "cv11" 1;
+  }
+
+  /*
+     Every transition in the product shares one curve and one default
+     duration, so nothing feels quicker or slower than anything beside it.
+     Components opt into a different length; none opt into a different curve.
+  */
+  *,
+  *::before,
+  *::after {
+    transition-timing-function: var(--ease-standard);
+    transition-duration: var(--duration-fast);
+  }
+
+  /*
+     Radix drives open and close states through data attributes; tw-animate-css
+     supplies keyframes, and these keep their timing on the same curve.
+  */
+  [data-slot="popover-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="select-content"],
+  [data-slot="tooltip-content"],
+  [data-slot="dialog-content"],
+  [data-slot="command-dialog-content"] {
+    animation-duration: var(--duration-fast);
+    animation-timing-function: var(--ease-standard);
+  }
+
+  [data-slot="dialog-overlay"] {
+    animation-duration: var(--duration-instant);
   }
 
   /* One focus treatment across the whole product */

@@ -4,11 +4,18 @@ import { PanelLeftClose } from "lucide-react";
 
 import { AppRail } from "@/components/shell/app-rail";
 import { CommandPaletteProvider } from "@/components/shell/command-palette";
+import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
 import { SectionSidebar } from "@/components/shell/section-sidebar";
 import { TicketPanel } from "@/components/tickets/ticket-panel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TicketPanelProvider } from "@/lib/store/ticket-panel";
 import { ShellProvider, useShell } from "@/hooks/use-shell";
+import { ViewStateProvider } from "@/lib/store/view-state";
+
+function CreateDialogHost() {
+  const { createOpen, setCreateOpen } = useShell();
+  return <CreateTicketDialog open={createOpen} onOpenChange={setCreateOpen} />;
+}
 
 function SidebarCollapseButton() {
   const { sidebarOpen, toggleSidebar } = useShell();
@@ -30,6 +37,7 @@ function SidebarCollapseButton() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ShellProvider>
+      <ViewStateProvider>
       <TicketPanelProvider>
       <CommandPaletteProvider>
       <TooltipProvider delayDuration={300}>
@@ -40,11 +48,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
             {children}
             <TicketPanel />
+            <CreateDialogHost />
           </main>
         </div>
       </TooltipProvider>
       </CommandPaletteProvider>
       </TicketPanelProvider>
+      </ViewStateProvider>
     </ShellProvider>
   );
 }

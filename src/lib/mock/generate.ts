@@ -8,7 +8,6 @@ import { TICKET_STATUSES } from "./types";
 import {
   ENVIRONMENTS,
   isDefect,
-  TICKET_SEVERITIES,
   TICKET_TYPES,
   type Comment,
   type Project,
@@ -67,9 +66,6 @@ const statusWeights: Record<TicketStatus, number> = {
   in_review: 12,
   done: 26,
 };
-
-/** Types that only appear on a service desk, and vice versa. */
-const typeWeightsByKind: Record<string, number> = {};
 
 const priorityWeights: Record<TicketPriority, number> = {
   urgent: 7,

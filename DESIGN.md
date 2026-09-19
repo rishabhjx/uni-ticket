@@ -60,5 +60,22 @@ and `--shadow-drag` for a card while it is being dragged.
 
 ## Motion
 
-Short, functional, ≤150ms: hover tints, panel slide-in, drag transforms.
+One easing curve, `cubic-bezier(0.32, 0.72, 0, 1)`, applied to every
+transition in the product so nothing feels quicker or slower than the thing
+beside it. Three durations: `--duration-instant` 100ms for presses and
+overlays appearing, `--duration-fast` 150ms as the default, `--duration-slow`
+220ms for the sidebar and the ticket panel, which travel further.
+
+Components opt into a different length; none opt into a different curve.
 `prefers-reduced-motion` disables all of it.
+
+## Colour, revisited
+
+The original rule reserved colour for status and priority badges. Two
+exceptions were added after reviewing the build:
+
+- **Overdue and SLA breaches** use the red tint. A date you have already
+  missed is exactly the kind of meaning colour exists for, and in grey it was
+  unfindable on a board of 100 cards.
+- **Severity S1 and S2** use red and orange. S3 and S4 stay neutral, so the
+  serious defects are the ones that stand out.

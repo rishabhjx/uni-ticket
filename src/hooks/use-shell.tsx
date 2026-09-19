@@ -37,6 +37,9 @@ type ShellContextValue = {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
+  createOpen: boolean;
+  openCreate: () => void;
+  setCreateOpen: (open: boolean) => void;
 };
 
 const ShellContext = React.createContext<ShellContextValue | null>(null);
@@ -55,12 +58,31 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     writeSidebarOpen(window.localStorage.getItem(STORAGE_KEY) === "false");
   }, []);
 
-  // ⌘B / Ctrl+B — the one global shortcut in the shell.
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const openCreate = React.useCallback(() => setCreateOpen(true), []);
+
+  // ⌘B toggles the sidebar; C starts a ticket, the way every tracker does.
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === "b" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         toggleSidebar();
+        return;
+      }
+
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (event.key.toLowerCase() === "c") {
+        event.preventDefault();
+        setCreateOpen(true);
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -68,8 +90,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [toggleSidebar]);
 
   const value = React.useMemo(
-    () => ({ sidebarOpen, toggleSidebar, setSidebarOpen }),
-    [sidebarOpen, toggleSidebar, setSidebarOpen],
+    () => ({
+      sidebarOpen,
+      toggleSidebar,
+      setSidebarOpen,
+      createOpen,
+      openCreate,
+      setCreateOpen,
+    }),
+    [sidebarOpen, toggleSidebar, setSidebarOpen, createOpen, openCreate],
   );
 
   return <ShellContext value={value}>{children}</ShellContext>;

@@ -83,3 +83,34 @@ export function CardsSkeleton({ count = 5 }: { count?: number }) {
     </div>
   );
 }
+
+/**
+ * The whole shell as a skeleton. ViewStateProvider reads the URL, so the
+ * prerendered HTML for every route is this, and the real UI renders on the
+ * client — which is the same loading model the store already uses.
+ */
+export function AppShellSkeleton() {
+  return (
+    <div className="flex h-full">
+      <div className="hairline-r flex w-rail shrink-0 flex-col items-center gap-1 bg-grey-100 py-3">
+        <Bar className="mb-2 size-8" />
+        {Array.from({ length: 11 }, (_, index) => (
+          <Bar key={index} className="size-9 bg-grey-150" />
+        ))}
+      </div>
+      <div className="hairline-r flex w-sidebar shrink-0 flex-col gap-2 bg-grey-50 p-3">
+        <Bar className="mb-2 h-5 w-24" />
+        <Bar className="h-8 w-full" />
+        {Array.from({ length: 8 }, (_, index) => (
+          <Bar key={index} className="h-7 w-full" />
+        ))}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="hairline-b flex h-topbar shrink-0 items-center px-6">
+          <Bar className="h-6 w-40" />
+        </div>
+        <RowsSkeleton rows={14} />
+      </div>
+    </div>
+  );
+}

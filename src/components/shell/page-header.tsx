@@ -1,8 +1,13 @@
 "use client";
 
-import { PanelLeft } from "lucide-react";
+import { PanelLeft, Plus } from "lucide-react";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Notifications } from "@/components/shell/notifications";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useShell } from "@/hooks/use-shell";
 
 export function PageHeader({
@@ -14,7 +19,7 @@ export function PageHeader({
   meta?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
-  const { sidebarOpen, toggleSidebar } = useShell();
+  const { sidebarOpen, toggleSidebar, openCreate } = useShell();
 
   return (
     <header className="hairline-b flex h-topbar shrink-0 items-center gap-3 px-6">
@@ -39,7 +44,26 @@ export function PageHeader({
       <h1 className="text-title font-semibold text-grey-900">{title}</h1>
       {meta ? <div className="flex items-center gap-2">{meta}</div> : null}
 
-      <div className="ml-auto flex items-center gap-2">{actions}</div>
+      <div className="ml-auto flex items-center gap-2">
+        {actions}
+        <Notifications />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={openCreate}
+              className="flex h-7 items-center gap-1.5 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"
+            >
+              <Plus className="size-3.5" strokeWidth={2.25} />
+              New
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" sideOffset={8}>
+            New ticket · C
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </header>
   );
 }

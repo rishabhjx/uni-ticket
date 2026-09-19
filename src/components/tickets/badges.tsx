@@ -13,10 +13,15 @@ import {
 } from "lucide-react";
 
 import {
+  ENVIRONMENT_LABEL,
   PRIORITY_LABEL,
+  SEVERITY_LABEL,
+  SEVERITY_SHORT,
   STATUS_LABEL,
   TYPE_LABEL,
+  type Environment,
   type TicketPriority,
+  type TicketSeverity,
   type TicketStatus,
   type TicketType,
 } from "@/lib/mock";
@@ -107,6 +112,80 @@ export function TypeIcon({
       strokeWidth={1.75}
       aria-label={TYPE_LABEL[type]}
     />
+  );
+}
+
+/**
+ * Severity is how bad it is, separate from when we will fix it. S1 and S2 earn
+ * colour; the lower two stay neutral so the serious ones stand out.
+ */
+const severityTint: Record<TicketSeverity, string> = {
+  s1: "bg-[var(--priority-urgent-bg)] text-[var(--priority-urgent-fg)]",
+  s2: "bg-[var(--priority-high-bg)] text-[var(--priority-high-fg)]",
+  s3: "bg-grey-100 text-grey-600",
+  s4: "bg-grey-50 text-grey-500",
+};
+
+export function SeverityBadge({
+  severity,
+  short = false,
+  className,
+}: {
+  severity: TicketSeverity;
+  short?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(badgeBase, severityTint[severity], className)}
+      title={SEVERITY_LABEL[severity]}
+    >
+      {short ? SEVERITY_SHORT[severity] : SEVERITY_LABEL[severity]}
+    </span>
+  );
+}
+
+export function EnvironmentChip({
+  environment,
+  className,
+}: {
+  environment: Environment;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-block rounded-md bg-grey-100 px-1.5 py-0.5 align-middle text-caption leading-4 text-grey-600",
+        className,
+      )}
+    >
+      {ENVIRONMENT_LABEL[environment]}
+    </span>
+  );
+}
+
+/**
+ * Overdue and SLA breaches are the one place I overruled the brief's "colour
+ * only on status and priority" rule: a date you have already missed is exactly
+ * the kind of meaning colour exists for, and in grey it was unfindable.
+ */
+export function AlertChip({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        badgeBase,
+        "bg-[var(--priority-urgent-bg)] text-[var(--priority-urgent-fg)]",
+        className,
+      )}
+    >
+      {children}
+    </span>
   );
 }
 

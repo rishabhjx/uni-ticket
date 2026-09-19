@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  AlertChip,
   LabelChip,
   PriorityBadge,
+  SeverityBadge,
   StatusBadge,
 } from "@/components/tickets/badges";
 import { UserAvatar } from "@/components/tickets/user-avatar";
@@ -15,6 +17,14 @@ import {
 } from "@/components/ui/select";
 import { formatDate, formatDueDate, formatRelative } from "@/lib/format";
 import {
+  daysInColumn,
+  ENVIRONMENT_LABEL,
+  ENVIRONMENTS,
+  isDefect,
+  isSlaBreached,
+  isStale,
+  SEVERITY_LABEL,
+  TICKET_SEVERITIES,
   getLabel,
   getProject,
   getUser,
@@ -24,7 +34,9 @@ import {
   TICKET_PRIORITIES,
   TICKET_STATUSES,
   type Ticket,
+  type Environment,
   type TicketPriority,
+  type TicketSeverity,
   type TicketStatus,
 } from "@/lib/mock";
 import { useTicketStore } from "@/lib/store/ticket-store";
@@ -132,6 +144,81 @@ export function TicketFields({ ticket }: { ticket: Ticket }) {
         </Select>
       </Field>
 
+      {isDefect(ticket.type) ? (
+        <>
+          <Field label="Severity">
+            <Select
+              value={ticket.severity ?? "s3"}
+              onValueChange={(severity) =>
+                updateTicket(ticket.id, { severity: severity as TicketSeverity })
+              }
+            >
+              <SelectTrigger className={triggerClass} aria-label="Severity">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TICKET_SEVERITIES.map((severity) => (
+                  <SelectItem key={severity} value={severity}>
+                    <SeverityBadge severity={severity} />
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field label="Environment">
+            <Select
+              value={ticket.environment ?? "unknown"}
+              onValueChange={(environment) =>
+                updateTicket(ticket.id, {
+                  environment: environment as Environment,
+                })
+              }
+            >
+              <SelectTrigger className={triggerClass} aria-label="Environment">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ENVIRONMENTS.map((environment) => (
+                  <SelectItem key={environment} value={environment}>
+                    {ENVIRONMENT_LABEL[environment]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field label="Build">
+            <span className="px-1.5 font-mono text-[12px] text-grey-700">
+              {ticket.buildVersion ?? "—"}
+            </span>
+          </Field>
+        </>
+      ) : null}
+
+      {ticket.requesterId ? (
+        <Field label="Requester">
+          <span className="flex items-center gap-2 px-1.5 text-small text-grey-700">
+            <UserAvatar userId={ticket.requesterId} />
+            {getUser(ticket.requesterId)?.name}
+          </span>
+        </Field>
+      ) : null}
+
+      {ticket.slaDueAt ? (
+        <Field label="SLA">
+          {isSlaBreached(ticket) ? (
+            <span className="px-1.5">
+              <AlertChip>Breached {formatDueDate(ticket.slaDueAt)}</AlertChip>
+            </span>
+          ) : (
+            <span className="px-1.5 text-small text-grey-700">
+              Respond by {formatDueDate(ticket.slaDueAt)}
+            </span>
+          )}
+        </Field>
+      ) : null}
+
       <Field label="Labels" className="items-start">
         {ticket.labelIds.length > 0 ? (
           <div className="flex flex-wrap gap-1 py-1.5">
@@ -146,18 +233,25 @@ export function TicketFields({ ticket }: { ticket: Ticket }) {
       </Field>
 
       <Field label="Due">
+        {ticket.dueAt && overdue ? (
+          <span className="px-1.5">
+            <AlertChip>{formatDueDate(ticket.dueAt)} · overdue</AlertChip>
+          </span>
+        ) : (
+          <span className="px-1.5 text-small text-grey-700">
+            {ticket.dueAt ? formatDueDate(ticket.dueAt) : "—"}
+          </span>
+        )}
+      </Field>
+
+      <Field label="Age">
         <span
           className={cn(
-            "px-1.5 text-small",
-            overdue ? "font-medium text-grey-900" : "text-grey-700",
+            "tnum px-1.5 text-small",
+            isStale(ticket) ? "font-medium text-grey-900" : "text-grey-700",
           )}
         >
-          {ticket.dueAt ? formatDueDate(ticket.dueAt) : "—"}
-          {overdue ? (
-            <span className="ml-1.5 text-caption font-medium text-grey-500">
-              Overdue
-            </span>
-          ) : null}
+          {daysInColumn(ticket)}d in {STATUS_LABEL[ticket.status].toLowerCase()}
         </span>
       </Field>
 

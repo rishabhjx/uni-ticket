@@ -24,14 +24,40 @@ Then open http://localhost:3000. Node 18.18+ required.
 
 | Route | What it is |
 | --- | --- |
-| `/` | Personal KPIs and a summary per project you are assigned to |
-| `/my-tickets` | Everything assigned to you, across projects |
+| `/` | Overview: my KPIs, my team's KPIs, and a card per project I work on |
+| `/my-work` | Assigned to me and My team on one page, with KPIs that filter it |
 | `/boards` | Every board, with its column distribution |
 | `/projects` | All projects with stats, lead and members |
-| `/projects/[key]/board` | Kanban with drag and drop |
+| `/projects/[key]/board` | Kanban with drag and drop, filters and group-by |
 | `/projects/[key]/list` | Sortable, filterable, virtualized table |
 
-The ticket detail panel opens over any of them. ⌘K opens search from anywhere.
+The ticket detail panel opens over any of them.
+
+**Filters live in the URL**, so any view is a link you can paste to someone.
+Saved views pin a filter combination into the sidebar.
+
+## Shortcuts
+
+| Key | Does |
+| --- | --- |
+| `⌘K` | Command palette — search tickets, jump to a board |
+| `C` | New ticket |
+| `⌘B` | Toggle the sidebar |
+| `J` / `K` | Move down / up the list |
+| `Enter` | Open the ticket under the cursor |
+| `X` | Select it, for bulk actions |
+| `Esc` | Close the panel |
+
+## Personas
+
+Ticket types carry the fields their persona needs rather than one flat shape:
+
+- **Bugs and incidents** — severity (separate from priority), environment,
+  build version, attachments.
+- **Anything with code behind it** — linked branch, PR number, PR state and CI
+  status.
+- **Service desk requests** — a requester who is not on the team, and an SLA
+  target derived from severity.
 
 ## Layout
 

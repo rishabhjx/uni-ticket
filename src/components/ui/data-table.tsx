@@ -30,7 +30,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
-import type { HTMLAttributes, ReactNode, RefObject } from "react";
+import type { CSSProperties, HTMLAttributes, ReactNode, RefObject } from "react";
+import type * as React from "react";
 import {
   createContext,
   useCallback,
@@ -213,14 +214,25 @@ export type TableRowProps = {
   children: (props: { cell: Cell<unknown, unknown> }) => ReactNode;
   className?: string;
   onClick?: () => void;
+  style?: React.CSSProperties;
+  "data-ticket-row"?: string;
 };
 
-export const TableRow = ({ row, children, className, onClick }: TableRowProps) => (
+export const TableRow = ({
+  row,
+  children,
+  className,
+  onClick,
+  style,
+  ...rest
+}: TableRowProps) => (
   <TableRowRaw
     className={className}
     data-state={row.getIsSelected() && "selected"}
     key={row.id}
     onClick={onClick}
+    style={style}
+    {...rest}
   >
     {row.getVisibleCells().map((cell) => children({ cell }))}
   </TableRowRaw>

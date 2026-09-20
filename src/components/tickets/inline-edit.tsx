@@ -44,6 +44,35 @@ export function InlineEdit({
     else setDraft(value);
   };
 
+  const cancel = () => {
+    setDraft(value);
+    setEditing(false);
+  };
+
+  /**
+   * The panel listens for Escape on `window` to close itself, so without this
+   * an Escape meant to abandon an edit closed the whole ticket and took the
+   * draft with it. Enter is stopped for the same reason: nothing above should
+   * get to act on a keystroke aimed at a field.
+   */
+  const onKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      cancel();
+      return;
+    }
+    if (event.key === "Enter") {
+      // A textarea takes plain Enter as a newline; only the modifier saves.
+      if (multiline && !(event.metaKey || event.ctrlKey)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      commit();
+    }
+  };
+
   if (!editing) {
     return (
       <button
@@ -77,13 +106,7 @@ export function InlineEdit({
       aria-label={label}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          setDraft(value);
-          setEditing(false);
-        }
-        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) commit();
-      }}
+      onKeyDown={onKeyDown}
       className={cn(shared, "resize-y font-mono text-[12px] leading-[18px]")}
     />
   ) : (
@@ -94,13 +117,7 @@ export function InlineEdit({
       aria-label={label}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          setDraft(value);
-          setEditing(false);
-        }
-        if (event.key === "Enter") commit();
-      }}
+      onKeyDown={onKeyDown}
       className={shared}
     />
   );

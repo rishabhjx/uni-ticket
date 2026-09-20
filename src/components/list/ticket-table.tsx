@@ -83,21 +83,36 @@ export const OPTIONAL_COLUMNS: { id: ColumnId; label: string }[] = [
 /**
  * Pixel widths rather than the Tailwind classes this used to carry: the grid
  * lays out with a fixed table layout and a colgroup, so it wants numbers.
- * Title has no size, which leaves it the flexible column.
+ *
+ * Title is deliberately absent, but leaving it unsized is NOT what makes it
+ * flexible - TanStack hands an unsized column a default 150px, which is why
+ * the title clipped at "Split invoices by c..." while Status sat on 116px of
+ * a two-word badge. It gets `meta.fillWidth` below instead, ReUI's flag for
+ * the one column that absorbs the leftover width.
+ *
+ * The rest are sized to their actual content: a status badge is never wider
+ * than "In Progress", a due cell has to hold "SLA breached" without clipping,
+ * and the label column needs room for two chips plus a "+1".
  */
 const SIZES: Partial<Record<ColumnId, number>> = {
-  select: 40,
+  select: 44,
   key: 108,
-  project: 72,
-  status: 116,
-  priority: 112,
-  severity: 72,
-  assignee: 176,
-  labels: 184,
-  dueAt: 104,
+  project: 76,
+  // Sized to the longest badge each will ever hold ("Ready for QA",
+  // "Medium"), plus the cell's own 32px of padding. At 124/108 both clipped
+  // to "Ready for QA .." and "Medium ..".
+  status: 148,
+  priority: 124,
+  severity: 68,
+  assignee: 168,
+  labels: 172,
+  dueAt: 128,
   age: 84,
   updatedAt: 96,
 };
+
+/** Below this the title stops being readable, so the grid scrolls instead. */
+const TITLE_MIN = 280;
 
 /** Cells whose content is a badge or a chip row, which must not be clipped. */
 const NO_TRUNCATE = new Set<ColumnId>([
@@ -113,7 +128,9 @@ type Column = ColumnDef<DataGridFeatures, Ticket, unknown>;
 
 function cellClass(id: ColumnId) {
   return cn(
-    "px-3 py-0",
+    // px-4, not px-3: at 12px the columns read as one block of text with
+    // vertical lines through it rather than as separate fields.
+    "px-4 py-1.5",
     NO_TRUNCATE.has(id) ? "whitespace-nowrap" : "truncate",
   );
 }
@@ -343,8 +360,16 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
     .filter((id) => visible.has(id))
     .map((id) => ({
       ...all[id],
-      ...(SIZES[id] === undefined ? {} : { size: SIZES[id] }),
-      meta: { cellClassName: cellClass(id) },
+      ...(SIZES[id] === undefined
+        ? { size: TITLE_MIN, minSize: TITLE_MIN }
+        : { size: SIZES[id] }),
+      meta: {
+        cellClassName: cellClass(id),
+        headerClassName: cellClass(id),
+        // Title takes whatever is left over, so it is the column that grows
+        // with the window instead of the one that clips first.
+        ...(SIZES[id] === undefined ? { fillWidth: true } : {}),
+      },
     }));
 }
 
@@ -400,14 +425,32 @@ export function TicketTable({
         columnsMovable: true,
       }}
       tableClassNames={{
-        // glass-strong rather than the grid's own translucent default: the
-        // rows scrolling under a sticky header need the opacity floor, or
-        // text shows through text.
-        headerSticky: "glass-strong sticky top-0 z-40",
-        headerRow: "h-9",
-        bodyRow: "cursor-pointer border-b border-grey-150 transition-colors",
+        /*
+         * z-30, not the default z-40. The ticket panel sits at z-50 and this
+         * header was painting straight over it, so the list's column headings
+         * showed through the ticket description.
+         *
+         * Opaque rather than translucent: rows scrolling under a see-through
+         * header put text on top of text.
+         */
+        headerSticky: "sticky top-0 z-30 bg-grey-0",
+        headerRow: "h-10",
+        /*
+         * The row height has to be set in CSS, not only handed to the
+         * virtualiser. `estimateSize` positions rows; it does not size them.
+         * With no vertical padding the rows collapsed to 25px of content while
+         * the virtualiser spaced them 48px apart — which is both why the table
+         * read as a solid block and why scrolling it jumped.
+         */
+        bodyRow:
+          "h-[var(--grid-row-h)] cursor-pointer border-b border-grey-150 transition-colors",
       }}
     >
+      {/* The var rides a wrapper because DataGridContainer takes no style. */}
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        style={{ "--grid-row-h": `${rowHeight}px` } as React.CSSProperties}
+      >
       <DataGridContainer className="min-h-0 flex-1">
         <DataGridTableVirtual
           height="100%"
@@ -415,6 +458,7 @@ export function TicketTable({
           overscan={8}
         />
       </DataGridContainer>
+      </div>
     </DataGrid>
   );
 }

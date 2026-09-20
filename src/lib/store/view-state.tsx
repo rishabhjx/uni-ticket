@@ -369,9 +369,14 @@ export function useViewState() {
   return context;
 }
 
+/**
+ * Comfortable went 44 -> 48. A status badge plus a priority badge plus an
+ * avatar in a 44px row leaves 4px of air above and below them, which is what
+ * made the list read as a wall rather than as rows.
+ */
 export const ROW_HEIGHT: Record<Density, number> = {
-  comfortable: 44,
-  compact: 32,
+  comfortable: 48,
+  compact: 34,
 };
 
 export function groupKeyOf(ticket: Ticket, groupBy: GroupBy): string {

@@ -20,6 +20,11 @@ import {
   DevelopmentBlock,
 } from "@/components/tickets/development-block";
 import { InlineEdit } from "@/components/tickets/inline-edit";
+import {
+  PanelResizer,
+  useStoredPanelWidth,
+  writePanelWidth,
+} from "@/components/tickets/panel-resizer";
 import { LinksBlock } from "@/components/tickets/links-block";
 import { TicketFields } from "@/components/tickets/ticket-fields";
 import {
@@ -44,6 +49,9 @@ export function TicketPanel() {
   const { tickets, comments, updateTicket, reopenTicket } = useTicketStore();
   const headingRef = React.useRef<HTMLDivElement>(null);
   const [showHistory, setShowHistory] = React.useState(true);
+
+  // The saved width is an external store, so it hydrates without an effect.
+  const width = useStoredPanelWidth();
 
   const ticket = React.useMemo(
     () => tickets.find((item) => item.key === openTicketKey) ?? null,
@@ -80,12 +88,32 @@ export function TicketPanel() {
       aria-label={ticket ? `Ticket ${ticket.key}` : "Ticket detail"}
       aria-hidden={!open}
       inert={!open}
+      style={
+        // While dragging, the width is a live number rather than a class, so
+        // the transition is dropped: animating every pointermove lags the edge
+        // behind the cursor.
+        expanded ? undefined : { width }
+      }
       className={cn(
-        "glass absolute inset-y-0 right-0 z-20 flex max-w-full flex-col border-l border-grey-200 transition-[transform,width] duration-[--duration-slow] max-md:w-full",
-        expanded ? "w-[min(920px,100%)]" : "w-panel",
+        /*
+         * z-50, not z-20. The data-grid's sticky header sits at z-40 and was
+         * painting straight over this panel — the list's column headings
+         * showed through the ticket description.
+         *
+         * bg-grey-0 rather than .glass for the same reason: a translucent
+         * panel over a dense table is unreadable, whatever the z-index. Glass
+         * is for things that float over content briefly, not for a surface you
+         * read a paragraph in.
+         */
+        "absolute inset-y-0 right-0 z-50 flex max-w-full flex-col border-l border-grey-200 bg-grey-0 max-md:w-full",
+        expanded && "w-[min(1200px,100%)]",
         open ? "translate-x-0 shadow-overlay" : "translate-x-full",
+        "transition-[transform] duration-[--duration-slow]",
       )}
     >
+      {open && !expanded ? (
+        <PanelResizer width={width} onWidth={writePanelWidth} disabled={!open} />
+      ) : null}
       {ticket ? (
         <>
           <header className="hairline-b flex h-topbar shrink-0 items-center gap-2 px-5">

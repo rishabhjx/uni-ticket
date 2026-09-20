@@ -98,6 +98,9 @@ export function AttachmentsBlock({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = React.useState(false);
 
+  // Counts dragenter/dragleave pairs; see the drop zone below.
+  const dragDepth = React.useRef(0);
+
   const accept = (files: FileList | null) => {
     if (!files) return;
     for (const file of Array.from(files)) {
@@ -166,26 +169,51 @@ export function AttachmentsBlock({
       </AttachmentGroup>
 
       {canEdit ? (
-        <div
-          onDragOver={(event) => {
+        /*
+         * A button, not a div. It looked like a drop zone and behaved like
+         * one, but the obvious thing to do with it is click it — and clicking
+         * did nothing at all, which is what "it doesn't work" meant.
+         *
+         * dragenter is counted rather than toggled: dragging across a child
+         * element fires dragleave on the parent, so a plain boolean flickered
+         * the highlight off while the pointer was still inside.
+         */
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          onDragEnter={(event) => {
             event.preventDefault();
+            dragDepth.current += 1;
             setDragging(true);
           }}
-          onDragLeave={() => setDragging(false)}
+          onDragOver={(event) => {
+            // Without this the browser treats the drop as navigation and the
+            // drop handler never runs.
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+          }}
+          onDragLeave={() => {
+            dragDepth.current -= 1;
+            if (dragDepth.current <= 0) {
+              dragDepth.current = 0;
+              setDragging(false);
+            }
+          }}
           onDrop={(event) => {
             event.preventDefault();
+            dragDepth.current = 0;
             setDragging(false);
             accept(event.dataTransfer.files);
           }}
           className={cn(
-            "rounded-md border border-dashed px-2.5 py-3 text-center text-caption transition-colors",
+            "w-full rounded-md border border-dashed px-2.5 py-3 text-center text-caption transition-colors",
             dragging
               ? "border-accent-600 bg-accent-50 text-accent-700"
-              : "border-grey-200 text-grey-400",
+              : "border-grey-200 text-grey-400 hover:border-grey-300 hover:text-grey-600",
           )}
         >
-          Drop a screenshot or log here
-        </div>
+          {dragging ? "Drop to attach" : "Drop a screenshot or log here, or click to browse"}
+        </button>
       ) : null}
     </div>
   );

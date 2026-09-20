@@ -119,7 +119,7 @@ export function KpiStrip({ kpis }: { kpis: PersonalKpis }) {
                 : "border-grey-200 hover:border-grey-300",
             )}
           >
-            <span className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+            <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
               {tile.label}
             </span>
             <span

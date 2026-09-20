@@ -58,7 +58,7 @@ function Metric({
 }) {
   return (
     <div className="flex flex-col rounded-md border border-grey-200 p-4">
-      <span className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+      <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
         {label}
       </span>
       <span className="tnum mt-2 text-metric font-semibold text-grey-900">
@@ -128,7 +128,7 @@ export function InsightsView() {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="hairline-b flex items-center gap-2 px-6 py-2.5">
-        <span className="text-caption tracking-wide text-grey-500 uppercase">
+        <span className="text-caption tracking-[0.07em] text-grey-500 uppercase">
           Project
         </span>
         <Select value={projectId} onValueChange={setProjectId}>

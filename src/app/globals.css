@@ -220,7 +220,14 @@
   --selection: var(--accent-600);
   --selection-foreground: var(--accent-ink);
 
-  /* --- One radius, theirs (0.625rem) -------------------------------------- */
+  /* --- Radius -------------------------------------------------------------
+     ReUI's 0.625rem (10px) is the surface radius: cards, popovers, dialogs,
+     board columns. Controls and chips sit one step in at 8px (`rounded-md`),
+     and anything nested inside a surface takes one step less than the thing
+     containing it -- a menu item at 6px inside a popover at 10px. That
+     nesting rule is why more than one radius renders at a time, and it is
+     deliberate: matching radii on nested boxes makes the inner one look
+     wrong. Pills (`rounded-full`) are for avatars and counts only.         */
   --radius: 0.625rem;
 
   /* --- Layout metrics ----------------------------------------------------- */
@@ -358,20 +365,32 @@ html.light {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* Type scale — 5 steps, nothing else */
-  --text-caption: 12px;
+  /* --- Type ----------------------------------------------------------------
+     Six sizes, each with a job, each far enough from its neighbour to read as
+     a level rather than as noise. The old scale put `small` at 13 and `body`
+     at 14 and let those two carry most of the product: a 1px difference is
+     not a hierarchy, it is a rendering artefact. `body` moves to 15/22, which
+     also gives long-form description and comment text a reading size it never
+     had -- a spec-length description used to render at the same size as a
+     table cell. Dense UI stays on 13.                                       */
+  --text-micro: 11px;                     /* avatar initials, count chips */
+  --text-micro--line-height: 14px;
+  --text-micro--letter-spacing: 0.01em;
+  --text-caption: 12px;                   /* badges, meta, column labels */
   --text-caption--line-height: 16px;
-  --text-caption--letter-spacing: 0.02em;
-  --text-small: 13px;
+  --text-caption--letter-spacing: 0.01em;
+  --text-small: 13px;                     /* dense UI: rows, controls, chips */
   --text-small--line-height: 18px;
-  --text-body: 14px;
-  --text-body--line-height: 20px;
-  --text-heading: 15px;
-  --text-heading--line-height: 20px;
-  --text-heading--letter-spacing: -0.006em;
-  --text-title: 20px;
-  --text-title--line-height: 28px;
-  --text-title--letter-spacing: -0.014em;
-  --text-metric: 28px;
+  --text-body: 15px;                      /* prose: descriptions, comments */
+  --text-body--line-height: 22px;
+  --text-body--letter-spacing: -0.003em;
+  --text-heading: 17px;                   /* section and panel headings */
+  --text-heading--line-height: 24px;
+  --text-heading--letter-spacing: -0.012em;
+  --text-title: 24px;                     /* the page's name */
+  --text-title--line-height: 30px;
+  --text-title--letter-spacing: -0.018em;
+  --text-metric: 28px;                    /* a number that is the point */
   --text-metric--line-height: 34px;
   --text-metric--letter-spacing: -0.02em;
 

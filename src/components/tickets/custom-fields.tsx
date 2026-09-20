@@ -51,7 +51,7 @@ export function CustomFields({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <h3 className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+      <h3 className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
         {getProject(ticket.projectId)?.name} fields
       </h3>
 

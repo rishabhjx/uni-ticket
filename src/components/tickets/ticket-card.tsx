@@ -60,15 +60,18 @@ export function TicketCard({
       className="group/card flex flex-col gap-2 p-3"
       onClick={onOpen ? () => onOpen(ticket.key) : undefined}
     >
-      <div className="flex items-center gap-1.5">
+      {/* nowrap and min-w-0: the status chip grew a dot, and on a narrow
+          column the row was breaking so the key and its status stacked. The
+          key never wraps; the status label ellipsises instead. */}
+      <div className="flex flex-nowrap items-center gap-1.5">
         <TypeIcon type={ticket.type} />
-        <TicketKey value={ticket.key} />
+        <TicketKey value={ticket.key} className="shrink-0" />
         {ticket.severity ? (
           <SeverityBadge severity={ticket.severity} short />
         ) : null}
         <span
           className={cn(
-            "ml-auto",
+            "ml-auto min-w-0",
             // Repeating the column name on every card is noise; the control
             // is still there on hover for changing it.
             !showStatus &&
@@ -83,12 +86,12 @@ export function TicketCard({
         {ticket.title}
       </p>
 
-      <div className="flex flex-wrap items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1.5">
         <PriorityBadge priority={ticket.priority} />
         {/* Only the fields the project marked for the card: a card with
             every custom field on it stops being scannable. */}
         {cardFields.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {cardFields.map(({ field, text }) => (
               <span
                 key={field.id}
@@ -135,7 +138,7 @@ export function TicketCard({
         ) : null}
 
         {ticket.attachments.length > 0 ? (
-          <span className="inline-flex items-center gap-0.5 text-caption text-grey-500">
+          <span className="inline-flex items-center gap-1 text-caption text-grey-500">
             <Paperclip className="size-3" strokeWidth={2} />
             {ticket.attachments.length}
           </span>

@@ -84,7 +84,7 @@ export function TicketPage({ ticketKey }: { ticketKey: string }) {
             >
               <ChevronLeft className="size-3.5" strokeWidth={2} />
               <span className="tnum">{parent.key}</span>
-              <span aria-hidden className="text-grey-300">
+              <span aria-hidden className="text-grey-400">
                 /
               </span>
             </Link>

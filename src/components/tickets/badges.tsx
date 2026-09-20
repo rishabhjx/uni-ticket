@@ -162,7 +162,7 @@ export function StatusBadge({
       )}
     >
       {accent ? null : <StatusDot status={status} />}
-      {STATUS_LABEL[status]}
+      <span className="truncate">{STATUS_LABEL[status]}</span>
     </span>
   );
 }
@@ -288,13 +288,16 @@ export function AlertChip({
 
 export function LabelChip({
   name,
+  title,
   className,
 }: {
   name: string;
+  title?: string;
   className?: string;
 }) {
   return (
     <span
+      title={title}
       className={cn(
         // inline-block rather than inline-flex so a truncated chip actually
         // gets an ellipsis: text-overflow has no effect on a flex container.

@@ -61,7 +61,7 @@ function Field({
 }) {
   return (
     <div className={cn("grid grid-cols-[92px_1fr] items-center gap-3", className)}>
-      <span className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+      <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
         {label}
       </span>
       <div className="min-w-0">{children}</div>

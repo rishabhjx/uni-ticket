@@ -36,7 +36,7 @@ export function ColumnChooser({
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-48 p-1.5">
-        <p className="px-1.5 py-1 text-caption font-medium tracking-wide text-grey-500 uppercase">
+        <p className="px-1.5 py-1 text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
           Columns
         </p>
         {OPTIONAL_COLUMNS.map((column) => (

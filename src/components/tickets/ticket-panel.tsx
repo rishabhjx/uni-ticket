@@ -136,7 +136,7 @@ export function TicketPanel() {
               >
                 <ChevronLeft className="size-3.5 shrink-0" strokeWidth={2} />
                 <span className="tnum shrink-0">{parent.key}</span>
-                <span aria-hidden className="text-grey-300">
+                <span aria-hidden className="text-grey-400">
                   /
                 </span>
               </button>

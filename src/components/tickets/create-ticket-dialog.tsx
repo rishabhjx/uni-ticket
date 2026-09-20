@@ -58,7 +58,7 @@ const fieldClass =
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="grid grid-cols-[92px_1fr] items-center gap-3">
-      <span className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+      <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
         {label}
       </span>
       <div className="min-w-0">{children}</div>

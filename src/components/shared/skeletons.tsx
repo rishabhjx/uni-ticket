@@ -100,13 +100,13 @@ export function BoardSkeleton({ columns = 6 }: { columns?: number }) {
         {Array.from({ length: columns }, (_, column) => (
           <div
             key={column}
-            className="flex min-w-[268px] flex-1 shrink-0 flex-col self-start rounded-md border border-grey-200 bg-grey-50"
+            className="flex min-w-[288px] flex-1 shrink-0 basis-0 flex-col self-start rounded-md border border-grey-200 bg-grey-50 xl:max-w-[400px]"
           >
             <div className="flex h-10 shrink-0 items-center gap-2 border-b border-grey-200 px-3">
               <Bar className="h-3 w-20" />
               <Bar className="h-3 w-4" />
             </div>
-            <div className="flex flex-col gap-2 p-2">
+            <div className="flex flex-col gap-2 p-3">
               {Array.from({ length: cards[column % cards.length] }, (_, card) => (
                 <div
                   key={card}

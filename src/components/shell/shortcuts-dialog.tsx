@@ -53,7 +53,7 @@ export function ShortcutsDialog({
         <div className="flex flex-col gap-4">
           {GROUPS.map((group) => (
             <section key={group.name}>
-              <h3 className="mb-2 text-caption font-semibold tracking-wide text-grey-500 uppercase">
+              <h3 className="mb-2 text-caption font-semibold tracking-[0.07em] text-grey-500 uppercase">
                 {group.name}
               </h3>
               <ul className="flex flex-col">

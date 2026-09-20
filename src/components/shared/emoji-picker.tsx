@@ -86,7 +86,7 @@ export function EmojiPicker({
           ) : (
             EMOJI_GROUPS.map((group) => (
               <section key={group.name} className="mb-2 last:mb-0">
-                <h4 className="px-1 pb-1 text-caption font-semibold tracking-wide text-grey-500 uppercase">
+                <h4 className="px-1 pb-1 text-caption font-semibold tracking-[0.07em] text-grey-500 uppercase">
                   {group.name}
                 </h4>
                 <div className="grid grid-cols-8 gap-0.5">

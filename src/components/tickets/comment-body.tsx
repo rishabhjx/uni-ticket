@@ -99,14 +99,14 @@ export function CommentBody({ comment }: { comment: Comment }) {
         ) : null}
 
         {comment.attachments.length > 0 ? (
-          <AttachmentGroup className="mt-1.5 flex flex-wrap">
+          <AttachmentGroup className="mt-1.5 flex flex-wrap gap-2">
             {comment.attachments.map((file) => {
               const Icon = attachmentIcon[file.kind];
               return (
                 <AttachmentCard
                   key={file.id}
-                  size="xs"
-                  className="w-[190px] cursor-pointer"
+                  size="sm"
+                  className="min-w-[172px] flex-1 basis-[172px] sm:max-w-[264px] cursor-pointer"
                   onClick={() => openAsset(file.id)}
                 >
                   <AttachmentMedia

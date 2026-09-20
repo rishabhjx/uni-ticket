@@ -36,7 +36,7 @@ export function GroupBySelect() {
   return (
     <>
     <label className="flex shrink-0 items-center gap-1.5">
-      <span className="text-caption tracking-wide text-grey-500 uppercase">
+      <span className="text-caption tracking-[0.07em] text-grey-500 uppercase">
         Group
       </span>
       <Select value={groupBy} onValueChange={(value) => setGroupBy(value as GroupBy)}>
@@ -57,7 +57,7 @@ export function GroupBySelect() {
     </label>
 
     <label className="flex shrink-0 items-center gap-1.5">
-      <span className="text-caption tracking-wide text-grey-500 uppercase">
+      <span className="text-caption tracking-[0.07em] text-grey-500 uppercase">
         Lanes
       </span>
       <Select

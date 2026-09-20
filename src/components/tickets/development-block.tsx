@@ -60,7 +60,7 @@ export function AttachmentsBlock({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <h3 className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+        <h3 className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
           Attachments
         </h3>
         {canEdit ? (
@@ -86,9 +86,9 @@ export function AttachmentsBlock({
         }}
       />
 
-      <AttachmentGroup className="flex flex-col">
+      <AttachmentGroup className="flex flex-wrap gap-2">
         {attachments.map((file) => (
-          <AttachmentCard key={file.id} size="sm" className="w-full">
+          <AttachmentCard key={file.id} size="sm" className="min-w-[172px] flex-1 basis-[172px] sm:max-w-[264px]">
             {/* A screenshot you cannot see is a filename. */}
             <AttachmentMedia
               variant={file.url ? "image" : "icon"}

@@ -126,7 +126,7 @@ export function LinksBlock({ ticket, canEdit }: { ticket: Ticket; canEdit: boole
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <h3 className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+        <h3 className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
           Relationships
         </h3>
 
@@ -206,9 +206,17 @@ export function LinksBlock({ ticket, canEdit }: { ticket: Ticket; canEdit: boole
             {children.length} child{children.length === 1 ? "" : "ren"} ·{" "}
             {children.filter((child) => child.status === "done").length} verified
           </span>
-          {children.slice(0, 6).map((child) => (
-            <TicketRow key={child.id} ticket={child} />
-          ))}
+          {/*
+           * Children sat flush with everything else, so the only thing saying
+           * "these belong to that" was the heading above them. An inset and a
+           * rule down the left make the containment visible, which is what
+           * hierarchy is for.
+           */}
+          <div className="ml-2 flex flex-col gap-1 border-l border-grey-200 pl-3">
+            {children.slice(0, 6).map((child) => (
+              <TicketRow key={child.id} ticket={child} />
+            ))}
+          </div>
         </div>
       ) : null}
 

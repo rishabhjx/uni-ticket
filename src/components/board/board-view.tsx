@@ -262,7 +262,7 @@ export function BoardView({ project }: { project: Project }) {
 
   const columnHeader = (column: { id: string; name: string }, count: number) => (
     <div className="flex h-10 shrink-0 items-center gap-2 border-b border-grey-200 px-3">
-      <span className="truncate text-caption font-semibold tracking-wide text-grey-700 uppercase">
+      <span className="truncate text-caption font-semibold tracking-[0.07em] text-grey-700 uppercase">
         {column.name}
       </span>
       <span
@@ -329,7 +329,7 @@ export function BoardView({ project }: { project: Project }) {
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
           {lanes.map((lane) => (
             <section key={lane.id}>
-              <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold tracking-wide text-grey-600 uppercase">
+              <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
                 {lane.name}
                 <span className="tnum font-normal text-grey-400">
                   {lane.items.length}
@@ -343,9 +343,9 @@ export function BoardView({ project }: { project: Project }) {
                   return (
                     <div
                       key={column.id}
-                      className="flex w-[300px] shrink-0 flex-col gap-2 rounded-md border border-grey-200 bg-grey-50 p-2"
+                      className="flex min-w-[288px] flex-1 shrink-0 basis-0 flex-col gap-2 rounded-md border border-grey-200 bg-grey-50 p-3 xl:max-w-[400px]"
                     >
-                      <span className="px-1 text-caption font-semibold tracking-wide text-grey-600 uppercase">
+                      <span className="px-1 text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
                         {column.name}
                         <span className="tnum ml-1.5 font-normal text-grey-400">
                           {items.length}
@@ -389,13 +389,13 @@ export function BoardView({ project }: { project: Project }) {
                 <KanbanColumn
                   key={column.id}
                   value={column.id}
-                  className="flex h-full w-[300px] shrink-0 flex-col overflow-hidden rounded-md border border-grey-200 bg-grey-50 p-0"
+                  className="flex h-full min-w-[288px] flex-1 shrink-0 basis-0 flex-col overflow-hidden rounded-md border border-grey-200 bg-grey-50 p-0 xl:max-w-[400px]"
                 >
                   {columnHeader(column, value[column.id]?.length ?? 0)}
 
                   <KanbanColumnContent
                     value={column.id}
-                    className="flex flex-1 flex-col gap-2 overflow-y-auto p-2"
+                    className="flex flex-1 flex-col gap-2 overflow-y-auto p-3"
                   >
                     {(value[column.id] ?? []).map((ticket) => (
                       <KanbanItem key={ticket.id} value={ticket.id}>

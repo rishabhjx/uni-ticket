@@ -21,8 +21,8 @@ const paletteById: Record<string, string> = {
 const fallback = "bg-grey-200 text-grey-700";
 
 const sizeClass = {
-  sm: "size-5 text-[9px]",
-  md: "size-6 text-[10px]",
+  sm: "size-5 text-[10px]",
+  md: "size-6 text-micro",
   lg: "size-8 text-caption",
 } as const;
 

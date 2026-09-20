@@ -64,7 +64,7 @@ export function CallButton({
 
           <div className="flex flex-col gap-3">
             <div>
-              <p className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+              <p className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
                 Room
               </p>
               <p className="mt-1 font-mono text-small text-grey-700">
@@ -73,7 +73,7 @@ export function CallButton({
             </div>
 
             <div>
-              <p className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+              <p className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
                 Invites {participantIds.length}
               </p>
               <ul className="mt-1.5 flex flex-wrap gap-1.5">

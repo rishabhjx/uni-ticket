@@ -18,7 +18,7 @@ import type { ProjectStats } from "@/lib/mock";
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-caption tracking-wide text-grey-500 uppercase">
+      <span className="text-caption tracking-[0.07em] text-grey-500 uppercase">
         {label}
       </span>
       <span className="tnum text-small font-medium text-grey-900">{value}</span>
@@ -70,7 +70,7 @@ export function ProjectCard({
             <UserAvatar key={id} userId={id} />
           ))}
           {project.memberIds.length > 4 ? (
-            <span className="tnum flex size-5 items-center justify-center rounded-full bg-grey-100 text-[9px] font-medium text-grey-600">
+            <span className="tnum flex size-[18px] items-center justify-center rounded-full bg-grey-100 text-micro font-medium text-grey-600">
               +{project.memberIds.length - 4}
             </span>
           ) : null}

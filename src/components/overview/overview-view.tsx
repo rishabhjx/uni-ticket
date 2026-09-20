@@ -34,7 +34,7 @@ function KpiCard({
       href={href}
       className="flex flex-col rounded-md border border-grey-200 p-4 transition-colors hover:border-grey-300"
     >
-      <span className="text-caption font-medium tracking-wide text-grey-500 uppercase">
+      <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
         {label}
       </span>
       <span
@@ -55,7 +55,7 @@ function KpiCard({
 function Stat({ label, value, alert }: { label: string; value: string | number; alert?: boolean }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-caption tracking-wide text-grey-500 uppercase">
+      <span className="text-caption tracking-[0.07em] text-grey-500 uppercase">
         {label}
       </span>
       <span

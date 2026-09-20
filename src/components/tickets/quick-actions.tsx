@@ -105,9 +105,9 @@ export function QuickStatus({ ticket }: { ticket: Ticket }) {
           type="button"
           aria-label={`Status: ${STATUS_LABEL[ticket.status]}`}
           onClick={(event) => event.stopPropagation()}
-          className="transition-opacity hover:opacity-80"
+          className="flex min-w-0 transition-opacity hover:opacity-80"
         >
-          <StatusBadge status={ticket.status} />
+          <StatusBadge status={ticket.status} className="min-w-0" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

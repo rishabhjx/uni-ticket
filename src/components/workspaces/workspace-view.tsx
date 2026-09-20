@@ -36,7 +36,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
                 <UserAvatar key={id} userId={id} />
               ))}
               {workspace.memberIds.length > 5 ? (
-                <span className="tnum flex size-5 items-center justify-center rounded-full bg-grey-100 text-[9px] font-medium text-grey-600">
+                <span className="tnum flex size-[18px] items-center justify-center rounded-full bg-grey-100 text-micro font-medium text-grey-600">
                   +{workspace.memberIds.length - 5}
                 </span>
               ) : null}

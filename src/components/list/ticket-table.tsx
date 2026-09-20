@@ -201,7 +201,12 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
         <span className="flex min-w-0 items-center gap-1.5">
           {/* min-w-0 on both: a flex child will not shrink below its content
               width without it, so the title would never ellipsis. */}
-          <span className="min-w-0 flex-1 truncate text-small text-grey-900">
+          {/* Truncation without a title is information deleted, not hidden:
+              hovering a cut-off title revealed nothing. */}
+          <span
+            className="min-w-0 flex-1 truncate text-small text-grey-900"
+            title={row.original.title}
+          >
             {row.original.title}
           </span>
           {row.original.attachments.length > 0 ? (
@@ -252,7 +257,7 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
         row.original.severity ? (
           <SeverityBadge severity={row.original.severity} short />
         ) : (
-          <span className="text-small text-grey-300">—</span>
+          <span aria-hidden className="text-small text-grey-400">—</span>
         ),
     },
     assignee: {
@@ -284,11 +289,25 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
           {row.original.labelIds.slice(0, 2).map((id) => {
             const label = getLabel(id);
             return label ? (
-              <LabelChip key={id} name={label.name} className="max-w-[76px] truncate" />
+              // 76px cut nearly every label to "perfor…" / "regress…", which
+              // is a chip carrying no information. 120px fits the real ones.
+              <LabelChip
+                key={id}
+                name={label.name}
+                title={label.name}
+                className="max-w-[120px] truncate"
+              />
             ) : null;
           })}
           {row.original.labelIds.length > 2 ? (
-            <span className="tnum text-caption text-grey-400">
+            <span
+              className="tnum text-caption text-grey-500"
+              title={row.original.labelIds
+                .slice(2)
+                .map((id) => getLabel(id)?.name)
+                .filter(Boolean)
+                .join(", ")}
+            >
               +{row.original.labelIds.length - 2}
             </span>
           ) : null}
@@ -301,7 +320,7 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
       cell: ({ row }) => {
         const ticket = row.original;
         if (isSlaBreached(ticket)) return <AlertChip tone="breached">SLA breached</AlertChip>;
-        if (!ticket.dueAt) return <span className="text-small text-grey-300">—</span>;
+        if (!ticket.dueAt) return <span aria-hidden className="text-small text-grey-400">—</span>;
         return isOverdue(ticket) ? (
           <AlertChip>{formatDueDate(ticket.dueAt)}</AlertChip>
         ) : (
@@ -396,9 +415,11 @@ function customColumns(fields: CustomField[]): Column[] {
       cell: ({ row }: { row: { original: Ticket } }) => {
         const text = formatCustomValue(field, row.original.custom?.[field.id]);
         return text ? (
-          <span className="truncate text-small text-grey-700">{text}</span>
+          <span className="truncate text-small text-grey-700" title={text}>
+            {text}
+          </span>
         ) : (
-          <span className="text-small text-grey-300">—</span>
+          <span aria-hidden className="text-small text-grey-400">—</span>
         );
       },
     })) as Column[];

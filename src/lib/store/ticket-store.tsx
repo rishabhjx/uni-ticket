@@ -215,8 +215,15 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
   const [events, setEvents] = React.useState<TicketEvent[]>(seedEvents);
   const [isLoading, setIsLoading] = React.useState(true);
 
+  /*
+   * The data is in the bundle, so this is theatre -- but a prototype that
+   * paints fully formed hides the loading states, and those are half of how a
+   * product feels. 260ms rather than the 450 it was: long enough to see the
+   * skeleton, short enough not to be a wait. It runs once, at the root, so
+   * client navigation between views never re-skeletons.
+   */
   React.useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 450);
+    const timer = window.setTimeout(() => setIsLoading(false), 260);
     return () => window.clearTimeout(timer);
   }, []);
 

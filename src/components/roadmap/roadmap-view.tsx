@@ -12,6 +12,7 @@ import { GanttNav } from "@/components/reui/gantt/gantt-nav";
 import { GanttView } from "@/components/reui/gantt/gantt-view";
 import { EmptyState } from "@/components/shared/empty-state";
 import { BoardSkeleton } from "@/components/shared/skeletons";
+import { cn } from "@/lib/utils";
 import {
   sprintsForProject,
   type Project,
@@ -140,11 +141,20 @@ export function RoadmapView({ project }: { project: Project }) {
    * gets its width committed.
    */
   const ready = !isLoading && events.length > 0;
+  /*
+   * Those two frames are visible: the track paints in May, then jumps to
+   * today. Holding it transparent until the scroll has landed turns a jump
+   * into an arrival.
+   */
+  const [positioned, setPositioned] = React.useState(false);
   React.useEffect(() => {
     if (!ready) return;
     let second = 0;
     const first = requestAnimationFrame(() => {
-      second = requestAnimationFrame(() => api.current?.today());
+      second = requestAnimationFrame(() => {
+        api.current?.today();
+        setPositioned(true);
+      });
     });
     return () => {
       cancelAnimationFrame(first);
@@ -200,7 +210,12 @@ export function RoadmapView({ project }: { project: Project }) {
           the title; adding those again beside it printed the date range and
           the scale menu twice. */}
       <GanttNav className="px-4 py-2.5 sm:px-6" />
-      <GanttView className="min-h-0 flex-1" />
+      <GanttView
+        className={cn(
+          "min-h-0 flex-1 transition-opacity duration-[--duration-slow]",
+          positioned ? "opacity-100" : "opacity-0",
+        )}
+      />
     </Gantt>
   );
 }

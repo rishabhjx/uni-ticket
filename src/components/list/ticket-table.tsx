@@ -2,7 +2,20 @@
 
 import * as React from "react";
 import { GitPullRequest, Hourglass, Paperclip } from "lucide-react";
+import {
+  useTable,
+  type ColumnDef,
+  type HeaderContext,
+} from "@tanstack/react-table";
 
+import {
+  DataGrid,
+  DataGridContainer,
+  dataGridFeatures,
+  type DataGridFeatures,
+} from "@/components/reui/data-grid/data-grid";
+import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header";
+import { DataGridTableVirtual } from "@/components/reui/data-grid/data-grid-table-virtual";
 import {
   AlertChip,
   LabelChip,
@@ -16,17 +29,6 @@ import {
   assigneeNames,
 } from "@/components/tickets/user-avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  TableCell,
-  TableColumnHeader,
-  TableHead,
-  TableHeader,
-  TableHeaderGroup,
-  TableProvider,
-  TableRow,
-  TableVirtualBody,
-  type ColumnDef,
-} from "@/components/ui/data-table";
 import { formatDueDate, formatRelative } from "@/lib/format";
 import {
   daysInColumn,
@@ -78,34 +80,84 @@ export const OPTIONAL_COLUMNS: { id: ColumnId; label: string }[] = [
   { id: "updatedAt", label: "Updated" },
 ];
 
-const widthFor: Record<string, string> = {
-  select: "w-[40px]",
-  key: "w-[108px]",
-  title: "w-auto",
-  project: "w-[72px]",
-  status: "w-[116px]",
-  priority: "w-[112px]",
-  severity: "w-[72px]",
-  assignee: "w-[176px]",
-  labels: "w-[184px]",
-  dueAt: "w-[104px]",
-  age: "w-[84px]",
-  updatedAt: "w-[96px]",
+/**
+ * Pixel widths rather than the Tailwind classes this used to carry: the grid
+ * lays out with a fixed table layout and a colgroup, so it wants numbers.
+ * Title has no size, which leaves it the flexible column.
+ */
+const SIZES: Partial<Record<ColumnId, number>> = {
+  select: 40,
+  key: 108,
+  project: 72,
+  status: 116,
+  priority: 112,
+  severity: 72,
+  assignee: 176,
+  labels: 184,
+  dueAt: 104,
+  age: 84,
+  updatedAt: 96,
 };
 
-const noTruncate = new Set(["select", "status", "priority", "severity", "labels", "dueAt"]);
+/** Cells whose content is a badge or a chip row, which must not be clipped. */
+const NO_TRUNCATE = new Set<ColumnId>([
+  "select",
+  "status",
+  "priority",
+  "severity",
+  "labels",
+  "dueAt",
+]);
 
-function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
-  const all: Record<ColumnId, ColumnDef<Ticket>> = {
+type Column = ColumnDef<DataGridFeatures, Ticket, unknown>;
+
+function cellClass(id: ColumnId) {
+  return cn(
+    "px-3 py-0",
+    NO_TRUNCATE.has(id) ? "whitespace-nowrap" : "truncate",
+  );
+}
+
+function SelectCell({ ticket }: { ticket: Ticket }) {
+  const { selection, toggleSelected } = useViewState();
+
+  return (
+    <span
+      className="flex items-center"
+      // The row opens the ticket; ticking a box must not also open it.
+      onClick={(event) => event.stopPropagation()}
+    >
+      <Checkbox
+        checked={selection.includes(ticket.id)}
+        onCheckedChange={() => toggleSelected(ticket.id)}
+        aria-label={`Select ${ticket.key}`}
+      />
+    </span>
+  );
+}
+
+function buildColumns(visible: Set<ColumnId>): Column[] {
+  // A sortable header, with their menu: sort, pin, move, hide.
+  const header = (title: string) => {
+    const Header = ({
+      column,
+    }: HeaderContext<DataGridFeatures, Ticket, unknown>) => (
+      <DataGridColumnHeader column={column} title={title} />
+    );
+    Header.displayName = `Header(${title})`;
+    return Header;
+  };
+
+  const all: Record<ColumnId, Column> = {
     select: {
       id: "select",
       enableSorting: false,
       header: () => <span className="sr-only">Select</span>,
-      cell: () => null,
+      cell: ({ row }) => <SelectCell ticket={row.original} />,
     },
     key: {
       accessorKey: "key",
-      header: ({ column }) => <TableColumnHeader column={column} title="Key" />,
+      header: header("Key"),
       cell: ({ row }) => (
         <span className="flex items-center gap-1.5">
           <TypeIcon type={row.original.type} />
@@ -117,7 +169,7 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
     },
     title: {
       accessorKey: "title",
-      header: ({ column }) => <TableColumnHeader column={column} title="Title" />,
+      header: header("Title"),
       cell: ({ row }) => (
         <span className="flex min-w-0 items-center gap-1.5">
           {/* min-w-0 on both: a flex child will not shrink below its content
@@ -145,7 +197,7 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
     project: {
       id: "project",
       accessorFn: (ticket) => ticket.projectId,
-      header: ({ column }) => <TableColumnHeader column={column} title="Project" />,
+      header: header("Project"),
       cell: ({ row }) => (
         <span className="truncate text-small text-grey-600">
           {getProject(row.original.projectId)?.key}
@@ -154,24 +206,26 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
     },
     status: {
       accessorKey: "status",
-      header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
-      sortingFn: (a, b) =>
+      header: header("Status"),
+      // Alphabetical order on a status is meaningless; these sort by where the
+      // column sits on the board.
+      sortFn: (a, b) =>
         (statusRank.get(a.original.status) ?? 0) -
         (statusRank.get(b.original.status) ?? 0),
       cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     priority: {
       accessorKey: "priority",
-      header: ({ column }) => <TableColumnHeader column={column} title="Priority" />,
-      sortingFn: (a, b) =>
+      header: header("Priority"),
+      sortFn: (a, b) =>
         (priorityRank.get(a.original.priority) ?? 0) -
         (priorityRank.get(b.original.priority) ?? 0),
       cell: ({ row }) => <PriorityBadge priority={row.original.priority} />,
     },
     severity: {
       accessorKey: "severity",
-      header: ({ column }) => <TableColumnHeader column={column} title="Sev" />,
-      sortingFn: (a, b) =>
+      header: header("Sev"),
+      sortFn: (a, b) =>
         (severityRank.get(a.original.severity ?? "s4") ?? 9) -
         (severityRank.get(b.original.severity ?? "s4") ?? 9),
       cell: ({ row }) =>
@@ -188,7 +242,7 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
         ticket.assigneeIds.length === 0
           ? "￿"
           : ticket.assigneeIds.map((id) => getUser(id)?.name ?? id).join(", "),
-      header: ({ column }) => <TableColumnHeader column={column} title="Assignee" />,
+      header: header("Assignee"),
       cell: ({ row }) => (
         <span className="flex min-w-0 items-center gap-2">
           <AvatarStack userIds={row.original.assigneeIds} max={2} />
@@ -223,7 +277,7 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
     },
     dueAt: {
       accessorKey: "dueAt",
-      header: ({ column }) => <TableColumnHeader column={column} title="Due" />,
+      header: header("Due"),
       cell: ({ row }) => {
         const ticket = row.original;
         if (isSlaBreached(ticket)) return <AlertChip>SLA breached</AlertChip>;
@@ -240,7 +294,7 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
     age: {
       id: "age",
       accessorFn: (ticket) => daysInColumn(ticket),
-      header: ({ column }) => <TableColumnHeader column={column} title="Age" />,
+      header: header("Age"),
       cell: ({ row }) => {
         const days = daysInColumn(row.original);
         const stale = isStale(row.original);
@@ -261,7 +315,7 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
     },
     updatedAt: {
       accessorKey: "updatedAt",
-      header: ({ column }) => <TableColumnHeader column={column} title="Updated" />,
+      header: header("Updated"),
       cell: ({ row }) => (
         <span className="text-small text-grey-500">
           {formatRelative(row.original.updatedAt)}
@@ -284,9 +338,23 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
     "age",
     "updatedAt",
   ];
-  return order.filter((id) => visible.has(id)).map((id) => all[id]);
+
+  return order
+    .filter((id) => visible.has(id))
+    .map((id) => ({
+      ...all[id],
+      ...(SIZES[id] === undefined ? {} : { size: SIZES[id] }),
+      meta: { cellClassName: cellClass(id) },
+    }));
 }
 
+/**
+ * The list is ReUI's data-grid on TanStack Table v9. It replaces a
+ * hand-rolled virtualiser built out of spacer rows, which held up at 150
+ * tickets but had no answer for a column that is pinned, resized or hidden.
+ * DataGridTableVirtual runs @tanstack/react-virtual over the same rows and
+ * keeps the header, the colgroup and the measured row heights in step.
+ */
 export function TicketTable({
   tickets,
   visibleColumns,
@@ -298,88 +366,55 @@ export function TicketTable({
   onOpenTicket?: (ticketId: string) => void;
   empty?: React.ReactNode;
 }) {
-  const scrollRef = React.useRef<HTMLDivElement>(null);
-  const { density, selection, toggleSelected } = useViewState();
+  const { density } = useViewState();
   const columns = React.useMemo(
     () => buildColumns(visibleColumns),
     [visibleColumns],
   );
-  const selected = React.useMemo(() => new Set(selection), [selection]);
   const rowHeight = ROW_HEIGHT[density];
 
-  return (
-    <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
-      <TableProvider
-        columns={columns}
-        data={tickets}
-        defaultSorting={[{ id: "updatedAt", desc: true }]}
-        className="border-separate border-spacing-0"
-      >
-        <TableHeader className="sticky top-0 z-10">
-          {({ headerGroup }) => (
-            <TableHeaderGroup headerGroup={headerGroup} key={headerGroup.id}>
-              {({ header }) => (
-                <TableHead
-                  key={header.id}
-                  header={header}
-                  className={cn(
-                    "glass-strong h-9 border-b border-grey-200 px-3 text-caption font-medium tracking-wide text-grey-500 uppercase",
-                    widthFor[header.column.id],
-                  )}
-                />
-              )}
-            </TableHeaderGroup>
-          )}
-        </TableHeader>
+  const table = useTable({
+    features: dataGridFeatures,
+    columns,
+    data: tickets,
+    getRowId: (ticket) => ticket.id,
+    initialState: { sorting: [{ id: "updatedAt", desc: true }] },
+    // dataGridFeatures registers rowPaginationFeature, which defaults to a
+    // 10-row page — so the grid silently truncated a 150-ticket project to
+    // ten. This list virtualises instead of paging, so the page is every row.
+    state: { pagination: { pageIndex: 0, pageSize: Math.max(tickets.length, 1) } },
+  });
 
-        <TableVirtualBody rowHeight={rowHeight} scrollRef={scrollRef} empty={empty}>
-          {({ row }) => {
-            const ticket = row.original as Ticket;
-            const isSelected = selected.has(ticket.id);
-            return (
-              <TableRow
-                key={row.id}
-                row={row}
-                data-ticket-row={ticket.id}
-                onClick={onOpenTicket ? () => onOpenTicket(ticket.key) : undefined}
-                className={cn(
-                  "cursor-pointer border-b border-grey-150 transition-colors",
-                  isSelected ? "bg-accent-50" : "hover:bg-grey-50",
-                )}
-                style={{ height: rowHeight }}
-              >
-                {({ cell }) =>
-                  cell.column.id === "select" ? (
-                    <td
-                      key={cell.id}
-                      className="w-[40px] px-3 py-0"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleSelected(ticket.id)}
-                        aria-label={`Select ${ticket.key}`}
-                      />
-                    </td>
-                  ) : (
-                    <TableCell
-                      key={cell.id}
-                      cell={cell}
-                      className={cn(
-                        "px-3 py-0",
-                        noTruncate.has(cell.column.id)
-                          ? "whitespace-nowrap"
-                          : "max-w-0 truncate",
-                        widthFor[cell.column.id],
-                      )}
-                    />
-                  )
-                }
-              </TableRow>
-            );
-          }}
-        </TableVirtualBody>
-      </TableProvider>
-    </div>
+  return (
+    <DataGrid
+      table={table}
+      recordCount={tickets.length}
+      onRowClick={onOpenTicket ? (ticket) => onOpenTicket(ticket.key) : undefined}
+      emptyMessage={empty}
+      tableLayout={{
+        headerSticky: true,
+        rowBorder: true,
+        width: "fixed",
+        columnsResizable: true,
+        columnsPinnable: true,
+        columnsMovable: true,
+      }}
+      tableClassNames={{
+        // glass-strong rather than the grid's own translucent default: the
+        // rows scrolling under a sticky header need the opacity floor, or
+        // text shows through text.
+        headerSticky: "glass-strong sticky top-0 z-40",
+        headerRow: "h-9",
+        bodyRow: "cursor-pointer border-b border-grey-150 transition-colors",
+      }}
+    >
+      <DataGridContainer className="min-h-0 flex-1">
+        <DataGridTableVirtual
+          height="100%"
+          estimateSize={rowHeight}
+          overscan={8}
+        />
+      </DataGridContainer>
+    </DataGrid>
   );
 }

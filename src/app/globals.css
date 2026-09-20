@@ -1,92 +1,158 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/*
+ * ReUI's own theme, vendored unmodified from registry/styles/style-nova.css
+ * (nova is their default). It is the missing half of the components we
+ * vendored: every `cn-*` hook they carry gets its look from here, so the grid,
+ * the keycaps, the attachments and the empty states render exactly as they do
+ * on reui.io rather than as unstyled markup. Scoped to `.style-nova`, which
+ * sits on <html>.
+ */
+@import "./reui-nova.css" layer(base);
+@custom-variant style-nova (&:where(.style-nova *));
+@custom-variant dark (&:is(.dark *));
+
+/* The utilities ReUI's stylesheet @applies, copied from their styles/globals.css. */
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility border-ghost {
+  @apply after:border-border relative after:absolute after:inset-0 after:border after:mix-blend-darken dark:after:mix-blend-lighten;
+}
+
 /* ============================================================================
    UNI · Ticketing — design tokens
-   Light theme only. One font, one spacing scale, one radius.
-   Neutral greys everywhere; colour is reserved for status + priority badges
-   and a single accent used sparingly.
+   Dark, and ReUI's palette throughout: the ramp below is their neutral scale
+   and their radius, so the app and the vendored components read as one thing.
+   Colour stays reserved for status and priority badges plus a single accent.
    ========================================================================= */
 
 :root {
-  /* --- Neutral ramp (the entire UI is built from this) -------------------- */
-  --grey-0: #171512;
-  --grey-25: #1a1815;
-  --grey-50: #1e1c18;
-  --grey-100: #24211d;
-  --grey-150: #2a2723;
-  --grey-200: #33302b;
-  --grey-300: #454039;
-  --grey-400: #6b645a;
-  --grey-500: #8d8579;
-  --grey-600: #a9a094;
-  --grey-700: #c4bcb0;
-  --grey-800: #ded8cf;
-  --grey-900: #f5f2ec;
+  /* ------------------------------------------------------------------------
+     ReUI's neutral scale, not ours. The app's components are written against
+     --grey-0..900, so pointing that ramp at ReUI's oklch neutrals re-skins
+     every screen at once instead of rewriting a hundred class lists. The dark
+     values are ReUI's `.dark` block; the in-between steps are interpolated on
+     the same lightness curve.
+     --------------------------------------------------------------------- */
+  --grey-0: oklch(0.145 0 0);   /* their --background */
+  --grey-25: oklch(0.175 0 0);
+  --grey-50: oklch(0.205 0 0);  /* their --card, --sidebar */
+  --grey-100: oklch(0.238 0 0);
+  --grey-150: oklch(0.255 0 0);
+  --grey-200: oklch(0.269 0 0); /* their --muted, --secondary */
+  --grey-300: oklch(0.32 0 0);
+  --grey-400: oklch(0.439 0 0); /* their --sidebar-ring */
+  --grey-500: oklch(0.556 0 0); /* their --ring */
+  --grey-600: oklch(0.646 0 0);
+  --grey-700: oklch(0.708 0 0); /* their --muted-foreground */
+  --grey-800: oklch(0.85 0 0);
+  --grey-900: oklch(0.985 0 0); /* their --foreground */
 
-  /* --- The one accent ----------------------------------------------------- */
-  --accent-50: #211b38;
-  --accent-100: #2b2450;
-  --accent-200: #3d3470;
-  --accent-500: #a68cf7;
-  --accent-600: #8b6df2;   /* primary accent */
-  --accent-700: #a68cf7;   /* pressed — lighter, since we are on dark */
+  /* --- The one accent ----------------------------------------------------
+     ReUI's dark --sidebar-primary / --chart-1, which is the blue-violet their
+     own screenshots lead with.                                              */
+  --accent-50: oklch(0.269 0.06 264.376);
+  --accent-100: oklch(0.32 0.09 264.376);
+  --accent-200: oklch(0.38 0.13 264.376);
+  --accent-500: oklch(0.55 0.22 264.376);
+  --accent-600: oklch(0.488 0.243 264.376);
+  --accent-700: oklch(0.58 0.22 264.376);
 
-  /* --- Status (badges only) ----------------------------------------------- */
-  --status-backlog-bg: #26231f;
-  --status-backlog-fg: #a9a094;
-  --status-todo-bg: #212530;
-  --status-todo-fg: #a3b4d1;
-  --status-progress-bg: #241f3d;
-  --status-progress-fg: #bba8fb;
-  --status-review-bg: #33251a;
-  --status-review-fg: #e3ad72;
-  --status-resolved-bg: #17293a;
-  --status-resolved-fg: #8ac1ef;
-  --status-done-bg: #172b20;
-  --status-done-fg: #84cda0;
+  /* --- Status (badges only) -----------------------------------------------
+     Built from ReUI's --chart-* series so the one thing this app adds on top
+     of their palette still belongs to it.                                   */
+  --status-backlog-bg: oklch(0.269 0 0);
+  --status-backlog-fg: oklch(0.708 0 0);
+  --status-todo-bg: oklch(0.269 0.04 264.376);
+  --status-todo-fg: oklch(0.72 0.12 264.376);
+  --status-progress-bg: oklch(0.28 0.06 303.9);
+  --status-progress-fg: oklch(0.75 0.15 303.9);
+  --status-review-bg: oklch(0.28 0.06 70.08);
+  --status-review-fg: oklch(0.769 0.188 70.08);
+  --status-resolved-bg: oklch(0.27 0.05 184.704);
+  --status-resolved-fg: oklch(0.72 0.12 184.704);
+  --status-done-bg: oklch(0.27 0.05 162.48);
+  --status-done-fg: oklch(0.696 0.17 162.48);
 
   /* --- Priority (badges only) --------------------------------------------- */
-  --priority-urgent-bg: #351d1c;
-  --priority-urgent-fg: #f5928a;
-  --priority-high-bg: #34271a;
-  --priority-high-fg: #eaac6e;
-  --priority-medium-bg: #24211d;
-  --priority-medium-fg: #a9a094;
-  --priority-low-bg: #1e1c18;
-  --priority-low-fg: #8d8579;
+  --priority-urgent-bg: oklch(0.28 0.07 22.216);
+  --priority-urgent-fg: oklch(0.704 0.191 22.216);
+  --priority-high-bg: oklch(0.28 0.06 70.08);
+  --priority-high-fg: oklch(0.769 0.188 70.08);
+  --priority-medium-bg: oklch(0.269 0 0);
+  --priority-medium-fg: oklch(0.708 0 0);
+  --priority-low-bg: oklch(0.205 0 0);
+  --priority-low-fg: oklch(0.556 0 0);
 
-  /* --- Feedback ----------------------------------------------------------- */
-  --danger: #f5928a;
-  --danger-bg: #351d1c;
-  --success: #84cda0;
+  /* --- Feedback (ReUI's extended colours) --------------------------------- */
+  --danger: oklch(0.704 0.191 22.216);
+  --danger-bg: oklch(0.28 0.07 22.216);
+  --success: var(--color-emerald-500);
+  --info: var(--color-violet-500);
+  --warning: var(--color-yellow-500);
 
   /* Native controls, scrollbars and form widgets follow the theme. */
   color-scheme: dark;
 
-  /* --- shadcn semantic tokens (mapped onto the ramp above) ---------------- */
-  --background: var(--grey-0);
-  --foreground: var(--grey-900);
-  --card: var(--grey-0);
-  --card-foreground: var(--grey-900);
-  --popover: var(--grey-0);
-  --popover-foreground: var(--grey-900);
-  --primary: var(--grey-900);
-  --primary-foreground: var(--grey-0);
-  --secondary: var(--grey-100);
-  --secondary-foreground: var(--grey-800);
-  --muted: var(--grey-50);
-  --muted-foreground: var(--grey-500);
-  --accent: var(--grey-100);
-  --accent-foreground: var(--grey-900);
-  --destructive: var(--danger);
-  --destructive-foreground: var(--grey-0);
-  --border: var(--grey-200);
-  --input: var(--grey-200);
-  --ring: var(--accent-600);
+  /* --- Semantic tokens: ReUI's `.dark` block, verbatim --------------------
+     Their components resolve everything through these, so this is what makes
+     the vendored markup look like theirs rather than like ours.              */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.371 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: var(--color-red-600);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.439 0 0);
+  --success-foreground: var(--color-emerald-600);
+  --info-foreground: var(--color-violet-600);
+  --warning-foreground: var(--color-yellow-600);
+  --invert: var(--color-zinc-700);
+  --invert-foreground: var(--color-zinc-50);
+  --surface: oklch(0.2 0 0);
+  --surface-foreground: oklch(0.708 0 0);
+  --code: var(--surface);
+  --code-foreground: var(--surface-foreground);
+  --code-highlight: oklch(0.27 0 0);
+  --code-number: oklch(0.72 0 0);
+  --selection: oklch(0.922 0 0);
+  --selection-foreground: oklch(0.205 0 0);
 
-  /* --- One radius --------------------------------------------------------- */
-  --radius: 10px;
+  /* --- One radius, theirs (0.625rem) -------------------------------------- */
+  --radius: 0.625rem;
 
   /* --- Layout metrics ----------------------------------------------------- */
   --rail-w: 56px;
@@ -107,8 +173,8 @@
      Only surfaces that float over content use it, and only to say "your work
      is still underneath". The opacity floor keeps text legible; saturate
      stops the blur washing the colour out of what shows through.            */
-  --glass-bg: rgb(23 21 18 / 0.82);
-  --glass-bg-strong: rgb(23 21 18 / 0.9);
+  --glass-bg: oklch(0.145 0 0 / 0.82);
+  --glass-bg-strong: oklch(0.145 0 0 / 0.9);
   --glass-border: rgb(255 255 255 / 0.08);
   --glass-blur: saturate(160%) blur(20px);
 
@@ -120,7 +186,8 @@
 
 @theme inline {
   /* Type — one family, everywhere */
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  /* Inter, which is what ReUI sets their components in. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* Type scale — 5 steps, nothing else */
   --text-caption: 12px;
@@ -144,11 +211,14 @@
   --spacing: 4px;
 
   /* Radius — a single value, collapsed across every shadcn size alias */
-  --radius-xs: var(--radius);
-  --radius-sm: var(--radius);
-  --radius-md: var(--radius);
+  /* ReUI's radius scale. This used to be flattened to one value, which is a
+     defensible rule on its own but erases their look: nova leans on the
+     difference between a rounded-sm keycap and a rounded-xl attachment. */
+  --radius-xs: calc(var(--radius) - 6px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 
   /* Motion, exposed as utilities */
   --ease-standard: var(--ease-standard);
@@ -205,6 +275,42 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* The rest of ReUI's colour surface, so their stylesheet's @apply rules
+     resolve. Charts, the sidebar set, surface and their extended feedback
+     colours all appear in style-nova.css. */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+  --color-code-highlight: var(--code-highlight);
+  --color-code-number: var(--code-number);
+  --color-selection: var(--selection);
+  --color-selection-foreground: var(--selection-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-invert: var(--invert);
+  --color-invert-foreground: var(--invert-foreground);
+
+  --animate-collapsible-down: collapsible-down 0.2s ease-out;
+  --animate-collapsible-up: collapsible-up 0.2s ease-out;
 
   /* Layout metrics as utilities */
   --spacing-rail: var(--rail-w);
@@ -348,127 +454,20 @@
   background: transparent;
 }
 
-/*
- * ReUI's components carry `cn-*` hooks and leave the look to a stylesheet that
- * ships with their theme. We vendored the components but not the theme — the
- * whole point of the single token ramp above is that this app has one look, so
- * pulling in a second one would defeat it. These rules are that missing layer,
- * written in our own tokens: ReUI keeps its structure and behaviour, and the
- * skin stays ours. Anything a component already styles with plain utilities is
- * deliberately not repeated here.
- */
-.cn-font-heading {
-  font-family: var(--font-sans);
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
 }
 
-/* Keycaps — used in the palette, the sidebar and the shortcut sheet */
-.cn-kbd {
-  height: 18px;
-  min-width: 18px;
-  padding: 0 5px;
-  border: 1px solid var(--grey-200);
-  border-bottom-width: 2px;
-  border-radius: 5px;
-  background-color: var(--grey-100);
-  color: var(--grey-600);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1;
-}
-.cn-kbd-group {
-  gap: 4px;
-}
-
-/* Empty states */
-.cn-empty-media-icon {
-  margin-bottom: 2px;
-}
-.cn-empty-content {
-  gap: 8px;
-}
-
-/* Attachments in the comment composer and on a ticket */
-.cn-attachment {
-  gap: 10px;
-  border: 1px solid var(--grey-200);
-  border-radius: var(--radius);
-  background-color: var(--grey-50);
-  padding: 8px;
-}
-.cn-attachment-group {
-  gap: 6px;
-}
-.cn-attachment-orientation-horizontal {
-  flex-direction: row;
-  align-items: center;
-}
-.cn-attachment-orientation-vertical {
-  flex-direction: column;
-  align-items: flex-start;
-}
-.cn-attachment-size-xs .cn-attachment-media,
-.cn-attachment-size-sm .cn-attachment-media {
-  --attachment-media: 32px;
-}
-.cn-attachment-media {
-  width: var(--attachment-media, 40px);
-  height: var(--attachment-media, 40px);
-  overflow: hidden;
-  border-radius: calc(var(--radius) - 4px);
-  background-color: var(--grey-100);
-  color: var(--grey-500);
-}
-.cn-attachment-media-variant-image img,
-.cn-attachment-media-variant-image video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.cn-attachment-content {
-  min-width: 0;
-  flex: 1;
-}
-.cn-attachment-title {
-  overflow: hidden;
-  color: var(--grey-900);
-  font-size: var(--text-small);
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cn-attachment-description {
-  color: var(--grey-500);
-  font-size: var(--text-caption);
-}
-.cn-attachment-action {
-  display: inline-flex;
-  height: 22px;
-  width: 22px;
-  align-items: center;
-  justify-content: center;
-  border-radius: calc(var(--radius) - 4px);
-  color: var(--grey-500);
-}
-.cn-attachment-action:hover {
-  background-color: var(--grey-200);
-  color: var(--grey-900);
-}
-
-/* Calendar and charts */
-.cn-calendar-caption-label {
-  font-size: var(--text-small);
-  font-weight: 600;
-}
-.cn-chart-tooltip {
-  border: 1px solid var(--grey-200);
-  border-radius: var(--radius);
-  background-color: var(--glass-bg, var(--grey-50));
-  padding: 8px 10px;
-  font-size: var(--text-caption);
-}
-
-/* Their RTL helper; we are LTR-only, so it is a no-op that keeps the hook */
-[dir="rtl"] .cn-rtl-flip {
-  transform: scaleX(-1);
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
 }

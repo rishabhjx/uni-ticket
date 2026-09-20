@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const geist = Geist({
-  variable: "--font-geist",
+// ReUI sets their components in Inter; matching it is most of why a screen
+// reads as theirs before you look at a single component.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
@@ -19,7 +21,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${geist.variable} h-full`}>
+    /*
+     * `dark` selects ReUI's dark token block, `style-nova` scopes their
+     * stylesheet - both are the class names their own theme expects, so the
+     * vendored CSS is used unmodified.
+     */
+    <html lang="en" className={`${inter.variable} dark style-nova h-full`}>
       <body className="h-full overflow-hidden bg-background text-foreground">
         {children}
       </body>

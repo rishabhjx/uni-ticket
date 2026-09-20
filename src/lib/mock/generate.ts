@@ -269,9 +269,23 @@ function buildTickets(random: Random) {
           )
         : null;
       const slaHours = severity === "s1" ? 4 : severity === "s2" ? 24 : 72;
+      /*
+       * Measured from NOW, not from creation. A clock of 4 to 72 hours run
+       * from a ticket opened months ago means every open ticket on the queue
+       * has breached, which is the same failure as a staleness threshold that
+       * fires on everything: a badge on all of them is a badge on none of
+       * them. A real desk has most tickets inside their window and a tail
+       * outside it, so the deadline sits ahead of now about four times in
+       * five.
+       */
       const slaDueAt =
         isService && status !== "done"
-          ? new Date(createdAt.getTime() + slaHours * 36e5).toISOString()
+          ? new Date(
+              Date.now() +
+                (random.chance(0.22)
+                  ? -random.int(1, slaHours) * 36e5
+                  : random.int(1, slaHours * 2) * 36e5),
+            ).toISOString()
           : null;
 
       const attachmentCount = defect

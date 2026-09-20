@@ -4,6 +4,8 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { matchesSearch, parseSearch } from "@/lib/search";
+import { countRules, matchesQuery } from "@/lib/ticket-query";
+import type { FilterQuery } from "@/components/reui/filters/filters-types";
 import {
   isOverdue,
   isSlaBreached,
@@ -13,33 +15,28 @@ import {
   type TicketStatus,
 } from "@/lib/mock";
 
+/**
+ * Filters used to be a flat bag of arrays, ANDed together. That shape cannot
+ * express "urgent OR breached SLA", which is exactly the question triage asks,
+ * so the conditions are a TREE now — ReUI's FilterQuery, evaluated by
+ * `matchesQuery`. Free text stays beside it rather than inside: it has its own
+ * `field:value` grammar and it is the control people type into first.
+ */
 export type TicketFilters = {
   search: string;
-  statuses: string[];
-  assignees: string[];
-  priorities: string[];
-  severities: string[];
-  types: string[];
-  labels: string[];
-  environments: string[];
-  /** Derived rather than fields, so each gets its own toggle. */
-  overdueOnly: boolean;
-  staleOnly: boolean;
-  breachedOnly: boolean;
+  query: FilterQuery<unknown>;
+};
+
+export const emptyQuery: FilterQuery<unknown> = {
+  id: "root",
+  type: "group",
+  combinator: "and",
+  rules: [],
 };
 
 export const emptyFilters: TicketFilters = {
   search: "",
-  statuses: [],
-  assignees: [],
-  priorities: [],
-  severities: [],
-  types: [],
-  labels: [],
-  environments: [],
-  overdueOnly: false,
-  staleOnly: false,
-  breachedOnly: false,
+  query: emptyQuery,
 };
 
 /**
@@ -86,88 +83,49 @@ const queryKey: Record<string, string> = {
   breachedOnly: "breached",
 };
 
+/**
+ * The query tree rides in the URL as compact JSON under `q`. Not a bespoke
+ * encoding: a tree with groups and negation has no readable flat form, and a
+ * shareable link matters more than a pretty one.
+ */
 export function filtersFromParams(params: URLSearchParams): TicketFilters {
-  const next: TicketFilters = { ...emptyFilters, statuses: [] };
-  next.search = params.get(queryKey.search) ?? "";
-  for (const key of listKeys) {
-    const raw = params.get(queryKey[key]);
-    next[key] = raw ? raw.split(",").filter(Boolean) : [];
+  const search = params.get("q") ?? "";
+  const raw = params.get("where");
+
+  if (!raw) return { search, query: emptyQuery };
+
+  try {
+    const parsed = JSON.parse(decodeURIComponent(raw)) as FilterQuery<unknown>;
+    // A malformed tree must not take the page down with it.
+    if (parsed && parsed.type === "group" && Array.isArray(parsed.rules)) {
+      return { search, query: parsed };
+    }
+  } catch {
+    // Someone edited the URL by hand, or an old link predates this format.
   }
-  for (const key of flagKeys) {
-    next[key] = params.get(queryKey[key]) === "1";
-  }
-  return next;
+  return { search, query: emptyQuery };
 }
 
 export function filtersToParams(filters: TicketFilters) {
   const params = new URLSearchParams();
-  if (filters.search.trim()) params.set(queryKey.search, filters.search.trim());
-  for (const key of listKeys) {
-    if (filters[key].length > 0) params.set(queryKey[key], filters[key].join(","));
-  }
-  for (const key of flagKeys) {
-    if (filters[key]) params.set(queryKey[key], "1");
+  if (filters.search.trim()) params.set("q", filters.search.trim());
+  if (filters.query.rules.length > 0) {
+    params.set("where", encodeURIComponent(JSON.stringify(filters.query)));
   }
   return params;
 }
 
 export function countActiveFilters(filters: TicketFilters) {
-  return (
-    listKeys.reduce((sum, key) => sum + filters[key].length, 0) +
-    flagKeys.reduce((sum, key) => sum + (filters[key] ? 1 : 0), 0) +
-    (filters.search.trim() ? 1 : 0)
-  );
+  return countRules(filters.query) + (filters.search.trim() ? 1 : 0);
 }
 
 export function applyFilters(tickets: Ticket[], filters: TicketFilters) {
   const trimmed = filters.search.trim();
   const parsed = trimmed ? parseSearch(trimmed) : null;
-  const now = new Date();
 
   return tickets.filter((ticket) => {
-    if (filters.overdueOnly && !isOverdue(ticket, now)) return false;
-    if (filters.staleOnly && !isStale(ticket, now)) return false;
-    if (filters.breachedOnly && !isSlaBreached(ticket, now)) return false;
-
     if (parsed && !matchesSearch(ticket, parsed)) return false;
-    if (filters.statuses.length > 0 && !filters.statuses.includes(ticket.status)) {
-      return false;
-    }
-    if (filters.types.length > 0 && !filters.types.includes(ticket.type)) {
-      return false;
-    }
-    if (
-      filters.priorities.length > 0 &&
-      !filters.priorities.includes(ticket.priority)
-    ) {
-      return false;
-    }
-    if (filters.severities.length > 0) {
-      if (!ticket.severity || !filters.severities.includes(ticket.severity)) {
-        return false;
-      }
-    }
-    if (filters.environments.length > 0) {
-      if (!ticket.environment || !filters.environments.includes(ticket.environment)) {
-        return false;
-      }
-    }
-    if (filters.assignees.length > 0) {
-      const on =
-        ticket.assigneeIds.length === 0
-          ? ["unassigned"]
-          : ticket.assigneeIds;
-      if (!on.some((id) => filters.assignees.includes(id))) {
-        return false;
-      }
-    }
-    if (
-      filters.labels.length > 0 &&
-      !ticket.labelIds.some((id) => filters.labels.includes(id))
-    ) {
-      return false;
-    }
-    return true;
+    return matchesQuery(ticket, filters.query);
   });
 }
 

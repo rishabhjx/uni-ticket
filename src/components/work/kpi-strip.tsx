@@ -2,27 +2,74 @@
 
 import { cn } from "@/lib/utils";
 import type { PersonalKpis } from "@/lib/mock";
-import { useViewState, type TicketFilters } from "@/lib/store/view-state";
+import { useViewState } from "@/lib/store/view-state";
+import type { FilterRule } from "@/components/reui/filters/filters-types";
 
+/**
+ * Each tile is one condition in the query language the bar speaks, so clicking
+ * a tile and building the same thing by hand produce the same URL — and the
+ * chip it adds is removable from the bar like any other.
+ */
 type Tile = {
   key: keyof PersonalKpis;
   label: string;
-  filter: Partial<TicketFilters>;
+  rule: FilterRule<unknown> | null;
   /** Overdue and stale mean something is wrong, so they get the alert tint. */
   alert?: boolean;
 };
 
+const rule = (
+  id: string,
+  field: string,
+  operator: string,
+  value: unknown,
+): FilterRule<unknown> => ({
+  // A stable id per tile, so toggling one twice does not stack two chips.
+  id: `kpi-${id}`,
+  type: "rule",
+  path: [field],
+  operator,
+  value,
+});
+
 const tiles: Tile[] = [
-  { key: "total", label: "Total", filter: {} },
-  { key: "pending", label: "Pending", filter: { statuses: ["backlog", "todo"] } },
+  { key: "total", label: "Total", rule: null },
+  {
+    key: "pending",
+    label: "Pending",
+    rule: rule("pending", "status", "is_any_of", [
+      "backlog",
+      "triage",
+      "design_todo",
+      "todo",
+      "ready_for_qa",
+    ]),
+  },
   {
     key: "inProgress",
     label: "In progress",
-    filter: { statuses: ["in_progress", "in_review"] },
+    rule: rule("inProgress", "status", "is_any_of", [
+      "in_design",
+      "design_review",
+      "in_progress",
+      "code_review",
+      "in_qa",
+      "product_review",
+    ]),
   },
-  { key: "overdue", label: "Overdue", filter: { overdueOnly: true }, alert: true },
-  { key: "stale", label: "Stale", filter: { staleOnly: true }, alert: true },
-  { key: "assignedThisWeek", label: "This week", filter: {} },
+  {
+    key: "overdue",
+    label: "Overdue",
+    rule: rule("overdue", "overdue", "is", true),
+    alert: true,
+  },
+  {
+    key: "stale",
+    label: "Stale",
+    rule: rule("stale", "stale", "is", true),
+    alert: true,
+  },
+  { key: "assignedThisWeek", label: "This week", rule: null },
 ];
 
 /**
@@ -32,14 +79,25 @@ const tiles: Tile[] = [
 export function KpiStrip({ kpis }: { kpis: PersonalKpis }) {
   const { filters, setFilters } = useViewState();
 
-  const isActive = (tile: Tile) => {
-    const entries = Object.entries(tile.filter);
-    if (entries.length === 0) return false;
-    return entries.every(([key, value]) =>
-      Array.isArray(value)
-        ? value.every((item) => filters[key as "statuses"].includes(item))
-        : filters[key as "overdueOnly"] === value,
+  const isActive = (tile: Tile) =>
+    tile.rule
+      ? filters.query.rules.some(
+          (node) => node.type === "rule" && node.id === tile.rule!.id,
+        )
+      : false;
+
+  const toggle = (tile: Tile) => {
+    if (!tile.rule) return;
+    const without = filters.query.rules.filter(
+      (node) => !(node.type === "rule" && node.id === tile.rule!.id),
     );
+    setFilters({
+      ...filters,
+      query: {
+        ...filters.query,
+        rules: isActive(tile) ? without : [...without, tile.rule],
+      },
+    });
   };
 
   return (
@@ -53,13 +111,7 @@ export function KpiStrip({ kpis }: { kpis: PersonalKpis }) {
             key={tile.key}
             type="button"
             aria-pressed={active}
-            onClick={() =>
-              setFilters(
-                active
-                  ? { ...filters, ...emptyOf(tile) }
-                  : { ...filters, ...tile.filter },
-              )
-            }
+            onClick={() => toggle(tile)}
             className={cn(
               "flex flex-col items-start rounded-md border px-3 py-2 text-left transition-colors",
               active
@@ -85,17 +137,4 @@ export function KpiStrip({ kpis }: { kpis: PersonalKpis }) {
       })}
     </div>
   );
-}
-
-/** Turning a tile off clears only the keys that tile set. */
-function emptyOf(tile: Tile): Partial<TicketFilters> {
-  const cleared: Partial<TicketFilters> = {};
-  for (const key of Object.keys(tile.filter) as (keyof TicketFilters)[]) {
-    if (key === "overdueOnly" || key === "staleOnly" || key === "breachedOnly") {
-      cleared[key] = false;
-    } else if (key !== "search") {
-      cleared[key] = [] as never;
-    }
-  }
-  return cleared;
 }

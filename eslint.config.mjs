@@ -13,6 +13,23 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    /**
+     * Vendored ReUI components, kept close to upstream so they stay diffable
+     * when the library moves. Their prop-to-state syncing trips the React
+     * Compiler rules; rewriting a thousand lines of someone else's state
+     * handling to satisfy a linter would invite real bugs. Code this project
+     * actually authors is still held to the full rule set.
+     */
+    files: ["src/components/reui/**"],
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/incompatible-library": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

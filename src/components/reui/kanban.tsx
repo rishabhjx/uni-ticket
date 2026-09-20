@@ -25,6 +25,7 @@ import type {
   UniqueIdentifier,
 } from "@dnd-kit/core"
 import {
+  closestCorners,
   defaultDropAnimationSideEffects,
   DndContext,
   DragOverlay,
@@ -130,6 +131,13 @@ const subscribeToNothing = () => () => {}
 const getIsMounted = () => true
 const getIsMountedOnServer = () => false
 
+/**
+ * Upstream passes no collisionDetection, so DndContext falls back to
+ * rectIntersection — under which the dragged item's own droppable always wins,
+ * `over` never changes, onDragOver never fires, and an empty column can never
+ * be reached. closestCorners is dnd-kit's recommendation for multi-container
+ * sortables and handles empty columns correctly. Overridable via the prop.
+ */
 const MOUSE_SENSOR_OPTIONS = { activationConstraint: { distance: 10 } }
 const TOUCH_SENSOR_OPTIONS = {
   activationConstraint: { delay: 250, tolerance: 5 },
@@ -179,6 +187,7 @@ export interface KanbanRootProps<T> extends Omit<
   accessibility?: React.ComponentProps<typeof DndContext>["accessibility"]
   asChild?: boolean
   modifiers?: Modifiers
+  collisionDetection?: React.ComponentProps<typeof DndContext>["collisionDetection"]
 }
 
 function Kanban<T>({
@@ -196,6 +205,7 @@ function Kanban<T>({
   onDragCancel,
   accessibility,
   modifiers,
+  collisionDetection = closestCorners,
   ...props
 }: KanbanRootProps<T>) {
   const columns = value
@@ -586,6 +596,7 @@ function Kanban<T>({
     <KanbanContext.Provider value={contextValue}>
       <DndContext
         sensors={sensors}
+        collisionDetection={collisionDetection}
         modifiers={modifiers}
         accessibility={accessibility}
         measuring={MEASURING_CONFIG}

@@ -1,22 +1,14 @@
 "use client";
 
-import { FolderPlus, PanelLeft, Plus, TicketPlus } from "lucide-react";
-
-import { Kbd } from "@/components/reui/kbd";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useShell } from "@/hooks/use-shell";
-
+/**
+ * A slim title row for the top-level pages. It used to carry the sidebar
+ * toggle, the search box and the New menu; all three moved to TopNav when the
+ * sidebar went, which left this doing the one job a page header should: name
+ * the page and hold the actions that belong to it.
+ *
+ * Project views do not use it — the breadcrumb in TopNav already names the
+ * project, and a second row repeating it is a row of nothing.
+ */
 export function PageHeader({
   title,
   meta,
@@ -26,57 +18,13 @@ export function PageHeader({
   meta?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
-  const { sidebarOpen, toggleSidebar, openCreate, openCreateProject } = useShell();
-
   return (
-    <header className="glass-strong hairline-b relative z-10 flex h-topbar shrink-0 items-center gap-3 px-4 sm:px-6">
-      {!sidebarOpen ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              aria-label="Show sidebar"
-              className="-ml-2 flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
-            >
-              <PanelLeft className="size-4" strokeWidth={1.75} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" sideOffset={8}>
-            Show sidebar ⌘B
-          </TooltipContent>
-        </Tooltip>
+    <header className="hairline-b flex h-topbar shrink-0 items-center gap-3 px-4 sm:px-6">
+      <h1 className="text-title font-semibold text-grey-900">{title}</h1>
+      {meta}
+      {actions ? (
+        <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>
       ) : null}
-
-      <h1 className="truncate text-title font-semibold text-grey-900">{title}</h1>
-      {meta ? <div className="flex items-center gap-2">{meta}</div> : null}
-
-      <div className="ml-auto flex items-center gap-2">
-        {actions}
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex h-7 items-center gap-1.5 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"
-            >
-              <Plus className="size-3.5" strokeWidth={2.25} />
-              New
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={openCreate} className="gap-2">
-              <TicketPlus className="size-3.5 text-grey-400" strokeWidth={1.75} />
-              New ticket
-              <Kbd className="ml-auto">C</Kbd>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={openCreateProject} className="gap-2">
-              <FolderPlus className="size-3.5 text-grey-400" strokeWidth={1.75} />
-              New project
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
     </header>
   );
 }

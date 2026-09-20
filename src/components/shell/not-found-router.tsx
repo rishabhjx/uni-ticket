@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 
 import { BoardView } from "@/components/board/board-view";
 import { ListView } from "@/components/list/list-view";
+import { RoadmapView } from "@/components/roadmap/roadmap-view";
+import { WorkspaceView } from "@/components/workspaces/workspace-view";
 import { AppShell } from "@/components/shell/app-shell";
 import { PageHeader } from "@/components/shell/page-header";
-import { ViewSwitcher } from "@/components/shell/view-switcher";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TicketStoreProvider, useTicketStore } from "@/lib/store/ticket-store";
 
@@ -18,12 +19,20 @@ import { TicketStoreProvider, useTicketStore } from "@/lib/store/ticket-store";
  */
 export function ResolvedRoute() {
   const pathname = usePathname();
-  const { projects } = useTicketStore();
+  const { projects, workspaces } = useTicketStore();
 
-  const match = pathname.match(/^\/projects\/([^/]+)\/(board|list)\/?$/);
+  // Workspaces created at runtime have no prerendered route either.
+  const wsMatch = pathname.match(/^\/workspaces\/([^/]+)\/?$/);
+  const workspace = wsMatch
+    ? workspaces.find((item) => item.slug === wsMatch[1].toLowerCase())
+    : undefined;
+
+  const match = pathname.match(/^\/projects\/([^/]+)\/(board|list|roadmap)\/?$/);
   const project = match
     ? projects.find((item) => item.slug === match[1].toLowerCase())
     : undefined;
+
+  if (workspace) return <WorkspaceView workspaceId={workspace.id} />;
 
   if (!project || !match) {
     return (
@@ -39,19 +48,9 @@ export function ResolvedRoute() {
     );
   }
 
-  return (
-    <>
-      <PageHeader
-        title={`${project.emoji} ${project.name}`}
-        actions={<ViewSwitcher projectSlug={project.slug} />}
-      />
-      {match[2] === "board" ? (
-        <BoardView project={project} />
-      ) : (
-        <ListView project={project} />
-      )}
-    </>
-  );
+  if (match[2] === "board") return <BoardView project={project} />;
+  if (match[2] === "roadmap") return <RoadmapView project={project} />;
+  return <ListView project={project} />;
 }
 
 /**

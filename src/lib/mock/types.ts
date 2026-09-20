@@ -68,6 +68,8 @@ export type Project = {
   description: string;
   leadId: string;
   memberIds: string[];
+  /** The workspace this project lives in. */
+  workspaceId: string;
   startedOn: string;
   kind: ProjectKind;
   /** One emoji per project — faster to recognise than a two-letter tile. */
@@ -76,6 +78,19 @@ export type Project = {
   roles: Record<string, ProjectRole>;
   /** Cards per column before the board warns you. */
   wipLimits?: Partial<Record<TicketStatus, number>>;
+};
+
+/**
+ * The level above a project. A project belongs to exactly one workspace, so
+ * the hierarchy reads workspace > project > ticket.
+ */
+export type Workspace = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  emoji: string;
+  memberIds: string[];
 };
 
 export type Label = {

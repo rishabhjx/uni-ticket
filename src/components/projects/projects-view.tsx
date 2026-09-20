@@ -1,7 +1,8 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
-import { Columns3, Rows3 } from "lucide-react";
+import { Columns3, Rows3, Search } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { CardsSkeleton } from "@/components/shared/skeletons";
@@ -25,7 +26,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-function ProjectCard({
+export function ProjectCard({
   project,
   stats,
 }: {
@@ -96,12 +97,32 @@ function ProjectCard({
   );
 }
 
-export function ProjectsView() {
+export function ProjectsView({ workspaceId }: { workspaceId?: string } = {}) {
   const { projects, tickets, isLoading } = useTicketStore();
+  const [query, setQuery] = React.useState("");
+
+  const scoped = React.useMemo(
+    () =>
+      workspaceId
+        ? projects.filter((project) => project.workspaceId === workspaceId)
+        : projects,
+    [projects, workspaceId],
+  );
+
+  const shown = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return scoped;
+    return scoped.filter(
+      (project) =>
+        project.name.toLowerCase().includes(q) ||
+        project.key.toLowerCase().includes(q) ||
+        project.description.toLowerCase().includes(q),
+    );
+  }, [scoped, query]);
 
   if (isLoading) return <CardsSkeleton count={5} />;
 
-  if (projects.length === 0) {
+  if (scoped.length === 0) {
     return (
       <EmptyState
         emoji="📁"
@@ -113,15 +134,47 @@ export function ProjectsView() {
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="grid gap-3 px-6 py-5 md:grid-cols-2 xl:grid-cols-3">
-        {projects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            project={project}
-            stats={projectStats(tickets, project.id)}
+      {/* Six projects fit on a screen; sixty do not, and this is the level
+          that grows fastest once workspaces exist. */}
+      <div className="hairline-b flex items-center gap-2 px-6 py-2.5">
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-grey-400"
+            strokeWidth={1.75}
           />
-        ))}
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search projects"
+            aria-label="Search projects"
+            className="h-7 w-64 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+          />
+        </div>
+        <span className="tnum ml-auto text-small text-grey-500">
+          {shown.length === scoped.length
+            ? `${scoped.length} projects`
+            : `${shown.length} of ${scoped.length}`}
+        </span>
       </div>
+
+      {shown.length === 0 ? (
+        <EmptyState
+          emoji="🔍"
+          title="No project matches that"
+          description={`Nothing in this list matches “${query}”.`}
+        />
+      ) : (
+        <div className="grid gap-3 px-6 py-5 md:grid-cols-2 xl:grid-cols-3">
+          {shown.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              stats={projectStats(tickets, project.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

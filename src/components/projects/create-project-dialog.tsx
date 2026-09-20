@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
+import { EmojiPicker } from "@/components/shared/emoji-picker";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   Dialog,
@@ -25,8 +26,6 @@ import { cn } from "@/lib/utils";
 
 const fieldClass =
   "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
-
-const EMOJI = ["🚀", "🛰️", "🧩", "📦", "🔭", "⚙️", "🎯", "🌱", "🛟", "📊", "🎨", "🔐"];
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -59,22 +58,26 @@ export function CreateProjectDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
-  const { projects, createProject } = useTicketStore();
+  const { projects, workspaces, createProject } = useTicketStore();
 
   const [name, setName] = React.useState("");
   const [key, setKey] = React.useState("");
   const [keyTouched, setKeyTouched] = React.useState(false);
   const [description, setDescription] = React.useState("");
-  const [emoji, setEmoji] = React.useState(EMOJI[0]);
+  const [emoji, setEmoji] = React.useState("🚀");
   const [kind, setKind] = React.useState<Project["kind"]>("software");
   const [memberIds, setMemberIds] = React.useState<string[]>([CURRENT_USER_ID]);
+  const [workspaceId, setWorkspaceId] = React.useState(workspaces[0]?.id ?? "");
 
   const effectiveKey = keyTouched ? key : suggestKey(name);
   const taken = projects.some(
     (project) => project.key.toUpperCase() === effectiveKey.toUpperCase(),
   );
   const canSubmit =
-    name.trim().length > 0 && effectiveKey.trim().length >= 2 && !taken;
+    name.trim().length > 0 &&
+    effectiveKey.trim().length >= 2 &&
+    !taken &&
+    workspaceId.length > 0;
 
   const reset = () => {
     setName("");
@@ -95,6 +98,7 @@ export function CreateProjectDialog({
       emoji,
       kind,
       memberIds,
+      workspaceId,
     });
 
     reset();
@@ -134,24 +138,22 @@ export function CreateProjectDialog({
             </div>
 
             <Row label="Icon">
-              <div className="flex flex-wrap gap-1">
-                {EMOJI.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setEmoji(option)}
-                    aria-pressed={emoji === option}
-                    className={cn(
-                      "flex size-8 items-center justify-center rounded-md border text-base transition-colors",
-                      emoji === option
-                        ? "border-accent-600 bg-accent-50"
-                        : "border-grey-200 hover:border-grey-300",
-                    )}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+              <EmojiPicker value={emoji} onChange={setEmoji} />
+            </Row>
+
+            <Row label="Workspace">
+              <Select value={workspaceId} onValueChange={setWorkspaceId}>
+                <SelectTrigger className="h-8 text-small">
+                  <SelectValue placeholder="Pick a workspace" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workspaces.map((workspace) => (
+                    <SelectItem key={workspace.id} value={workspace.id}>
+                      {workspace.emoji} {workspace.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Row>
 
             <Row label="Key">

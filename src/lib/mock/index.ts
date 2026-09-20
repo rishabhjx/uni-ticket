@@ -21,8 +21,14 @@ export * from "./types";
 export * from "./users";
 export * from "./labels";
 export * from "./projects";
+export * from "./workspaces";
 export * from "./dates";
 export * from "./sprints";
+
+/** Projects inside a workspace, in the order the workspace lists them. */
+export function projectsForWorkspace(all: Project[], workspaceId: string) {
+  return all.filter((project) => project.workspaceId === workspaceId);
+}
 
 /** Open work — everything that has not reached Done. */
 export function isOpen(ticket: Ticket) {

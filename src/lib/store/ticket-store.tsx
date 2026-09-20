@@ -6,6 +6,7 @@ import {
   comments as seedComments,
   events as seedEvents,
   projects as seedProjects,
+  workspaces as seedWorkspaces,
   tickets as seedTickets,
   getProject,
   getUser,
@@ -16,6 +17,7 @@ import {
   type Attachment,
   type LinkType,
   type Project,
+  type Workspace,
   type TicketStatus,
   type TicketType,
   LINK_INVERSE,
@@ -51,9 +53,20 @@ export type NewProjectInput = {
   emoji: string;
   kind: Project["kind"];
   memberIds: string[];
+  /** Every project belongs to a workspace. */
+  workspaceId: string;
+};
+
+export type NewWorkspaceInput = {
+  name: string;
+  slug: string;
+  description: string;
+  emoji: string;
+  memberIds: string[];
 };
 
 type TicketStoreValue = {
+  workspaces: Workspace[];
   projects: Project[];
   tickets: Ticket[];
   comments: Comment[];
@@ -66,6 +79,7 @@ type TicketStoreValue = {
   updateMany: (ticketIds: string[], patch: Partial<Ticket>) => void;
   createTicket: (input: NewTicketInput) => Ticket;
   createProject: (input: NewProjectInput) => Project;
+  createWorkspace: (input: NewWorkspaceInput) => Workspace;
   /** Sends a verified ticket back to be worked on, and says so in the history. */
   reopenTicket: (ticketId: string) => void;
   linkTickets: (ticketId: string, otherId: string, type: LinkType) => void;
@@ -87,6 +101,7 @@ type TicketStoreValue = {
 const TicketStoreContext = React.createContext<TicketStoreValue | null>(null);
 
 const CREATED_PROJECTS_KEY = "uni.createdProjects";
+const CREATED_WORKSPACES_KEY = "uni.createdWorkspaces";
 
 /**
  * Projects created at runtime are persisted. A static host has no route for a
@@ -98,6 +113,16 @@ function loadCreatedProjects(): Project[] {
   try {
     const stored = window.localStorage.getItem(CREATED_PROJECTS_KEY);
     return stored ? (JSON.parse(stored) as Project[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadCreatedWorkspaces(): Workspace[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = window.localStorage.getItem(CREATED_WORKSPACES_KEY);
+    return stored ? (JSON.parse(stored) as Workspace[]) : [];
   } catch {
     return [];
   }
@@ -165,6 +190,10 @@ function reorderColumn(
 }
 
 export function TicketStoreProvider({ children }: { children: React.ReactNode }) {
+  const [workspaces, setWorkspaces] = React.useState<Workspace[]>(() => [
+    ...seedWorkspaces,
+    ...loadCreatedWorkspaces(),
+  ]);
   const [projects, setProjects] = React.useState<Project[]>(() => [
     ...seedProjects,
     ...loadCreatedProjects(),
@@ -511,6 +540,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       description: input.description.trim(),
       leadId: CURRENT_USER_ID,
       memberIds: input.memberIds,
+      workspaceId: input.workspaceId,
       kind: input.kind,
       emoji: input.emoji,
       // Whoever creates a project administers it.
@@ -536,6 +566,31 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       return next;
     });
     return project;
+  }, []);
+
+  const createWorkspace = React.useCallback((input: NewWorkspaceInput) => {
+    const workspace: Workspace = {
+      id: `w-${input.slug}`,
+      slug: input.slug,
+      name: input.name.trim(),
+      description: input.description.trim(),
+      emoji: input.emoji,
+      memberIds: input.memberIds,
+    };
+
+    setWorkspaces((current) => {
+      const next = [...current, workspace];
+      try {
+        window.localStorage.setItem(
+          CREATED_WORKSPACES_KEY,
+          JSON.stringify(next.filter((item) => !seedWorkspaces.includes(item))),
+        );
+      } catch {
+        // Persisting is a convenience; the workspace still exists in memory.
+      }
+      return next;
+    });
+    return workspace;
   }, []);
 
   const commentFileSeq = React.useRef(0);
@@ -610,6 +665,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
 
   const value = React.useMemo(
     () => ({
+      workspaces,
       projects,
       tickets,
       comments,
@@ -621,6 +677,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       updateMany,
       createTicket,
       createProject,
+      createWorkspace,
       reopenTicket,
       linkTickets,
       unlinkTickets,
@@ -633,6 +690,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       deleteComment,
     }),
     [
+      workspaces,
       projects,
       tickets,
       comments,
@@ -644,6 +702,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       updateMany,
       createTicket,
       createProject,
+      createWorkspace,
       reopenTicket,
       linkTickets,
       unlinkTickets,

@@ -43,6 +43,9 @@ type ShellContextValue = {
   createProjectOpen: boolean;
   openCreateProject: () => void;
   setCreateProjectOpen: (open: boolean) => void;
+  createWorkspaceOpen: boolean;
+  openCreateWorkspace: () => void;
+  setCreateWorkspaceOpen: (open: boolean) => void;
   shortcutsOpen: boolean;
   setShortcutsOpen: (open: boolean) => void;
 };
@@ -66,6 +69,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [createOpen, setCreateOpen] = React.useState(false);
   const openCreate = React.useCallback(() => setCreateOpen(true), []);
   const [createProjectOpen, setCreateProjectOpen] = React.useState(false);
+  const [createWorkspaceOpen, setCreateWorkspaceOpen] = React.useState(false);
+  const openCreateWorkspace = React.useCallback(
+    () => setCreateWorkspaceOpen(true),
+    [],
+  );
   const openCreateProject = React.useCallback(
     () => setCreateProjectOpen(true),
     [],
@@ -118,6 +126,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       createProjectOpen,
       openCreateProject,
       setCreateProjectOpen,
+      createWorkspaceOpen,
+      openCreateWorkspace,
+      setCreateWorkspaceOpen,
       shortcutsOpen,
       setShortcutsOpen,
     }),
@@ -129,6 +140,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       openCreate,
       createProjectOpen,
       openCreateProject,
+      createWorkspaceOpen,
+      openCreateWorkspace,
       shortcutsOpen,
     ],
   );

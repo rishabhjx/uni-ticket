@@ -67,3 +67,64 @@ export function UserAvatar({
     </span>
   );
 }
+
+/**
+ * A ticket can carry several assignees, and a row of full-width avatars would
+ * blow out every layout that used to hold exactly one. Overlapping them keeps
+ * the footprint close to a single avatar, and past `max` the tail collapses
+ * into a "+n" chip rather than pushing the rest of the row around.
+ */
+export function AvatarStack({
+  userIds,
+  size = "sm",
+  max = 3,
+  className,
+}: {
+  userIds: string[];
+  size?: keyof typeof sizeClass;
+  max?: number;
+  className?: string;
+}) {
+  if (userIds.length === 0) {
+    return <UserAvatar userId={null} size={size} className={className} />;
+  }
+
+  const shown = userIds.slice(0, max);
+  const rest = userIds.slice(max);
+
+  return (
+    <span className={cn("inline-flex items-center", className)}>
+      {shown.map((id, index) => (
+        <UserAvatar
+          key={id}
+          userId={id}
+          size={size}
+          // The ring separates neighbours that would otherwise read as one
+          // blob; only the overlapping ones need the negative margin.
+          className={cn(
+            "ring-1 ring-grey-0",
+            index > 0 && (size === "lg" ? "-ml-2" : "-ml-1.5"),
+          )}
+        />
+      ))}
+      {rest.length > 0 ? (
+        <span
+          title={rest.map((id) => getUser(id)?.name ?? id).join(", ")}
+          className={cn(
+            "inline-flex items-center justify-center rounded-full bg-grey-200 font-semibold text-grey-600 ring-1 ring-grey-0",
+            sizeClass[size],
+            size === "lg" ? "-ml-2" : "-ml-1.5",
+          )}
+        >
+          +{rest.length}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+/** The names behind a stack, for a tooltip or a detail row. */
+export function assigneeNames(userIds: string[]) {
+  if (userIds.length === 0) return "Unassigned";
+  return userIds.map((id) => getUser(id)?.name ?? id).join(", ");
+}

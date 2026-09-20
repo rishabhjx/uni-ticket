@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { CardsSkeleton } from "@/components/shared/skeletons";
 import { StatusBadge } from "@/components/tickets/badges";
-import { UserAvatar } from "@/components/tickets/user-avatar";
+import { AvatarStack } from "@/components/tickets/user-avatar";
 import {
   Select,
   SelectContent,
@@ -256,7 +256,7 @@ function TicketLine({
       <span className="min-w-0 flex-1 truncate text-small text-grey-900">
         {ticket.title}
       </span>
-      <UserAvatar userId={ticket.assigneeId} />
+      <AvatarStack userIds={ticket.assigneeIds} />
       <span className="tnum shrink-0 text-caption text-grey-500">
         {trailing}
       </span>

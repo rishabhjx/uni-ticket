@@ -93,7 +93,13 @@ export type Ticket = {
   status: TicketStatus;
   priority: TicketPriority;
   type: TicketType;
-  assigneeId: string | null;
+  /**
+   * Work is often shared, so a ticket carries a list rather than one owner.
+   * Empty means unassigned. The first entry is the lead: it is what single-slot
+   * places (board grouping, a swimlane, a sort key) fall back to, because a
+   * card cannot sit in two columns at once.
+   */
+  assigneeIds: string[];
   reporterId: string;
   labelIds: string[];
   estimate: number | null;

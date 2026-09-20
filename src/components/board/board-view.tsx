@@ -155,7 +155,7 @@ export function BoardView({ project }: { project: Project }) {
     if (swimlane === "none") return [];
 
     const laneOf = (ticket: Ticket) => {
-      if (swimlane === "assignee") return ticket.assigneeId ?? "unassigned";
+      if (swimlane === "assignee") return ticket.assigneeIds[0] ?? "unassigned";
       if (swimlane === "priority") return ticket.priority;
       return ticket.parentId ?? "none";
     };

@@ -101,7 +101,7 @@ export function BulkBar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="max-h-72 overflow-y-auto">
-            <DropdownMenuItem onClick={() => apply({ assigneeId: null })}>
+            <DropdownMenuItem onClick={() => apply({ assigneeIds: [] })}>
               <span className="flex items-center gap-2">
                 <UserAvatar userId={null} />
                 Unassigned
@@ -110,7 +110,10 @@ export function BulkBar() {
             {users.map((user) => (
               <DropdownMenuItem
                 key={user.id}
-                onClick={() => apply({ assigneeId: user.id })}
+                // A bulk action sets the whole list rather than adding to it:
+                // "assign these twelve to Priya" should not silently keep
+                // whoever happened to be on each one.
+                onClick={() => apply({ assigneeIds: [user.id] })}
               >
                 <span className="flex items-center gap-2">
                   <UserAvatar userId={user.id} />

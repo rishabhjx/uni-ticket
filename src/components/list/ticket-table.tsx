@@ -11,7 +11,10 @@ import {
   StatusBadge,
   TypeIcon,
 } from "@/components/tickets/badges";
-import { UserAvatar } from "@/components/tickets/user-avatar";
+import {
+  AvatarStack,
+  assigneeNames,
+} from "@/components/tickets/user-avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   TableCell,
@@ -180,13 +183,20 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
     },
     assignee: {
       id: "assignee",
-      accessorFn: (ticket) => getUser(ticket.assigneeId)?.name ?? "￿",
+      // Sorts on the lead; the tail is a tie-breaker so a pair is stable.
+      accessorFn: (ticket) =>
+        ticket.assigneeIds.length === 0
+          ? "￿"
+          : ticket.assigneeIds.map((id) => getUser(id)?.name ?? id).join(", "),
       header: ({ column }) => <TableColumnHeader column={column} title="Assignee" />,
       cell: ({ row }) => (
         <span className="flex min-w-0 items-center gap-2">
-          <UserAvatar userId={row.original.assigneeId} />
-          <span className="min-w-0 truncate text-small text-grey-700">
-            {getUser(row.original.assigneeId)?.name ?? "Unassigned"}
+          <AvatarStack userIds={row.original.assigneeIds} max={2} />
+          <span
+            className="min-w-0 truncate text-small text-grey-700"
+            title={assigneeNames(row.original.assigneeIds)}
+          >
+            {assigneeNames(row.original.assigneeIds)}
           </span>
         </span>
       ),

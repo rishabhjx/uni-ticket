@@ -32,6 +32,9 @@ function valueLabel(event: TicketEvent, value: string | null) {
     case "severity":
       return SEVERITY_LABEL[value as keyof typeof SEVERITY_LABEL] ?? value;
     case "assignee":
+      // Seeded events hold a single user id; anything the store wrote is
+      // already a list of names, so the lookup misses and the text passes
+      // straight through.
       return getUser(value)?.name ?? value;
     default:
       return value;
@@ -45,7 +48,11 @@ function describe(event: TicketEvent) {
     case "status":
       return `moved it from ${valueLabel(event, event.from)} to ${valueLabel(event, event.to)}`;
     case "assignee":
-      return `assigned it to ${valueLabel(event, event.to)}`;
+      // The store records the whole assignee list as one joined string, so a
+      // shared ticket reads "assigned it to Priya, Dan" from the same branch.
+      return event.to
+        ? `assigned it to ${valueLabel(event, event.to)}`
+        : "left it unassigned";
     case "priority":
       return `changed priority to ${valueLabel(event, event.to)}`;
     case "severity":

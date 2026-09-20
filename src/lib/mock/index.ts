@@ -38,7 +38,7 @@ export function ticketsForProject(all: Ticket[], projectId: string) {
 }
 
 export function ticketsForUser(all: Ticket[], userId: string = CURRENT_USER_ID) {
-  return all.filter((ticket) => ticket.assigneeId === userId);
+  return all.filter((ticket) => ticket.assigneeIds.includes(userId));
 }
 
 export function commentsForTicket(all: Comment[], ticketId: string) {
@@ -200,7 +200,7 @@ export function isSlaBreached(ticket: Ticket, now: Date = new Date()) {
 export function ticketsForTeam(all: Ticket[], userId: string = CURRENT_USER_ID) {
   const team = new Set(reporteeIds(userId));
   return all.filter(
-    (ticket) => ticket.assigneeId !== null && team.has(ticket.assigneeId),
+    (ticket) => ticket.assigneeIds.some((id) => team.has(id)),
   );
 }
 
@@ -293,7 +293,7 @@ export function projectStats(
     done,
     inProgress: scoped.filter((ticket) => ticket.status === "in_progress").length,
     overdue: scoped.filter((ticket) => isOverdue(ticket, now)).length,
-    mine: scoped.filter((ticket) => ticket.assigneeId === userId).length,
+    mine: scoped.filter((ticket) => ticket.assigneeIds.includes(userId)).length,
     completion: scoped.length === 0 ? 0 : Math.round((done / scoped.length) * 100),
   };
 }

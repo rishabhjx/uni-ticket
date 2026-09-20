@@ -49,14 +49,20 @@ export function parseSearch(query: string): ParsedSearch {
 }
 
 function userMatches(ticket: Ticket, value: string) {
-  if (value === "me") return ticket.assigneeId === CURRENT_USER_ID;
-  if (value === "none" || value === "unassigned") return ticket.assigneeId === null;
-  const user = getUser(ticket.assigneeId);
-  if (!user) return false;
-  return (
-    user.name.toLowerCase().includes(value) ||
-    user.email.toLowerCase().startsWith(value)
-  );
+  // A ticket can carry several assignees, so `assignee:` asks whether any of
+  // them match, not whether the one of them does.
+  if (value === "me") return ticket.assigneeIds.includes(CURRENT_USER_ID);
+  if (value === "none" || value === "unassigned") {
+    return ticket.assigneeIds.length === 0;
+  }
+  return ticket.assigneeIds.some((id) => {
+    const user = getUser(id);
+    if (!user) return false;
+    return (
+      user.name.toLowerCase().includes(value) ||
+      user.email.toLowerCase().startsWith(value)
+    );
+  });
 }
 
 function matchesTerm(ticket: Ticket, term: SearchTerm) {
@@ -83,7 +89,7 @@ function matchesTerm(ticket: Ticket, term: SearchTerm) {
       if (term.value === "blocked")
         return ticket.links.some((link) => link.type === "blocked_by");
       if (term.value === "epic") return ticket.type === "epic";
-      if (term.value === "mine") return ticket.assigneeId === CURRENT_USER_ID;
+      if (term.value === "mine") return ticket.assigneeIds.includes(CURRENT_USER_ID);
       return true;
     default:
       return true;

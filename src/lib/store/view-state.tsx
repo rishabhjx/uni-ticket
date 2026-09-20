@@ -141,7 +141,11 @@ export function applyFilters(tickets: Ticket[], filters: TicketFilters) {
       }
     }
     if (filters.assignees.length > 0) {
-      if (!filters.assignees.includes(ticket.assigneeId ?? "unassigned")) {
+      const on =
+        ticket.assigneeIds.length === 0
+          ? ["unassigned"]
+          : ticket.assigneeIds;
+      if (!on.some((id) => filters.assignees.includes(id))) {
         return false;
       }
     }
@@ -373,7 +377,8 @@ export const ROW_HEIGHT: Record<Density, number> = {
 export function groupKeyOf(ticket: Ticket, groupBy: GroupBy): string {
   switch (groupBy) {
     case "assignee":
-      return ticket.assigneeId ?? "unassigned";
+      // A card can only live in one column, so grouping follows the lead.
+      return ticket.assigneeIds[0] ?? "unassigned";
     case "priority":
       return ticket.priority;
     case "severity":

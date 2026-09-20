@@ -27,7 +27,7 @@ export function MyWorkView() {
   const reportees = React.useMemo(() => reporteesOf(), []);
 
   const mine = React.useMemo(
-    () => tickets.filter((ticket) => ticket.assigneeId === CURRENT_USER_ID),
+    () => tickets.filter((ticket) => ticket.assigneeIds.includes(CURRENT_USER_ID)),
     [tickets],
   );
   const team = React.useMemo(() => ticketsForTeam(tickets), [tickets]);

@@ -8,6 +8,7 @@ import {
   projects as seedProjects,
   tickets as seedTickets,
   getProject,
+  getUser,
   CURRENT_USER_ID,
   type Comment,
   type Ticket,
@@ -28,7 +29,7 @@ export type NewTicketInput = {
   priority: Ticket["priority"];
   severity: Ticket["severity"];
   status: TicketStatus;
-  assigneeId: string | null;
+  assigneeIds: string[];
   labelIds: string[];
   estimate: number | null;
   dueAt: string | null;
@@ -105,7 +106,7 @@ function loadCreatedProjects(): Project[] {
 /** Field changes worth recording in the history. */
 const trackedFields = [
   "status",
-  "assigneeId",
+  "assigneeIds",
   "priority",
   "severity",
   "title",
@@ -114,7 +115,7 @@ const trackedFields = [
 
 const eventKindForField: Record<(typeof trackedFields)[number], TicketEvent["kind"]> = {
   status: "status",
-  assigneeId: "assignee",
+  assigneeIds: "assignee",
   priority: "priority",
   severity: "severity",
   title: "title",
@@ -124,9 +125,22 @@ const eventKindForField: Record<(typeof trackedFields)[number], TicketEvent["kin
 /** Long prose in an audit entry is unreadable, so record that it changed. */
 function auditValue(field: (typeof trackedFields)[number], value: unknown) {
   if (value === null || value === undefined) return null;
+  if (field === "assigneeIds") {
+    const ids = value as string[];
+    if (ids.length === 0) return null;
+    return ids.map((id) => getUser(id)?.name ?? id).join(", ");
+  }
   const text = String(value);
   if (field === "description") return null;
   return text.length > 80 ? `${text.slice(0, 77)}…` : text;
+}
+
+/** Arrays never compare equal by reference, so the audit needs this. */
+function sameFieldValue(a: unknown, b: unknown) {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((item, i) => item === b[i]);
+  }
+  return a === b;
 }
 
 function reorderColumn(
@@ -190,7 +204,9 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
     (ticket: Ticket, patch: Partial<Ticket>) =>
       trackedFields
         .filter(
-          (field) => patch[field] !== undefined && patch[field] !== ticket[field],
+          (field) =>
+            patch[field] !== undefined &&
+            !sameFieldValue(patch[field], ticket[field]),
         )
         .map((field) => ({
           ticketId: ticket.id,
@@ -453,7 +469,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
         status: input.status,
         priority: input.priority,
         type: input.type,
-        assigneeId: input.assigneeId,
+        assigneeIds: input.assigneeIds,
         reporterId: CURRENT_USER_ID,
         labelIds: input.labelIds,
         estimate: input.estimate,

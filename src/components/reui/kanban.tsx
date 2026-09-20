@@ -16,6 +16,7 @@ import {
   useSyncExternalStore,
 } from "react"
 import type {
+  CollisionDetection,
   DragCancelEvent,
   DragEndEvent,
   DragOverEvent,
@@ -25,9 +26,13 @@ import type {
   UniqueIdentifier,
 } from "@dnd-kit/core"
 import {
+  closestCenter,
   closestCorners,
   defaultDropAnimationSideEffects,
   DndContext,
+  getFirstCollision,
+  pointerWithin,
+  rectIntersection,
   DragOverlay,
   KeyboardSensor,
   MeasuringStrategy,
@@ -131,13 +136,6 @@ const subscribeToNothing = () => () => {}
 const getIsMounted = () => true
 const getIsMountedOnServer = () => false
 
-/**
- * Upstream passes no collisionDetection, so DndContext falls back to
- * rectIntersection — under which the dragged item's own droppable always wins,
- * `over` never changes, onDragOver never fires, and an empty column can never
- * be reached. closestCorners is dnd-kit's recommendation for multi-container
- * sortables and handles empty columns correctly. Overridable via the prop.
- */
 const MOUSE_SENSOR_OPTIONS = { activationConstraint: { distance: 10 } }
 const TOUCH_SENSOR_OPTIONS = {
   activationConstraint: { delay: 250, tolerance: 5 },
@@ -205,7 +203,7 @@ function Kanban<T>({
   onDragCancel,
   accessibility,
   modifiers,
-  collisionDetection = closestCorners,
+  collisionDetection,
   ...props
 }: KanbanRootProps<T>) {
   const columns = value
@@ -258,6 +256,63 @@ function Kanban<T>({
     (id: UniqueIdentifier) => columnIds.includes(id as string),
     [columnIds]
   )
+
+  /**
+   * LOCAL ADDITION (not upstream). Upstream passes no `collisionDetection`, so
+   * dnd-kit falls back to `rectIntersection`, and a kanban built that way can
+   * never drop into an empty column.
+   *
+   * Every sortable is a droppable, including the one being dragged, and its
+   * rect travels under the pointer. Over a column that still has cards some
+   * other card usually wins on proximity, which is why cross-column drags look
+   * like they work. Over an *empty* column the only two candidates are the
+   * column's own rect - whose corners sit far from a pointer near its middle -
+   * and the dragged card itself, at distance zero. The card wins, `over` comes
+   * back as the active id, `onDragOver` never fires, and the drop is a no-op.
+   * Swapping in `closestCorners` alone does not help: the active card is still
+   * a candidate and still closest.
+   *
+   * So: drop the active id from the candidate list (nothing can be dropped on
+   * itself), then follow dnd-kit's multi-container recipe - `pointerWithin`
+   * first because it is exact while the pointer is inside a rect, falling back
+   * to `rectIntersection` and finally `closestCorners` for keyboard drags,
+   * which have no pointer at all. When the winner is a column that still holds
+   * cards, resolve to the card nearest the cursor so the insertion point lands
+   * where the user is actually pointing.
+   */
+  const defaultCollisionDetection = useCallback<CollisionDetection>((args) => {
+    const { active, droppableContainers, ...rest } = args
+    const candidates = droppableContainers.filter((c) => c.id !== active.id)
+    const base = { ...rest, active, droppableContainers: candidates }
+
+    const pointerHits = pointerWithin(base)
+    const collisions =
+      pointerHits.length > 0 ? pointerHits : rectIntersection(base)
+
+    const overId = getFirstCollision(collisions, "id")
+    if (overId === null || overId === undefined) return closestCorners(base)
+
+    const items = valueRef.current[overId as string]
+    if (items) {
+      const getId = getItemValueRef.current
+      // The active card is already excluded above; in default mode dragOver has
+      // usually parked it in this very column, so without this filter the
+      // candidate set would come back empty and `over` would go null.
+      const itemIds = new Set(
+        items.map(getId).filter((id) => id !== active.id)
+      )
+      if (itemIds.size > 0) {
+        return closestCenter({
+          ...base,
+          droppableContainers: candidates.filter((c) =>
+            itemIds.has(c.id as string)
+          ),
+        })
+      }
+    }
+
+    return collisions
+  }, [])
 
   const findContainer = useCallback(
     (id: UniqueIdentifier) => {
@@ -404,6 +459,10 @@ function Kanban<T>({
           [overContainer]: newOverItems,
         })
       } else {
+        // Hovering the column the card already lives in is not a reorder, and
+        // the lookup below would return -1 and hand arrayMove a bogus index.
+        if (isColumn(over.id)) return
+
         const container = activeContainer
         const activeIndex = columns[container].findIndex(
           (item: T) => getItemValue(item) === active.id
@@ -412,7 +471,7 @@ function Kanban<T>({
           (item: T) => getItemValue(item) === over.id
         )
 
-        if (activeIndex !== overIndex) {
+        if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
           setColumns({
             ...columns,
             [container]: arrayMove(columns[container], activeIndex, overIndex),
@@ -596,7 +655,7 @@ function Kanban<T>({
     <KanbanContext.Provider value={contextValue}>
       <DndContext
         sensors={sensors}
-        collisionDetection={collisionDetection}
+        collisionDetection={collisionDetection ?? defaultCollisionDetection}
         modifiers={modifiers}
         accessibility={accessibility}
         measuring={MEASURING_CONFIG}

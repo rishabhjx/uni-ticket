@@ -52,24 +52,44 @@ export function QuickAssign({
         align="end"
         onClick={(event) => event.stopPropagation()}
       >
-        <DropdownMenuLabel>Assignee</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => updateTicket(ticket.id, { assigneeId: null })}>
+        <DropdownMenuLabel>Assignees</DropdownMenuLabel>
+        <DropdownMenuItem
+          onClick={() => updateTicket(ticket.id, { assigneeIds: [] })}
+        >
           <span className="flex items-center gap-2">
             <UserAvatar userId={null} />
             Unassigned
           </span>
         </DropdownMenuItem>
-        {members.map((id) => (
-          <DropdownMenuItem
-            key={id}
-            onClick={() => updateTicket(ticket.id, { assigneeId: id })}
-          >
-            <span className="flex items-center gap-2">
-              <UserAvatar userId={id} />
-              {getUser(id)?.name}
-            </span>
-          </DropdownMenuItem>
-        ))}
+        {members.map((id) => {
+          const picked = ticket.assigneeIds.includes(id);
+          return (
+            <DropdownMenuItem
+              key={id}
+              // Several people can hold one ticket, so a row toggles rather
+              // than replaces. closeOnSelect stays on: ticking two people from
+              // a card is rare enough that keeping the menu open would feel
+              // stickier than it is worth.
+              onClick={() =>
+                updateTicket(ticket.id, {
+                  assigneeIds: picked
+                    ? ticket.assigneeIds.filter((item) => item !== id)
+                    : [...ticket.assigneeIds, id],
+                })
+              }
+            >
+              <span className="flex w-full items-center gap-2">
+                <UserAvatar userId={id} />
+                <span className="flex-1">{getUser(id)?.name}</span>
+                {picked ? (
+                  <span aria-hidden className="text-accent-600">
+                    ✓
+                  </span>
+                ) : null}
+              </span>
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

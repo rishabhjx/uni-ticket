@@ -150,12 +150,19 @@ function buildDescription(random: Random, type: TicketType, title: string) {
   ].join("\n");
 }
 
-function pickAssignee(random: Random, project: Project, status: TicketStatus) {
-  if (!random.chance(assignedChanceByStatus[status])) return null;
+function pickAssignees(random: Random, project: Project, status: TicketStatus) {
+  if (!random.chance(assignedChanceByStatus[status])) return [];
   // The current user carries a meaningful share so "My tickets" is populated.
-  if (random.chance(0.24)) return CURRENT_USER_ID;
-  const others = project.memberIds.filter((id) => id !== CURRENT_USER_ID);
-  return random.pick(others);
+  const lead = random.chance(0.24)
+    ? CURRENT_USER_ID
+    : random.pick(project.memberIds.filter((id) => id !== CURRENT_USER_ID));
+
+  // Most work has one owner. A minority is genuinely shared - a pairing, or a
+  // fix that needs someone from another discipline - and that is the case the
+  // multi-assignee UI exists for, so it has to show up in the mock data.
+  const rest = project.memberIds.filter((id) => id !== lead);
+  const extra = random.chance(0.18) ? (random.chance(0.22) ? 2 : 1) : 0;
+  return [lead, ...random.sample(rest, Math.min(extra, rest.length))];
 }
 
 function buildTickets(random: Random) {
@@ -177,8 +184,10 @@ function buildTickets(random: Random) {
           ? random.int(1, Math.max(1, Math.floor(createdDaysAgo * 0.6)))
           : random.int(0, Math.min(14, createdDaysAgo));
 
-      const assigneeId = pickAssignee(random, project, status);
-      const reporterPool = project.memberIds.filter((id) => id !== assigneeId);
+      const assigneeIds = pickAssignees(random, project, status);
+      const reporterPool = project.memberIds.filter(
+        (id) => !assigneeIds.includes(id),
+      );
       const reporterId = random.pick(reporterPool.length > 0 ? reporterPool : project.memberIds);
 
       let dueAt: string | null = null;
@@ -260,7 +269,7 @@ function buildTickets(random: Random) {
         status,
         priority,
         type,
-        assigneeId,
+        assigneeIds,
         reporterId,
         labelIds: random.sample(labelPool, random.int(0, 3)),
         estimate: random.chance(0.78) ? random.pick(estimates) : null,
@@ -373,7 +382,7 @@ function buildEvents(random: Random, tickets: Ticket[]) {
     events.push({
       id: `e-${sequence}`,
       ticketId: ticket.id,
-      actorId: ticket.assigneeId ?? ticket.reporterId,
+      actorId: ticket.assigneeIds[0] ?? ticket.reporterId,
       kind,
       from,
       to,
@@ -411,8 +420,14 @@ function buildEvents(random: Random, tickets: Ticket[]) {
       );
     });
 
-    if (ticket.assigneeId) {
-      add(ticket, "assignee", null, ticket.assigneeId, createdMs + span * 0.2);
+    if (ticket.assigneeIds.length > 0) {
+      add(
+        ticket,
+        "assignee",
+        null,
+        ticket.assigneeIds[0],
+        createdMs + span * 0.2,
+      );
     }
     if (random.chance(0.28)) {
       add(ticket, "priority", "medium", ticket.priority, createdMs + span * 0.5);

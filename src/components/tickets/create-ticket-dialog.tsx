@@ -4,7 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 
 import { PriorityBadge, SeverityBadge, TypeIcon } from "@/components/tickets/badges";
-import { UserAvatar } from "@/components/tickets/user-avatar";
+import { AssigneePicker } from "@/components/tickets/assignee-picker";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,6 @@ import {
   ENVIRONMENTS,
   getProject,
   getProjectBySlug,
-  getUser,
   isDefect,
   labels,
   sprintsForProject,
@@ -96,7 +95,7 @@ export function CreateTicketDialog({
   const [severity, setSeverity] = React.useState<TicketSeverity>("s3");
   const [environment, setEnvironment] = React.useState<Environment>("production");
   const [buildVersion, setBuildVersion] = React.useState("");
-  const [assigneeId, setAssigneeId] = React.useState<string>("unassigned");
+  const [assigneeIds, setAssigneeIds] = React.useState<string[]>([]);
   const [labelIds, setLabelIds] = React.useState<string[]>([]);
   const [dueAt, setDueAt] = React.useState("");
   const [sprintId, setSprintId] = React.useState("none");
@@ -158,7 +157,7 @@ export function CreateTicketDialog({
       priority,
       severity: defect ? severity : null,
       status: "backlog",
-      assigneeId: assigneeId === "unassigned" ? null : assigneeId,
+      assigneeIds,
       labelIds,
       estimate: null,
       dueAt: dueAt ? new Date(`${dueAt}T17:00:00`).toISOString() : null,
@@ -313,28 +312,13 @@ export function CreateTicketDialog({
               </>
             ) : null}
 
-            <Row label="Assignee">
-              <Select value={assigneeId} onValueChange={setAssigneeId}>
-                <SelectTrigger className="h-8 text-small">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">
-                    <span className="flex items-center gap-2">
-                      <UserAvatar userId={null} />
-                      Unassigned
-                    </span>
-                  </SelectItem>
-                  {(project?.memberIds ?? []).map((id) => (
-                    <SelectItem key={id} value={id}>
-                      <span className="flex items-center gap-2">
-                        <UserAvatar userId={id} />
-                        {getUser(id)?.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Row label="Assignees">
+              <AssigneePicker
+                value={assigneeIds}
+                memberIds={project?.memberIds ?? []}
+                onChange={setAssigneeIds}
+                className="h-8 rounded-md border border-grey-200"
+              />
             </Row>
 
             {cycles.length > 0 ? (

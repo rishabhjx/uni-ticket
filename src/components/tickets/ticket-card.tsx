@@ -11,7 +11,7 @@ import {
   TypeIcon,
 } from "@/components/tickets/badges";
 import { QuickAssign, QuickStatus } from "@/components/tickets/quick-actions";
-import { UserAvatar } from "@/components/tickets/user-avatar";
+import { AvatarStack } from "@/components/tickets/user-avatar";
 import { formatDueDate } from "@/lib/format";
 import {
   daysInColumn,
@@ -122,7 +122,7 @@ export function TicketCard({
 
         <span className="ml-auto">
           <QuickAssign ticket={ticket}>
-            <UserAvatar userId={ticket.assigneeId} />
+            <AvatarStack userIds={ticket.assigneeIds} />
           </QuickAssign>
         </span>
       </div>

@@ -7,7 +7,12 @@ import {
   SeverityBadge,
   StatusBadge,
 } from "@/components/tickets/badges";
-import { UserAvatar } from "@/components/tickets/user-avatar";
+import { AssigneePicker } from "@/components/tickets/assignee-picker";
+import {
+  AvatarStack,
+  assigneeNames,
+  UserAvatar,
+} from "@/components/tickets/user-avatar";
 import {
   Select,
   SelectContent,
@@ -143,41 +148,18 @@ export function TicketFields({
         )}
       </Field>
 
-      <Field label="Assignee">
+      <Field label={ticket.assigneeIds.length > 1 ? "Assignees" : "Assignee"}>
         {!canEdit ? (
           <ReadOnlyValue>
-            <UserAvatar userId={ticket.assigneeId} />
-            {getUser(ticket.assigneeId)?.name ?? "Unassigned"}
+            <AvatarStack userIds={ticket.assigneeIds} />
+            {assigneeNames(ticket.assigneeIds)}
           </ReadOnlyValue>
         ) : (
-        <Select
-          value={ticket.assigneeId ?? "unassigned"}
-          onValueChange={(value) =>
-            updateTicket(ticket.id, {
-              assigneeId: value === "unassigned" ? null : value,
-            })
-          }
-        >
-          <SelectTrigger className={triggerClass} aria-label="Assignee">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="unassigned">
-              <span className="flex items-center gap-2 text-small text-grey-500">
-                <UserAvatar userId={null} />
-                Unassigned
-              </span>
-            </SelectItem>
-            {(project?.memberIds ?? []).map((id) => (
-              <SelectItem key={id} value={id}>
-                <span className="flex items-center gap-2 text-small">
-                  <UserAvatar userId={id} />
-                  {getUser(id)?.name}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <AssigneePicker
+            value={ticket.assigneeIds}
+            memberIds={project?.memberIds ?? []}
+            onChange={(next) => updateTicket(ticket.id, { assigneeIds: next })}
+          />
         )}
       </Field>
 

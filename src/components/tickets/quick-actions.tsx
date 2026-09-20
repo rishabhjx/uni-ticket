@@ -1,5 +1,8 @@
 "use client";
 
+import * as React from "react";
+
+import { useCelebrate } from "@/components/shared/celebrate";
 import { PriorityBadge, StatusBadge } from "@/components/tickets/badges";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
@@ -96,7 +99,35 @@ export function QuickAssign({
 }
 
 export function QuickStatus({ ticket }: { ticket: Ticket }) {
-  const { updateTicket } = useTicketStore();
+  const { updateTicket, updateMany, previewRouting } = useTicketStore();
+  const celebrate = useCelebrate();
+
+  /*
+   * Routing hands the ticket to another team's owner when work crosses a
+   * discipline boundary. That is the right behaviour and it used to happen in
+   * silence: the person who had it lost it with no signal and no way back.
+   * `updateMany` rather than `updateTicket` because it is what takes the undo
+   * snapshot -- an action the product performs on your behalf has to be
+   * reversible.
+   */
+  const setStatus = React.useCallback(
+    (status: TicketStatus) => {
+      const routedTo = previewRouting(ticket, { status });
+      const before = { status: ticket.status, assigneeIds: ticket.assigneeIds };
+      updateMany([ticket.id], { status });
+      if (routedTo) {
+        celebrate(
+          "→",
+          `${STATUS_LABEL[status]} · reassigned to ${getUser(routedTo)?.name ?? routedTo}`,
+          // Put the exact previous values back rather than leaning on the
+          // store's snapshot: that snapshot is taken in the same render this
+          // callback closed over, so `undo` reads null the first time.
+          () => updateMany([ticket.id], before),
+        );
+      }
+    },
+    [celebrate, previewRouting, ticket, updateMany],
+  );
 
   return (
     <DropdownMenu>
@@ -118,9 +149,7 @@ export function QuickStatus({ ticket }: { ticket: Ticket }) {
         {TICKET_STATUSES.map((status) => (
           <DropdownMenuItem
             key={status}
-            onClick={() =>
-              updateTicket(ticket.id, { status: status as TicketStatus })
-            }
+            onClick={() => setStatus(status as TicketStatus)}
           >
             <StatusBadge status={status} />
           </DropdownMenuItem>

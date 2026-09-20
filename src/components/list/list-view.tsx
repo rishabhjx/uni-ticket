@@ -141,7 +141,12 @@ export function ListView({
   }
 
   return (
-    <>
+    /*
+     * `settle` covers the seam where the skeleton is replaced: the bars used
+     * to vanish and the rows appear in the same frame, which reads as a
+     * glitch rather than as loading finishing.
+     */
+    <div className="settle flex min-h-0 flex-1 flex-col">
       <FilterBar
         project={project}
         resultCount={filtered.length}
@@ -195,6 +200,6 @@ export function ListView({
         }
       />
       <BulkBar />
-    </>
+    </div>
   );
 }

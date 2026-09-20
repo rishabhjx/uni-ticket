@@ -420,7 +420,7 @@ export function FilterBar({
         // No children: `Filters` renders its own chrome per variant, and
         // passing any overrides it — which is how the advanced builder ended
         // up replaced by the plain chip row.
-        className="min-w-0 flex-1"
+        className="filters-animate min-w-0 flex-1"
       />
 
       {activeCount > 0 ? (

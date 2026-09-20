@@ -82,6 +82,13 @@ type TicketStoreValue = {
   updateTicket: (ticketId: string, patch: Partial<Ticket>) => void;
   /** Applies the same patch to many tickets at once. */
   updateMany: (ticketIds: string[], patch: Partial<Ticket>) => void;
+  /**
+   * Who a patch WOULD hand the ticket to, without applying it. Routing
+   * changes the assignee by itself when work crosses a discipline boundary,
+   * and the person losing the ticket used to get no signal at all -- so the
+   * callers ask first and say so afterwards.
+   */
+  previewRouting: (ticket: Ticket, patch: Partial<Ticket>) => string | null;
   createTicket: (input: NewTicketInput) => Ticket;
   createProject: (input: NewProjectInput) => Project;
   createWorkspace: (input: NewWorkspaceInput) => Workspace;
@@ -333,6 +340,16 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       applyPatch(ticketIds, patch);
     },
     [applyPatch],
+  );
+
+  const previewRouting = React.useCallback(
+    (ticket: Ticket, patch: Partial<Ticket>): string | null => {
+      const routed = routeOnStatusChange(ticket, patch);
+      if (routed.assigneeIds === undefined) return null;
+      const next = routed.assigneeIds[0];
+      return next && !ticket.assigneeIds.includes(next) ? next : null;
+    },
+    [routeOnStatusChange],
   );
 
   const undo = React.useCallback(() => {
@@ -740,6 +757,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       unlinkTickets,
       addAttachment,
       removeAttachment,
+      previewRouting,
       undo: undoSnapshot ? undo : null,
       addComment,
       toggleReaction,
@@ -767,6 +785,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       removeAttachment,
       undoSnapshot,
       undo,
+      previewRouting,
       addComment,
       toggleReaction,
       editComment,

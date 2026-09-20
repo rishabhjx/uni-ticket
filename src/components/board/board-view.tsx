@@ -95,7 +95,8 @@ function columnsFor(groupBy: GroupBy, project: Project) {
 }
 
 export function BoardView({ project }: { project: Project }) {
-  const { tickets, applyBoardOrder, isLoading } = useTicketStore();
+  const { tickets, applyBoardOrder, isLoading, previewRouting, updateMany } =
+    useTicketStore();
   const { openTicket } = useTicketPanel();
   const { filters, groupBy, swimlane, clearFilters } = useViewState();
   const { openCreate } = useShell();
@@ -202,10 +203,29 @@ export function BoardView({ project }: { project: Project }) {
         }
       }
 
+      /*
+       * Say so when the board hands the ticket to someone else. Crossing a
+       * discipline reassigns it to that team's owner, which is right, and
+       * which used to happen in complete silence -- the card simply had a
+       * different face on it the next time you looked.
+       */
+      const movedStatus = entries.find((entry) => entry.id === moved.id)?.column;
+      const routedTo =
+        movedStatus && movedStatus !== moved.status
+          ? previewRouting(moved, { status: movedStatus })
+          : null;
+
       applyBoardOrder(entries);
+
       if (finished > 0) celebrate(randomCheer(), "Nice — that's verified");
+      else if (routedTo) {
+        const before = { status: moved.status, assigneeIds: moved.assigneeIds };
+        celebrate("→", `Handed to ${getUser(routedTo)?.name ?? routedTo}`, () =>
+          updateMany([moved.id], before),
+        );
+      }
     },
-    [applyBoardOrder, groupBy, celebrate, value],
+    [applyBoardOrder, groupBy, celebrate, previewRouting, updateMany, value],
   );
 
   const wipLimit = (columnId: string) =>
@@ -389,7 +409,14 @@ export function BoardView({ project }: { project: Project }) {
                 <KanbanColumn
                   key={column.id}
                   value={column.id}
-                  className="flex h-full min-w-[288px] flex-1 shrink-0 basis-0 flex-col overflow-hidden rounded-md border border-grey-200 bg-grey-50 p-0 xl:max-w-[400px]"
+                  className={cn(
+                    "flex h-full min-w-[288px] flex-1 shrink-0 basis-0 flex-col overflow-hidden rounded-md border border-grey-200 bg-grey-50 p-0 xl:max-w-[400px]",
+                    // Committing the move on drop means no live slot-in
+                    // preview, so the column says "here" instead: the card
+                    // no longer has to guess where it is about to land.
+                    "transition-[border-color,background-color] duration-[--duration-fast]",
+                    "data-[over=true]:border-[var(--selected-edge)] data-[over=true]:bg-[var(--selected-bg)]",
+                  )}
                 >
                   {columnHeader(column, value[column.id]?.length ?? 0)}
 

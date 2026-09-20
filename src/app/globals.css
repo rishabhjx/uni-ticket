@@ -240,10 +240,18 @@
   /* --- Motion ------------------------------------------------------------
      One easing curve and three durations. The curve decelerates hard, which
      is what makes a panel feel like it settles rather than stops.            */
+  /* --- Motion --------------------------------------------------------------
+     One curve, four lengths, chosen by how far the thing actually travels.
+     Everything used to run at 150ms: a hover tint and a 460px panel took the
+     same time, which makes the tint feel sluggish and the panel feel yanked.
+     A tint moves nothing, so it gets the shortest; the panel crosses a third
+     of the screen, so it gets the longest.                                  */
   --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
-  --duration-instant: 100ms;
-  --duration-fast: 150ms;
-  --duration-slow: 220ms;
+  --ease-exit: cubic-bezier(0.4, 0, 0.9, 0.3);
+  --duration-instant: 90ms;   /* colour, opacity: nothing moves */
+  --duration-fast: 140ms;     /* a chip, a checkbox, a small popover */
+  --duration-slow: 220ms;     /* a dropdown, a dialog, a row of chips */
+  --duration-panel: 340ms;    /* the ticket panel: 460px of travel */
 
   /* --- Glass -------------------------------------------------------------
      Only surfaces that float over content use it, and only to say "your work
@@ -537,21 +545,35 @@ html.light {
   *::before,
   *::after {
     transition-timing-function: var(--ease-standard);
-    transition-duration: var(--duration-fast);
+    transition-duration: var(--duration-instant);
   }
 
   /*
      Radix drives open and close states through data attributes; tw-animate-css
      supplies keyframes, and these keep their timing on the same curve.
   */
+  [data-slot="tooltip-content"] {
+    animation-duration: var(--duration-fast);
+    animation-timing-function: var(--ease-standard);
+  }
+
   [data-slot="popover-content"],
   [data-slot="dropdown-menu-content"],
   [data-slot="select-content"],
-  [data-slot="tooltip-content"],
   [data-slot="dialog-content"],
   [data-slot="command-dialog-content"] {
-    animation-duration: var(--duration-fast);
+    animation-duration: var(--duration-slow);
     animation-timing-function: var(--ease-standard);
+  }
+
+  /*
+     Leaving is not entering played backwards. A layer that is going away has
+     nothing to explain, so it goes faster and on a curve that starts moving
+     immediately instead of easing in.
+  */
+  [data-state="closed"][data-slot$="-content"] {
+    animation-duration: var(--duration-fast);
+    animation-timing-function: var(--ease-exit);
   }
 
   [data-slot="dialog-overlay"] {
@@ -576,17 +598,86 @@ html.light {
     background-color: var(--accent-200);
   }
 
+  /*
+     A conformance requirement, not a preference. Note `animation-iteration-
+     count`: zeroing the duration is not enough for anything that loops --
+     a skeleton's pulse would still run, it would just run instantly.
+  */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }
 
 @layer utilities {
+  /*
+     Content replacing a skeleton used to be a hard swap: the bars vanished
+     and the real thing appeared in the same frame, which reads as a glitch
+     rather than as loading finishing. A short rise-and-fade covers the seam.
+  */
+  @keyframes settle-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .settle {
+    animation: settle-in var(--duration-slow) var(--ease-standard) both;
+  }
+
+  /*
+     The panel slides in as one block, so its contents appear to travel
+     sideways with it. Staggering them by a few frames lets the surface
+     arrive first and the content land on it.
+  */
+  .settle-1 {
+    animation: settle-in var(--duration-slow) var(--ease-standard) 60ms both;
+  }
+
+  .settle-2 {
+    animation: settle-in var(--duration-slow) var(--ease-standard) 120ms both;
+  }
+
+  /*
+     A ticket that has just changed hands is the most meaningful event on the
+     board and it used to happen instantly, with nothing to follow.
+  */
+  @keyframes flash-change {
+    0% {
+      box-shadow: inset 0 0 0 1px var(--selected-edge);
+      background-color: var(--selected-bg);
+    }
+    100% {
+      box-shadow: inset 0 0 0 1px transparent;
+      background-color: transparent;
+    }
+  }
+
+  .flash {
+    animation: flash-change 900ms var(--ease-standard) both;
+  }
+
+  /*
+     Filter chips used to appear and vanish with nothing in between, so the
+     bar's height stepped as conditions were added and everything below it
+     jumped. The chips fade and rise into place instead, which is enough to
+     read the change as one thing moving rather than the page redrawing.
+  */
+  .filters-animate [data-slot="filter-chip"] {
+    animation: settle-in var(--duration-fast) var(--ease-standard) both;
+  }
+
   /*
      WCAG 2.5.8 puts the floor for a pointer target at 24x24. Several controls
      here are optically smaller than that on purpose -- a 16px checkbox, a

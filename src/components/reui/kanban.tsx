@@ -726,6 +726,10 @@ function KanbanColumn({
     attributes,
     listeners,
     isDragging: isSortableDragging,
+    // Local addition. Committing the move on drop (rather than reparenting
+    // live) costs the slot-in preview, so the column has to say "here" some
+    // other way; `data-over` is what the board styles.
+    isOver,
   } = useSortable({
     id: value,
     disabled: disabled || isOverlay,
@@ -773,6 +777,7 @@ function KanbanColumn({
         data-slot="kanban-column"
         data-value={value}
         data-dragging={isSortableDragging}
+        data-over={activeId && isOver && !isColumnDragging ? "true" : undefined}
         data-disabled={disabled}
         ref={setNodeRef}
         style={style}

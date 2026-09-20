@@ -118,7 +118,7 @@ export function TicketPanel() {
         "absolute inset-y-0 right-0 z-50 flex max-w-full flex-col border-l border-grey-200 bg-grey-0 max-md:w-full",
         expanded && "w-[min(1200px,100%)]",
         open ? "translate-x-0 shadow-overlay" : "translate-x-full",
-        "transition-[transform] duration-[--duration-slow]",
+        "transition-[transform] duration-[--duration-panel]",
       )}
     >
       {open && !expanded ? (
@@ -126,7 +126,14 @@ export function TicketPanel() {
       ) : null}
       {ticket ? (
         <>
-          <header className="hairline-b flex h-topbar shrink-0 items-center gap-2 px-5">
+          {/* The surface arrives first, its contents land on it: staggered
+              by a few frames so the text does not appear to travel sideways
+              as part of the panel. Keyed on the ticket so it replays when you
+              open a different one. */}
+          <header
+            key={`head-${ticket.id}`}
+            className="settle-1 hairline-b flex h-topbar shrink-0 items-center gap-2 px-5"
+          >
             {parent ? (
               <button
                 type="button"
@@ -224,7 +231,13 @@ export function TicketPanel() {
             </button>
           </header>
 
-          <div className={cn("min-h-0 flex-1 overflow-y-auto", expanded && "px-2")}>
+          <div
+            key={`body-${ticket.id}`}
+            className={cn(
+              "settle-2 min-h-0 flex-1 overflow-y-auto",
+              expanded && "px-2",
+            )}
+          >
             {blockers.length > 0 ? (
               <div className="hairline-b flex items-start gap-2 bg-[var(--priority-urgent-bg)] px-5 py-2.5">
                 <ShieldAlert

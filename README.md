@@ -18,7 +18,7 @@ Then open http://localhost:3000. Node 18.18+ required.
 - Next.js (App Router) · TypeScript · Tailwind v4
 - shadcn/ui as the only base component system, vendored into
   `src/components/ui` so every component is editable in-repo
-- Light theme only. See [DESIGN.md](./DESIGN.md) for the token system.
+- Dark theme. See [DESIGN.md](./DESIGN.md) for the token system.
 
 ## Screens
 

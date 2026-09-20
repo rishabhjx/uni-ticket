@@ -1,8 +1,13 @@
 # Design system — UNI Tickets
 
-Light theme only. No dark mode, no theme toggle. Every screen uses one font,
-one spacing scale, one border-radius. Colour is reserved for status and
-priority badges plus a single accent.
+Dark theme. One theme, no toggle. Every screen uses one font, one spacing
+scale, one border-radius.
+
+Nothing in the product uses Tailwind's `dark:` variants: every surface, border
+and piece of text reads from the token ramp, so switching the whole app from
+light to dark was a single file. The ramp keeps its meaning through the
+inversion — `--grey-0` is the base surface and `--grey-900` the strongest
+text, whichever theme those happen to be.
 
 ## Type — Inter, five steps
 
@@ -20,8 +25,8 @@ tables, KPIs and ticket keys so columns of figures line up.
 
 ## Colour
 
-Neutral ramp `--grey-0 … --grey-900` carries the entire interface — surfaces,
-text, borders, hover states.
+Warm neutral ramp `--grey-0 … --grey-900` carries the entire interface —
+surfaces, text, borders, hover states. On dark it runs #171512 to #f5f2ec.
 
 One accent, `--accent-600` (#1f5fdb): active nav item, primary button, focus
 ring, selected row. Nowhere else.

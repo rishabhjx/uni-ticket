@@ -7,14 +7,14 @@ import { cn } from "@/lib/utils";
  * this does not compete with the status and priority colours.
  */
 const paletteById: Record<string, string> = {
-  "u-1": "bg-[#e8e2ff] text-[#4c3a9e]",
-  "u-2": "bg-[#ffe3e8] text-[#9c2f45]",
-  "u-3": "bg-[#dff0e4] text-[#26663f]",
-  "u-4": "bg-[#ffe8d4] text-[#95531b]",
-  "u-5": "bg-[#d9ecf7] text-[#1f5876]",
-  "u-6": "bg-[#fdeacb] text-[#87621a]",
-  "u-7": "bg-[#e6e6f5] text-[#454585]",
-  "u-8": "bg-[#f7dff0] text-[#8a2f72]",
+  "u-1": "bg-[#2e2552] text-[#c3b1fb]",
+  "u-2": "bg-[#43222a] text-[#f6a3b2]",
+  "u-3": "bg-[#1b3527] text-[#8fd6ab]",
+  "u-4": "bg-[#3d2a17] text-[#f0b378]",
+  "u-5": "bg-[#16303f] text-[#8ecbec]",
+  "u-6": "bg-[#3a3016] text-[#e4c473]",
+  "u-7": "bg-[#272749] text-[#adadea]",
+  "u-8": "bg-[#3b1f35] text-[#eaa3d6]",
 };
 
 const fallback = "bg-grey-200 text-grey-700";

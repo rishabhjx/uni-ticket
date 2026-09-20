@@ -10,56 +10,59 @@
 
 :root {
   /* --- Neutral ramp (the entire UI is built from this) -------------------- */
-  --grey-0: #ffffff;
-  --grey-25: #fdfcfb;
-  --grey-50: #faf8f6;
-  --grey-100: #f4f1ee;
-  --grey-150: #edeae5;
-  --grey-200: #e5e0da;
-  --grey-300: #d4cec6;
-  --grey-400: #a8a29a;
-  --grey-500: #827c74;
-  --grey-600: #635d56;
-  --grey-700: #4a453f;
-  --grey-800: #2e2a26;
-  --grey-900: #1c1917;
+  --grey-0: #171512;
+  --grey-25: #1a1815;
+  --grey-50: #1e1c18;
+  --grey-100: #24211d;
+  --grey-150: #2a2723;
+  --grey-200: #33302b;
+  --grey-300: #454039;
+  --grey-400: #6b645a;
+  --grey-500: #8d8579;
+  --grey-600: #a9a094;
+  --grey-700: #c4bcb0;
+  --grey-800: #ded8cf;
+  --grey-900: #f5f2ec;
 
   /* --- The one accent ----------------------------------------------------- */
-  --accent-50: #f6f3ff;
-  --accent-100: #ece5ff;
-  --accent-200: #d9ccff;
-  --accent-500: #8b6df2;
-  --accent-600: #7355e8;   /* primary accent */
-  --accent-700: #5b41c4;   /* pressed */
+  --accent-50: #211b38;
+  --accent-100: #2b2450;
+  --accent-200: #3d3470;
+  --accent-500: #a68cf7;
+  --accent-600: #8b6df2;   /* primary accent */
+  --accent-700: #a68cf7;   /* pressed — lighter, since we are on dark */
 
   /* --- Status (badges only) ----------------------------------------------- */
-  --status-backlog-bg: #f1eeea;
-  --status-backlog-fg: #635d56;
-  --status-todo-bg: #edeef3;
-  --status-todo-fg: #4a5169;
-  --status-progress-bg: #eeeaff;
-  --status-progress-fg: #5b41c4;
-  --status-review-bg: #fdefe3;
-  --status-review-fg: #96541a;
-  --status-resolved-bg: #e7f1fb;
-  --status-resolved-fg: #1c5a92;
-  --status-done-bg: #e6f3ea;
-  --status-done-fg: #256c43;
+  --status-backlog-bg: #26231f;
+  --status-backlog-fg: #a9a094;
+  --status-todo-bg: #212530;
+  --status-todo-fg: #a3b4d1;
+  --status-progress-bg: #241f3d;
+  --status-progress-fg: #bba8fb;
+  --status-review-bg: #33251a;
+  --status-review-fg: #e3ad72;
+  --status-resolved-bg: #17293a;
+  --status-resolved-fg: #8ac1ef;
+  --status-done-bg: #172b20;
+  --status-done-fg: #84cda0;
 
   /* --- Priority (badges only) --------------------------------------------- */
-  --priority-urgent-bg: #fdecea;
-  --priority-urgent-fg: #a8322a;
-  --priority-high-bg: #fdf0e6;
-  --priority-high-fg: #9a5312;
-  --priority-medium-bg: #fbf5e4;
-  --priority-medium-fg: #7a5b12;
-  --priority-low-bg: #f1eeea;
-  --priority-low-fg: #635d56;
+  --priority-urgent-bg: #351d1c;
+  --priority-urgent-fg: #f5928a;
+  --priority-high-bg: #34271a;
+  --priority-high-fg: #eaac6e;
+  --priority-medium-bg: #24211d;
+  --priority-medium-fg: #a9a094;
+  --priority-low-bg: #1e1c18;
+  --priority-low-fg: #8d8579;
 
   /* --- Feedback ----------------------------------------------------------- */
-  --danger: #b4342a;
-  --danger-bg: #fdecea;
-  --success: #256c43;
+  --danger: #f5928a;
+  --danger-bg: #351d1c;
+  --success: #84cda0;
+
+  /* Native controls, scrollbars and form widgets follow the theme. */
+  color-scheme: dark;
 
   /* --- shadcn semantic tokens (mapped onto the ramp above) ---------------- */
   --background: var(--grey-0);
@@ -104,15 +107,15 @@
      Only surfaces that float over content use it, and only to say "your work
      is still underneath". The opacity floor keeps text legible; saturate
      stops the blur washing the colour out of what shows through.            */
-  --glass-bg: rgb(255 255 255 / 0.86);
-  --glass-bg-strong: rgb(255 255 255 / 0.92);
-  --glass-border: rgb(255 255 255 / 0.6);
-  --glass-blur: saturate(180%) blur(20px);
+  --glass-bg: rgb(23 21 18 / 0.82);
+  --glass-bg-strong: rgb(23 21 18 / 0.9);
+  --glass-border: rgb(255 255 255 / 0.08);
+  --glass-blur: saturate(160%) blur(20px);
 
   /* --- The only elevation in the system (overlays / dragged cards) -------- */
-  --shadow-overlay: 0 10px 28px -8px rgb(23 23 27 / 0.14),
-    0 2px 6px -2px rgb(23 23 27 / 0.07);
-  --shadow-drag: 0 12px 24px -8px rgb(23 23 27 / 0.18);
+  --shadow-overlay: 0 12px 32px -8px rgb(0 0 0 / 0.66),
+    0 2px 8px -2px rgb(0 0 0 / 0.5);
+  --shadow-drag: 0 16px 32px -10px rgb(0 0 0 / 0.75);
 }
 
 @theme inline {
@@ -276,7 +279,7 @@
   }
 
   ::selection {
-    background-color: var(--accent-100);
+    background-color: var(--accent-200);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -310,7 +313,7 @@
   @supports not (backdrop-filter: blur(1px)) {
     .glass,
     .glass-strong {
-      background-color: var(--grey-0);
+      background-color: var(--grey-50);
     }
   }
 

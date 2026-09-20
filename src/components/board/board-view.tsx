@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { GroupBySelect } from "@/components/board/group-by-select";
 import { FilterBar } from "@/components/list/filter-bar";
+import { ProjectActions } from "@/components/projects/project-actions";
 import { randomCheer, useCelebrate } from "@/components/shared/celebrate";
 import { EmptyState } from "@/components/shared/empty-state";
 import { BoardSkeleton } from "@/components/shared/skeletons";
@@ -294,7 +295,10 @@ export function BoardView({ project }: { project: Project }) {
         resultCount={filtered.length}
         totalCount={scoped.length}
         hideStatus={groupBy === "status"}
-        extra={<GroupBySelect />}
+        extra={<>
+            <ProjectActions project={project} tickets={filtered} />
+            <GroupBySelect />
+          </>}
       />
 
       {filtered.length === 0 ? (

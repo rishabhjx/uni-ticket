@@ -9,6 +9,7 @@ import {
 } from "@/components/tickets/badges";
 import { AssigneePicker } from "@/components/tickets/assignee-picker";
 import { DueDatePicker } from "@/components/tickets/due-date-picker";
+import { LabelPicker } from "@/components/tickets/label-picker";
 import {
   AvatarStack,
   assigneeNames,
@@ -240,15 +241,22 @@ export function TicketFields({
       ) : null}
 
       <Field label="Labels" className="items-start">
-        {ticket.labelIds.length > 0 ? (
-          <div className="flex flex-wrap gap-1 py-1.5">
-            {ticket.labelIds.map((id) => {
-              const label = getLabel(id);
-              return label ? <LabelChip key={id} name={label.name} /> : null;
-            })}
-          </div>
+        {!canEdit ? (
+          ticket.labelIds.length > 0 ? (
+            <div className="flex flex-wrap gap-1 py-1.5">
+              {ticket.labelIds.map((id) => {
+                const label = getLabel(id);
+                return label ? <LabelChip key={id} name={label.name} /> : null;
+              })}
+            </div>
+          ) : (
+            <span className="px-1.5 py-1.5 text-small text-grey-400">None</span>
+          )
         ) : (
-          <span className="px-1.5 py-1.5 text-small text-grey-400">None</span>
+          <LabelPicker
+            value={ticket.labelIds}
+            onChange={(labelIds) => updateTicket(ticket.id, { labelIds })}
+          />
         )}
       </Field>
 

@@ -1,7 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
+  ChevronLeft,
+  ExternalLink,
   History,
   Maximize2,
   MessageSquare,
@@ -11,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 
+import { CallButton } from "@/components/shared/call-button";
 import { ActivityFeed } from "@/components/tickets/activity-feed";
 import { AlertChip, TypeIcon } from "@/components/tickets/badges";
 import { CommentComposer } from "@/components/tickets/comment-composer";
@@ -41,7 +45,7 @@ import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
 export function TicketPanel() {
-  const { openTicketKey, closeTicket, expanded, toggleExpanded } =
+  const { openTicketKey, openTicket, closeTicket, expanded, toggleExpanded } =
     useTicketPanel();
   const { tickets, comments, updateTicket, reopenTicket } = useTicketStore();
   const headingRef = React.useRef<HTMLDivElement>(null);
@@ -68,6 +72,14 @@ export function TicketPanel() {
   }, [openTicketKey, closeTicket]);
 
   const project = ticket ? getProject(ticket.projectId) : undefined;
+  // #12: a child should say what it belongs to and get you there in one click.
+  const parent = React.useMemo(
+    () =>
+      ticket?.parentId
+        ? (tickets.find((item) => item.id === ticket.parentId) ?? null)
+        : null,
+    [tickets, ticket?.parentId],
+  );
   const editable = canEditProject(project, CURRENT_USER_ID);
   const blockers = ticket ? blockersOf(tickets, ticket) : [];
   const sprint = ticket ? getSprint(ticket.sprintId) : undefined;
@@ -114,6 +126,20 @@ export function TicketPanel() {
       {ticket ? (
         <>
           <header className="hairline-b flex h-topbar shrink-0 items-center gap-2 px-5">
+            {parent ? (
+              <button
+                type="button"
+                onClick={() => openTicket(parent.key)}
+                title={`Back to ${parent.key} · ${parent.title}`}
+                className="flex max-w-[180px] shrink-0 items-center gap-1 rounded-md px-1 text-caption text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+              >
+                <ChevronLeft className="size-3.5 shrink-0" strokeWidth={2} />
+                <span className="tnum shrink-0">{parent.key}</span>
+                <span aria-hidden className="text-grey-300">
+                  /
+                </span>
+              </button>
+            ) : null}
             <TypeIcon type={ticket.type} />
             <span className="tnum text-small font-medium text-grey-600">
               {ticket.key}
@@ -147,12 +173,38 @@ export function TicketPanel() {
               </button>
             ) : null}
 
+            <CallButton
+              subject={`${ticket.key} ${ticket.title}`}
+              participantIds={
+                ticket.assigneeIds.length > 0
+                  ? ticket.assigneeIds
+                  : (project?.memberIds ?? [])
+              }
+              className="ml-auto"
+            />
+
+            {/*
+              Expand now opens the ticket as a PAGE rather than just widening
+              the panel. A panel is right while you are working a list — the
+              list stays behind it and you keep your place — and wrong when the
+              ticket IS the work.
+            */}
+            <Link
+              href={`/tickets/${ticket.key.toLowerCase()}`}
+              onClick={closeTicket}
+              aria-label="Open as a full page"
+              title="Open as a full page"
+              className="flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+            >
+              <ExternalLink className="size-4" strokeWidth={1.75} />
+            </Link>
+
             <button
               type="button"
               onClick={toggleExpanded}
-              aria-label={expanded ? "Collapse ticket" : "Expand ticket"}
-              title={expanded ? "Collapse" : "Expand"}
-              className="ml-auto flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+              aria-label={expanded ? "Narrow the panel" : "Widen the panel"}
+              title={expanded ? "Narrow" : "Widen"}
+              className="flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
               {expanded ? (
                 <Minimize2 className="size-4" strokeWidth={1.75} />

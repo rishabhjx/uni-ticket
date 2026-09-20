@@ -17,6 +17,7 @@ import {
 
 import { formatBytes } from "@/lib/format";
 import { kindOf } from "@/components/tickets/comment-composer";
+import { useMediaViewer } from "@/components/tickets/media-viewer";
 import type { Attachment } from "@/lib/mock";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ export function AttachmentsBlock({
   canEdit: boolean;
 }) {
   const { addAttachment, removeAttachment } = useTicketStore();
+  const { openAsset } = useMediaViewer();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = React.useState(false);
 
@@ -40,10 +42,17 @@ export function AttachmentsBlock({
   const accept = (files: FileList | null) => {
     if (!files) return;
     for (const file of Array.from(files)) {
+      const kind = kindOf(file);
       addAttachment(ticketId, {
         name: file.name,
         size: file.size,
-        kind: kindOf(file),
+        kind,
+        // Object URLs live as long as the document, which for a prototype
+        // with no upload endpoint is exactly as long as they are useful.
+        url:
+          kind === "image" || kind === "video"
+            ? URL.createObjectURL(file)
+            : undefined,
       });
     }
   };
@@ -80,11 +89,44 @@ export function AttachmentsBlock({
       <AttachmentGroup className="flex flex-col">
         {attachments.map((file) => (
           <AttachmentCard key={file.id} size="sm" className="w-full">
-            <AttachmentMedia className="rounded-md">
-              <Paperclip className="size-3.5 text-grey-400" strokeWidth={1.75} />
+            {/* A screenshot you cannot see is a filename. */}
+            <AttachmentMedia
+              variant={file.url ? "image" : "icon"}
+              className="rounded-md"
+            >
+              {file.url && file.kind === "image" ? (
+                <button
+                  type="button"
+                  onClick={() => openAsset(file.id)}
+                  aria-label={`Open ${file.name}`}
+                  className="size-full"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={file.url} alt="" />
+                </button>
+              ) : file.url && file.kind === "video" ? (
+                <button
+                  type="button"
+                  onClick={() => openAsset(file.id)}
+                  aria-label={`Open ${file.name}`}
+                  className="size-full"
+                >
+                  <video src={file.url} muted />
+                </button>
+              ) : (
+                <Paperclip className="size-3.5 text-grey-400" strokeWidth={1.75} />
+              )}
             </AttachmentMedia>
             <AttachmentContent>
-              <AttachmentTitle>{file.name}</AttachmentTitle>
+              <AttachmentTitle>
+                <button
+                  type="button"
+                  onClick={() => openAsset(file.id)}
+                  className="max-w-full truncate text-left hover:text-accent-700"
+                >
+                  {file.name}
+                </button>
+              </AttachmentTitle>
               <AttachmentDescription className="tnum">
                 {formatBytes(file.size)}
               </AttachmentDescription>

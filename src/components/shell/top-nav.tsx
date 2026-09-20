@@ -48,14 +48,26 @@ const linkActive = "bg-grey-100 text-grey-900";
  */
 export function TopNav() {
   const pathname = usePathname();
-  const { workspaces, projects } = useTicketStore();
+  const { workspaces, projects, tickets } = useTicketStore();
   const { openCreate, openCreateProject, openCreateWorkspace } = useShell();
   const { open: openPalette } = useCommandPalette();
 
   const match = pathname.match(/^\/projects\/([^/]+)(?:\/([^/]+))?/);
   const projectSlug = match?.[1];
   const view = match?.[2];
-  const project = projects.find((item) => item.slug === projectSlug);
+
+  // A ticket page is inside a project too, so the breadcrumb should say so
+  // rather than falling back to "All workspaces".
+  const ticketMatch = pathname.match(/^\/tickets\/([^/]+)/);
+  const ticket = ticketMatch
+    ? tickets.find(
+        (item) => item.key.toLowerCase() === ticketMatch[1].toLowerCase(),
+      )
+    : undefined;
+
+  const project =
+    projects.find((item) => item.slug === projectSlug) ??
+    (ticket ? projects.find((item) => item.id === ticket.projectId) : undefined);
   const workspace = workspaces.find((item) => item.id === project?.workspaceId);
 
   const wsMatch = pathname.match(/^\/workspaces\/([^/]+)/);

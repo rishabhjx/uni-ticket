@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { BoardView } from "@/components/board/board-view";
 import { ListView } from "@/components/list/list-view";
 import { RoadmapView } from "@/components/roadmap/roadmap-view";
+import { TicketPage } from "@/components/tickets/ticket-page";
 import { WorkspaceView } from "@/components/workspaces/workspace-view";
 import { AppShell } from "@/components/shell/app-shell";
 import { PageHeader } from "@/components/shell/page-header";
@@ -31,6 +32,12 @@ export function ResolvedRoute() {
   const project = match
     ? projects.find((item) => item.slug === match[1].toLowerCase())
     : undefined;
+
+  // A ticket created at runtime has no prerendered page either.
+  const ticketMatch = pathname.match(/^\/tickets\/([^/]+)\/?$/);
+  if (ticketMatch) {
+    return <TicketPage ticketKey={ticketMatch[1].toUpperCase()} />;
+  }
 
   if (workspace) return <WorkspaceView workspaceId={workspace.id} />;
 

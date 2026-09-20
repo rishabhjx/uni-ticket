@@ -267,6 +267,13 @@ export type Attachment = {
   /** Bytes. */
   size: number;
   kind: "image" | "log" | "video" | "document";
+  /**
+   * Where the bytes are. For a file dropped in this session it is an object
+   * URL; for seeded data it is a generated placeholder, because a prototype
+   * with no backend has nothing real to point at. Absent means "no preview",
+   * which is the honest state for a log file.
+   */
+  url?: string;
 };
 
 /**

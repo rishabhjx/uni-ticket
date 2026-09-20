@@ -5,6 +5,7 @@ import * as React from "react";
 import { BulkBar } from "@/components/list/bulk-bar";
 import { ColumnChooser } from "@/components/list/column-chooser";
 import { FilterBar } from "@/components/list/filter-bar";
+import { ProjectActions } from "@/components/projects/project-actions";
 import { TicketTable, type ColumnId } from "@/components/list/ticket-table";
 import { RowsSkeleton } from "@/components/shared/skeletons";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
@@ -137,7 +138,12 @@ export function ListView({
         resultCount={filtered.length}
         totalCount={scoped.length}
         extra={
-          <ColumnChooser visible={visibleColumns} onChange={setVisibleColumns} />
+          <>
+            <ColumnChooser visible={visibleColumns} onChange={setVisibleColumns} />
+            {project ? (
+              <ProjectActions project={project} tickets={filtered} />
+            ) : null}
+          </>
         }
       />
       <TicketTable

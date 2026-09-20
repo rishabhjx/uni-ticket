@@ -16,11 +16,15 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DISCIPLINE_LABEL,
+  DISCIPLINES,
   ENVIRONMENT_LABEL,
   ENVIRONMENTS,
   getProject,
@@ -29,6 +33,8 @@ import {
   labels,
   sprintsForProject,
   SEVERITY_LABEL,
+  STATUS_LABEL,
+  statusesForDiscipline,
   TICKET_PRIORITIES,
   TICKET_SEVERITIES,
   TICKET_TYPES,
@@ -36,6 +42,7 @@ import {
   type Environment,
   type TicketPriority,
   type TicketSeverity,
+  type TicketStatus,
   type TicketType,
 } from "@/lib/mock";
 import { TEMPLATES } from "@/lib/mock/templates";
@@ -97,6 +104,8 @@ export function CreateTicketDialog({
   const [buildVersion, setBuildVersion] = React.useState("");
   const [assigneeIds, setAssigneeIds] = React.useState<string[]>([]);
   const [labelIds, setLabelIds] = React.useState<string[]>([]);
+  // Filing straight into a stage: a bug found in QA does not start in Backlog.
+  const [status, setStatus] = React.useState<TicketStatus>("backlog");
   const [dueAt, setDueAt] = React.useState("");
   const [sprintId, setSprintId] = React.useState("none");
   const [parentId, setParentId] = React.useState("none");
@@ -156,7 +165,7 @@ export function CreateTicketDialog({
       type,
       priority,
       severity: defect ? severity : null,
-      status: "backlog",
+      status,
       assigneeIds,
       labelIds,
       estimate: null,
@@ -169,7 +178,9 @@ export function CreateTicketDialog({
 
     reset();
     onOpenChange(false);
-    openTicket(ticket.id);
+    // By KEY, not id: the panel resolves ?ticket= against ticket.key, so
+    // passing the id opened nothing at all.
+    openTicket(ticket.key);
   };
 
   return (
@@ -239,6 +250,29 @@ export function CreateTicketDialog({
                         {TYPE_LABEL[item]}
                       </span>
                     </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Row>
+
+            <Row label="Status">
+              <Select
+                value={status}
+                onValueChange={(value) => setStatus(value as TicketStatus)}
+              >
+                <SelectTrigger className="h-8 text-small">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISCIPLINES.map((discipline) => (
+                    <SelectGroup key={discipline}>
+                      <SelectLabel>{DISCIPLINE_LABEL[discipline]}</SelectLabel>
+                      {statusesForDiscipline(discipline).map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {STATUS_LABEL[option]}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>

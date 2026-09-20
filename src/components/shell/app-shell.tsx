@@ -8,6 +8,7 @@ import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
 import { ShortcutsDialog } from "@/components/shell/shortcuts-dialog";
 import { TopNav } from "@/components/shell/top-nav";
 import { CreateWorkspaceDialog } from "@/components/workspaces/create-workspace-dialog";
+import { MediaViewer } from "@/components/tickets/media-viewer";
 import { TicketPanel } from "@/components/tickets/ticket-panel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TicketPanelProvider } from "@/lib/store/ticket-panel";
@@ -63,6 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
               {children}
               <TicketPanel />
+              <MediaViewer />
               <CreateDialogHost />
             </main>
           </div>

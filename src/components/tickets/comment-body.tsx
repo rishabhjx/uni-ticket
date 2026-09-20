@@ -13,6 +13,7 @@ import {
   AttachmentTitle,
 } from "@/components/reui/attachment";
 import { attachmentIcon } from "@/components/tickets/comment-composer";
+import { useMediaViewer } from "@/components/tickets/media-viewer";
 import { formatBytes } from "@/lib/format";
 import { CURRENT_USER_ID, users, type Comment } from "@/lib/mock";
 import { useTicketStore } from "@/lib/store/ticket-store";
@@ -41,6 +42,7 @@ function withMentions(body: string) {
 
 export function CommentBody({ comment }: { comment: Comment }) {
   const { editComment, deleteComment } = useTicketStore();
+  const { openAsset } = useMediaViewer();
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(comment.body);
   const mine = comment.authorId === CURRENT_USER_ID;
@@ -101,9 +103,24 @@ export function CommentBody({ comment }: { comment: Comment }) {
             {comment.attachments.map((file) => {
               const Icon = attachmentIcon[file.kind];
               return (
-                <AttachmentCard key={file.id} size="xs" className="w-[190px]">
-                  <AttachmentMedia className="rounded-md">
-                    <Icon className="size-3.5 text-grey-400" strokeWidth={2} />
+                <AttachmentCard
+                  key={file.id}
+                  size="xs"
+                  className="w-[190px] cursor-pointer"
+                  onClick={() => openAsset(file.id)}
+                >
+                  <AttachmentMedia
+                    variant={file.url ? "image" : "icon"}
+                    className="rounded-md"
+                  >
+                    {file.url && file.kind === "image" ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={file.url} alt="" />
+                    ) : file.url && file.kind === "video" ? (
+                      <video src={file.url} muted />
+                    ) : (
+                      <Icon className="size-3.5 text-grey-400" strokeWidth={2} />
+                    )}
                   </AttachmentMedia>
                   <AttachmentContent>
                     <AttachmentTitle>{file.name}</AttachmentTitle>

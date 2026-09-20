@@ -1,6 +1,7 @@
 import { criteriaByType, commentBodies, summariesByType } from "./content";
 import { daysFromToday } from "./dates";
 import { labels } from "./labels";
+import { placeholderImage } from "./placeholder";
 import { projects } from "./projects";
 import { createRandom, type Random } from "./random";
 import { sprintsForProject } from "./sprints";
@@ -286,12 +287,20 @@ function buildTickets(random: Random) {
         sprintId: null,
         attachments: random
           .sample(attachmentPool, attachmentCount)
-          .map((file, fileIndex) => ({
-            id: `a-${project.slug}-${index + 1}-${fileIndex}`,
-            name: file.name,
-            kind: file.kind,
-            size: random.int(12, 4800) * 1024,
-          })),
+          .map((file, fileIndex) => {
+            const id = `a-${project.slug}-${index + 1}-${fileIndex}`;
+            return {
+              id,
+              name: file.name,
+              kind: file.kind,
+              size: random.int(12, 4800) * 1024,
+              // Only pictures get a preview; a log file has nothing to show.
+              url:
+                file.kind === "image"
+                  ? placeholderImage(id, file.name)
+                  : undefined,
+            };
+          }),
         statusChangedAt: updatedAt.toISOString(),
         createdAt: createdAt.toISOString(),
         updatedAt: updatedAt.toISOString(),

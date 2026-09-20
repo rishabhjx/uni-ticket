@@ -3,16 +3,89 @@
  * nowhere to stand. `resolved` is the fix landing; `done` is someone having
  * verified it. Reopening sends a ticket back to in_progress.
  */
+/**
+ * Six statuses said "somebody is doing something" without saying who. Design
+ * handing over to development and development handing over to QA are the two
+ * moments a ticket actually changes hands, and neither was visible: everything
+ * between To Do and Verified was one undifferentiated middle.
+ *
+ * Statuses are grouped by the discipline that owns them, which is also what
+ * makes routing possible — see `Project["team"]`. Order is the order work
+ * flows in, so the board reads left to right.
+ */
+export const DISCIPLINES = [
+  "intake",
+  "design",
+  "development",
+  "qa",
+  "product",
+  "closed",
+] as const;
+
+export type Discipline = (typeof DISCIPLINES)[number];
+
 export const TICKET_STATUSES = [
   "backlog",
+  "triage",
+  "design_todo",
+  "in_design",
+  "design_review",
   "todo",
   "in_progress",
-  "in_review",
-  "resolved",
+  "code_review",
+  "ready_for_qa",
+  "in_qa",
+  "qa_failed",
+  "product_review",
   "done",
 ] as const;
 
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
+
+export const STATUS_DISCIPLINE: Record<TicketStatus, Discipline> = {
+  backlog: "intake",
+  triage: "intake",
+  design_todo: "design",
+  in_design: "design",
+  design_review: "design",
+  todo: "development",
+  in_progress: "development",
+  code_review: "development",
+  ready_for_qa: "qa",
+  in_qa: "qa",
+  qa_failed: "qa",
+  product_review: "product",
+  done: "closed",
+};
+
+export const DISCIPLINE_LABEL: Record<Discipline, string> = {
+  intake: "Intake",
+  design: "Design",
+  development: "Development",
+  qa: "QA",
+  product: "Product",
+  closed: "Closed",
+};
+
+/**
+ * Where a ticket lands when it is moved to a discipline rather than to a
+ * specific status — dropping a card into the "QA" column on a board grouped by
+ * discipline means "QA has it now", which is Ready for QA, not In QA.
+ */
+export const DISCIPLINE_ENTRY_STATUS: Record<Discipline, TicketStatus> = {
+  intake: "backlog",
+  design: "design_todo",
+  development: "todo",
+  qa: "ready_for_qa",
+  product: "product_review",
+  closed: "done",
+};
+
+export function statusesForDiscipline(discipline: Discipline) {
+  return TICKET_STATUSES.filter(
+    (status) => STATUS_DISCIPLINE[status] === discipline,
+  );
+}
 
 export const TICKET_PRIORITIES = ["urgent", "high", "medium", "low"] as const;
 
@@ -78,6 +151,12 @@ export type Project = {
   roles: Record<string, ProjectRole>;
   /** Cards per column before the board warns you. */
   wipLimits?: Partial<Record<TicketStatus, number>>;
+  /**
+   * Who owns each discipline here. Moving a ticket into a discipline's status
+   * hands it to that person, which is the whole point of the split: a ticket
+   * reaching QA should already be on the QA person's list.
+   */
+  team: Partial<Record<Discipline, string>>;
 };
 
 /**
@@ -125,7 +204,6 @@ export type Ticket = {
   /** Service desk only — the person who asked, who is not on the team. */
   requesterId: string | null;
   slaDueAt: string | null;
-  development: Development | null;
   attachments: Attachment[];
   /** When it last entered its current column, which is what ageing measures. */
   statusChangedAt: string;
@@ -183,13 +261,6 @@ export const PROJECT_ROLES = ["admin", "member", "viewer"] as const;
 
 export type ProjectRole = (typeof PROJECT_ROLES)[number];
 
-export type Development = {
-  branch: string;
-  prNumber: number;
-  prState: "open" | "merged" | "draft";
-  checks: "passing" | "failing" | "running";
-};
-
 export type Attachment = {
   id: string;
   name: string;
@@ -243,10 +314,17 @@ export const REACTIONS = ["👍", "🎉", "👀", "🔥", "🤔"] as const;
 
 export const STATUS_LABEL: Record<TicketStatus, string> = {
   backlog: "Backlog",
-  todo: "To Do",
-  in_progress: "In Progress",
-  in_review: "In Review",
-  resolved: "Ready for QA",
+  triage: "Triage",
+  design_todo: "Design todo",
+  in_design: "In design",
+  design_review: "Design review",
+  todo: "To do",
+  in_progress: "In progress",
+  code_review: "Code review",
+  ready_for_qa: "Ready for QA",
+  in_qa: "In QA",
+  qa_failed: "QA failed",
+  product_review: "Product review",
   done: "Verified",
 };
 

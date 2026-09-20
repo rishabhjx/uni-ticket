@@ -66,21 +66,22 @@
   --accent-600: oklch(0.488 0.243 264.376);
   --accent-700: oklch(0.58 0.22 264.376);
 
-  /* --- Status (badges only) -----------------------------------------------
-     Built from ReUI's --chart-* series so the one thing this app adds on top
-     of their palette still belongs to it.                                   */
-  --status-backlog-bg: oklch(0.269 0 0);
-  --status-backlog-fg: oklch(0.708 0 0);
-  --status-todo-bg: oklch(0.269 0.04 264.376);
-  --status-todo-fg: oklch(0.72 0.12 264.376);
-  --status-progress-bg: oklch(0.28 0.06 303.9);
-  --status-progress-fg: oklch(0.75 0.15 303.9);
-  --status-review-bg: oklch(0.28 0.06 70.08);
-  --status-review-fg: oklch(0.769 0.188 70.08);
-  --status-resolved-bg: oklch(0.27 0.05 184.704);
-  --status-resolved-fg: oklch(0.72 0.12 184.704);
-  --status-done-bg: oklch(0.27 0.05 162.48);
-  --status-done-fg: oklch(0.696 0.17 162.48);
+  /* --- Discipline (status badges) -----------------------------------------
+     Colour says WHO HAS IT, not which of thirteen boxes it is in. Thirteen
+     tints would be thirteen things to learn; six map onto the teams people
+     already think in. Built from ReUI's --chart-* series.                    */
+  --discipline-intake-bg: oklch(0.269 0 0);
+  --discipline-intake-fg: oklch(0.708 0 0);
+  --discipline-design-bg: oklch(0.28 0.06 303.9);
+  --discipline-design-fg: oklch(0.75 0.15 303.9);
+  --discipline-development-bg: oklch(0.269 0.05 264.376);
+  --discipline-development-fg: oklch(0.74 0.13 264.376);
+  --discipline-qa-bg: oklch(0.28 0.06 70.08);
+  --discipline-qa-fg: oklch(0.769 0.188 70.08);
+  --discipline-product-bg: oklch(0.27 0.05 184.704);
+  --discipline-product-fg: oklch(0.72 0.12 184.704);
+  --discipline-closed-bg: oklch(0.27 0.05 162.48);
+  --discipline-closed-fg: oklch(0.696 0.17 162.48);
 
   /* --- Priority (badges only) --------------------------------------------- */
   --priority-urgent-bg: oklch(0.28 0.07 22.216);

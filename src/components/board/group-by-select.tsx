@@ -14,6 +14,7 @@ import {
 } from "@/lib/store/view-state";
 
 const options: { value: GroupBy; label: string }[] = [
+  { value: "discipline", label: "Stage" },
   { value: "status", label: "Status" },
   { value: "assignee", label: "Assignee" },
   { value: "priority", label: "Priority" },

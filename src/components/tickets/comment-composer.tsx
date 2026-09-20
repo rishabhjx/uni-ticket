@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 
 type Draft = Omit<Attachment, "id"> & { url?: string };
 
-function kindOf(file: File): Attachment["kind"] {
+export function kindOf(file: File): Attachment["kind"] {
   if (file.type.startsWith("image/")) return "image";
   if (file.type.startsWith("video/")) return "video";
   if (/\.(log|txt|har|json)$/i.test(file.name)) return "log";

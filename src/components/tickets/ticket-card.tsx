@@ -100,19 +100,6 @@ export function TicketCard({
           </span>
         ) : null}
 
-        {ticket.development ? (
-          <GitPullRequest
-            className={cn(
-              "size-3",
-              ticket.development.checks === "failing"
-                ? "text-[var(--priority-urgent-fg)]"
-                : "text-grey-400",
-            )}
-            strokeWidth={2}
-            aria-label={`PR #${ticket.development.prNumber}`}
-          />
-        ) : null}
-
         {ticket.attachments.length > 0 ? (
           <span className="inline-flex items-center gap-0.5 text-caption text-grey-500">
             <Paperclip className="size-3" strokeWidth={2} />

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { GitPullRequest, Hourglass, Paperclip } from "lucide-react";
+import { Hourglass, Paperclip } from "lucide-react";
 import {
   useTable,
   type ColumnDef,
@@ -194,13 +194,6 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
           <span className="min-w-0 flex-1 truncate text-small text-grey-900">
             {row.original.title}
           </span>
-          {row.original.development ? (
-            <GitPullRequest
-              className="size-3 shrink-0 text-grey-400"
-              strokeWidth={2}
-              aria-label={`PR #${row.original.development.prNumber}`}
-            />
-          ) : null}
           {row.original.attachments.length > 0 ? (
             <Paperclip
               className="size-3 shrink-0 text-grey-400"

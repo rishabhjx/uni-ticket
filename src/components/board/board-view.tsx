@@ -8,8 +8,10 @@ import { randomCheer, useCelebrate } from "@/components/shared/celebrate";
 import { EmptyState } from "@/components/shared/empty-state";
 import { BoardSkeleton } from "@/components/shared/skeletons";
 import { TicketCard } from "@/components/tickets/ticket-card";
+import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   Kanban,
+  type KanbanMoveEvent,
   KanbanBoard,
   KanbanColumn,
   KanbanColumnContent,
@@ -18,6 +20,9 @@ import {
   KanbanOverlay,
 } from "@/components/reui/kanban";
 import {
+  DISCIPLINE_ENTRY_STATUS,
+  DISCIPLINE_LABEL,
+  DISCIPLINES,
   getUser,
   PRIORITY_LABEL,
   SEVERITY_SHORT,
@@ -27,6 +32,8 @@ import {
   TICKET_STATUSES,
   TICKET_TYPES,
   TYPE_LABEL,
+  STATUS_DISCIPLINE,
+  type Discipline,
   type Project,
   type Ticket,
   type TicketStatus,
@@ -41,9 +48,16 @@ import {
 } from "@/lib/store/view-state";
 import { cn } from "@/lib/utils";
 
+const noop = () => {};
+
 /** Columns depend on what the board is grouped by. */
 function columnsFor(groupBy: GroupBy, project: Project) {
   switch (groupBy) {
+    case "discipline":
+      return DISCIPLINES.map((discipline) => ({
+        id: discipline as string,
+        name: DISCIPLINE_LABEL[discipline],
+      }));
     case "assignee":
       return [
         { id: "unassigned", name: "Unassigned" },
@@ -104,7 +118,7 @@ export function BoardView({ project }: { project: Project }) {
    * so a move never has to be expressed as an index into everything. That is
    * also the shape the store wants back.
    */
-  const value = React.useMemo(() => {
+  const derived = React.useMemo(() => {
     const byColumn: Record<string, Ticket[]> = {};
     for (const column of columns) byColumn[column.id] = [];
 
@@ -118,31 +132,88 @@ export function BoardView({ project }: { project: Project }) {
     return byColumn;
   }, [filtered, columns, groupBy]);
 
-  // Only a status board can commit a drag: the other groupings would need a
-  // different field written, which the brief does not ask for.
-  const handleValueChange = React.useCallback(
-    (next: Record<string, Ticket[]>) => {
-      if (groupBy !== "status") return;
+  /**
+   * `onMove` mode, not the default live-reparenting one.
+   *
+   * By default ReUI reshuffles the columns on every dragOver. dnd-kit measures
+   * droppables on every render (MeasuringStrategy.Always), so each reshuffle
+   * re-measures, which recomputes `over`, which can fire dragOver again — the
+   * rects oscillate between two layouts and React kills it with "Maximum
+   * update depth exceeded", blanking the board. Passing `onMove` makes ReUI's
+   * dragOver a no-op and report the move once, on drop, so nothing re-renders
+   * mid-drag.
+   *
+   * What is lost is the card visibly slotting into place while dragging; the
+   * drag overlay still follows the cursor and the column still highlights, so
+   * the feedback that matters survives.
+   */
+  const value = derived;
+
+  const getItemValue = React.useCallback((ticket: Ticket) => ticket.id, []);
+
+  const handleMove = React.useCallback(
+    ({ activeContainer, activeIndex, overContainer, overIndex }: KanbanMoveEvent) => {
+      if (groupBy !== "status" && groupBy !== "discipline") return;
+
+      const moved = value[activeContainer]?.[activeIndex];
+      if (!moved) return;
+
+      // Rebuild only the two columns the move touches, then flatten every
+      // column back into the (id, status) pairs the store wants.
+      const next: Record<string, Ticket[]> = { ...value };
+      if (activeContainer === overContainer) {
+        const column = [...(value[activeContainer] ?? [])];
+        column.splice(activeIndex, 1);
+        column.splice(Math.min(overIndex, column.length), 0, moved);
+        next[activeContainer] = column;
+      } else {
+        const from = [...(value[activeContainer] ?? [])];
+        const to = [...(value[overContainer] ?? [])];
+        from.splice(activeIndex, 1);
+        to.splice(Math.min(Math.max(overIndex, 0), to.length), 0, moved);
+        next[activeContainer] = from;
+        next[overContainer] = to;
+      }
 
       const entries: { id: string; column: TicketStatus }[] = [];
       let finished = 0;
 
       for (const [column, items] of Object.entries(next)) {
         for (const ticket of items) {
-          entries.push({ id: ticket.id, column: column as TicketStatus });
-          if (column === "done" && ticket.status !== "done") finished += 1;
+          /*
+           * On a stage board the column is a discipline, not a status, so a
+           * card dropped into QA lands on that stage's ENTRY status — Ready
+           * for QA, not In QA. A card already in the stage keeps its exact
+           * status, or reordering inside Development would silently reset
+           * everything to To do.
+           */
+          const status =
+            groupBy === "status"
+              ? (column as TicketStatus)
+              : STATUS_DISCIPLINE[ticket.status] === column
+                ? ticket.status
+                : DISCIPLINE_ENTRY_STATUS[column as Discipline];
+
+          entries.push({ id: ticket.id, column: status });
+          if (status === "done" && ticket.status !== "done") finished += 1;
         }
       }
 
       applyBoardOrder(entries);
       if (finished > 0) celebrate(randomCheer(), "Nice — that's verified");
     },
-    [applyBoardOrder, groupBy, celebrate],
+    [applyBoardOrder, groupBy, celebrate, value],
   );
 
   const wipLimit = (columnId: string) =>
     groupBy === "status"
       ? project.wipLimits?.[columnId as TicketStatus]
+      : undefined;
+
+  /** Who picks work up at this stage, shown in the column header. */
+  const stageOwner = (columnId: string) =>
+    groupBy === "discipline"
+      ? project.team?.[columnId as Discipline]
       : undefined;
 
   const overLimit = (columnId: string) => {
@@ -203,6 +274,14 @@ export function BoardView({ project }: { project: Project }) {
       {overLimit(column.id) ? (
         <span title="Over the work-in-progress limit" className="text-caption">
           ⚠️
+        </span>
+      ) : null}
+      {stageOwner(column.id) ? (
+        <span
+          title={`${getUser(stageOwner(column.id))?.name} picks these up`}
+          className="ml-auto"
+        >
+          <UserAvatar userId={stageOwner(column.id) ?? null} />
         </span>
       ) : null}
     </div>
@@ -284,8 +363,11 @@ export function BoardView({ project }: { project: Project }) {
         <div className="min-h-0 flex-1 px-6 py-4">
           <Kanban
             value={value}
-            onValueChange={handleValueChange}
-            getItemValue={(ticket) => ticket.id}
+            // Required by the API but inert in onMove mode: ReUI never
+            // reshuffles during a drag, so it never asks for a new value.
+            onValueChange={noop}
+            onMove={handleMove}
+            getItemValue={getItemValue}
             className="h-full"
           >
             <KanbanBoard className="flex h-full gap-3 overflow-x-auto overflow-y-hidden sm:grid-cols-none">

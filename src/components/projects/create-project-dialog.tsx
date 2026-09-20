@@ -20,7 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CURRENT_USER_ID, getUser, users, type Project } from "@/lib/mock";
+import {
+  CURRENT_USER_ID,
+  DISCIPLINE_LABEL,
+  DISCIPLINES,
+  getUser,
+  users,
+  type Discipline,
+  type Project,
+} from "@/lib/mock";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +76,15 @@ export function CreateProjectDialog({
   const [kind, setKind] = React.useState<Project["kind"]>("software");
   const [memberIds, setMemberIds] = React.useState<string[]>([CURRENT_USER_ID]);
   const [workspaceId, setWorkspaceId] = React.useState(workspaces[0]?.id ?? "");
+  const [team, setTeam] = React.useState<Partial<Record<Discipline, string>>>({
+    // Whoever is creating it owns everything until they say otherwise, which
+    // beats a project where routing silently does nothing.
+    intake: CURRENT_USER_ID,
+    design: CURRENT_USER_ID,
+    development: CURRENT_USER_ID,
+    qa: CURRENT_USER_ID,
+    product: CURRENT_USER_ID,
+  });
 
   const effectiveKey = keyTouched ? key : suggestKey(name);
   const taken = projects.some(
@@ -99,6 +116,7 @@ export function CreateProjectDialog({
       kind,
       memberIds,
       workspaceId,
+      team,
     });
 
     reset();
@@ -139,6 +157,48 @@ export function CreateProjectDialog({
 
             <Row label="Icon">
               <EmojiPicker value={emoji} onChange={setEmoji} />
+            </Row>
+
+            <Row label="Routing">
+              <div className="flex flex-col gap-1.5">
+                <p className="text-caption text-grey-500">
+                  Who picks a ticket up when it reaches each stage. Moving a
+                  ticket into a stage assigns it to them.
+                </p>
+                {DISCIPLINES.filter((d) => d !== "closed").map((discipline) => (
+                  <div
+                    key={discipline}
+                    className="grid grid-cols-[96px_1fr] items-center gap-2"
+                  >
+                    <span className="text-small text-grey-600">
+                      {DISCIPLINE_LABEL[discipline]}
+                    </span>
+                    <Select
+                      value={team[discipline] ?? "none"}
+                      onValueChange={(value) =>
+                        setTeam((current) => ({
+                          ...current,
+                          [discipline]: value === "none" ? undefined : value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="h-7 text-small">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">
+                          <span className="text-grey-500">Nobody</span>
+                        </SelectItem>
+                        {memberIds.map((id) => (
+                          <SelectItem key={id} value={id}>
+                            {getUser(id)?.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
             </Row>
 
             <Row label="Workspace">

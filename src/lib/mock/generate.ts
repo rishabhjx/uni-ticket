@@ -5,7 +5,7 @@ import { projects } from "./projects";
 import { createRandom, type Random } from "./random";
 import { sprintsForProject } from "./sprints";
 import { titlesByProject } from "./titles";
-import { LINK_INVERSE, REACTIONS } from "./types";
+import { LINK_INVERSE, REACTIONS, STATUS_DISCIPLINE } from "./types";
 import { TICKET_STATUSES } from "./types";
 import {
   ENVIRONMENTS,
@@ -62,12 +62,21 @@ function slugifyTitle(title: string) {
 }
 
 const statusWeights: Record<TicketStatus, number> = {
-  backlog: 26,
-  todo: 16,
-  in_progress: 15,
-  in_review: 10,
-  resolved: 9,
-  done: 24,
+  backlog: 22,
+  triage: 5,
+  design_todo: 4,
+  in_design: 4,
+  design_review: 3,
+  todo: 11,
+  in_progress: 11,
+  code_review: 7,
+  ready_for_qa: 5,
+  in_qa: 5,
+  // A small tail, because a board where a tenth of everything has failed QA
+  // reads as a crisis rather than as a normal week.
+  qa_failed: 2,
+  product_review: 4,
+  done: 17,
 };
 
 const priorityWeights: Record<TicketPriority, number> = {
@@ -80,20 +89,34 @@ const priorityWeights: Record<TicketPriority, number> = {
 /** How old a ticket is, by the state it reached. */
 const ageByStatus: Record<TicketStatus, [number, number]> = {
   backlog: [8, 150],
+  triage: [1, 20],
+  design_todo: [3, 60],
+  in_design: [2, 30],
+  design_review: [3, 24],
   todo: [2, 70],
   in_progress: [3, 45],
-  in_review: [4, 32],
-  resolved: [5, 40],
+  code_review: [4, 32],
+  ready_for_qa: [5, 40],
+  in_qa: [2, 22],
+  qa_failed: [3, 28],
+  product_review: [3, 26],
   done: [18, 130],
 };
 
 /** How likely a ticket in this state is to have an owner. */
 const assignedChanceByStatus: Record<TicketStatus, number> = {
   backlog: 0.42,
+  triage: 0.7,
+  design_todo: 0.8,
+  in_design: 1,
+  design_review: 1,
   todo: 0.86,
   in_progress: 1,
-  in_review: 1,
-  resolved: 1,
+  code_review: 1,
+  ready_for_qa: 1,
+  in_qa: 1,
+  qa_failed: 1,
+  product_review: 1,
   done: 1,
 };
 
@@ -232,28 +255,6 @@ function buildTickets(random: Random) {
           ? new Date(createdAt.getTime() + slaHours * 36e5).toISOString()
           : null;
 
-      // Work that reached review or done usually has a branch behind it.
-      const development =
-        !isService &&
-        (status === "in_review" || status === "resolved" || status === "done")
-          ? {
-              branch: `${branchPrefix[type] ?? "chore"}/${project.key.toLowerCase()}-${
-                101 + index
-              }-${slugifyTitle(title)}`,
-              prNumber: 1200 + random.int(1, 899),
-              prState:
-                status === "done" || status === "resolved"
-                  ? ("merged" as const)
-                  : random.chance(0.15)
-                    ? ("draft" as const)
-                    : ("open" as const),
-              checks:
-                status === "done" || status === "resolved"
-                  ? ("passing" as const)
-                  : random.weighted({ passing: 70, failing: 18, running: 12 }),
-            }
-          : null;
-
       const attachmentCount = defect
         ? random.int(0, 3)
         : random.chance(0.15)
@@ -280,7 +281,6 @@ function buildTickets(random: Random) {
           : null,
         requesterId,
         slaDueAt,
-        development,
         parentId: null,
         links: [],
         sprintId: null,
@@ -320,7 +320,7 @@ function buildComments(random: Random, tickets: Ticket[]) {
   for (const ticket of tickets) {
     // Busier tickets attract more discussion; quiet ones have none at all.
     const chance =
-      ticket.status === "in_review" || ticket.status === "in_progress"
+      ticket.status === "code_review" || ticket.status === "in_progress"
         ? 0.72
         : ticket.status === "done"
           ? 0.4

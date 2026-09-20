@@ -10,6 +10,7 @@ import {
   tickets as seedTickets,
   getProject,
   getUser,
+  STATUS_DISCIPLINE,
   CURRENT_USER_ID,
   type Comment,
   type Ticket,
@@ -55,6 +56,8 @@ export type NewProjectInput = {
   memberIds: string[];
   /** Every project belongs to a workspace. */
   workspaceId: string;
+  /** Who owns each discipline; tickets route to them on a status change. */
+  team: Project["team"];
 };
 
 export type NewWorkspaceInput = {
@@ -249,6 +252,39 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
   // One level of undo, which is what a bulk action actually needs.
   const [undoSnapshot, setUndoSnapshot] = React.useState<Ticket[] | null>(null);
 
+  /**
+   * Handing a ticket to the next discipline should hand it to a person. When
+   * a status change crosses a discipline boundary, the ticket is reassigned to
+   * whoever owns the discipline it lands in — that is the whole point of
+   * splitting statuses by discipline.
+   *
+   * Only on a CROSSING: moving In design -> Design review is the same person's
+   * work and must not reshuffle the assignees. An explicit assignee in the
+   * same patch always wins, because somebody naming a person outranks a rule.
+   */
+  const routeOnStatusChange = React.useCallback(
+    (ticket: Ticket, patch: Partial<Ticket>): Partial<Ticket> => {
+      if (patch.status === undefined) return patch;
+      if (patch.assigneeIds !== undefined) return patch;
+      if (patch.status === ticket.status) return patch;
+
+      const from = STATUS_DISCIPLINE[ticket.status];
+      const to = STATUS_DISCIPLINE[patch.status];
+      if (from === to) return patch;
+
+      const owner = getProject(ticket.projectId)?.team?.[to];
+      // No owner for that discipline means the project has not said who picks
+      // it up, and inventing one would be worse than leaving it alone.
+      if (!owner) return patch;
+      if (ticket.assigneeIds.length === 1 && ticket.assigneeIds[0] === owner) {
+        return patch;
+      }
+
+      return { ...patch, assigneeIds: [owner] };
+    },
+    [],
+  );
+
   const applyPatch = React.useCallback(
     (ticketIds: string[], patch: Partial<Ticket>) => {
       const at = new Date().toISOString();
@@ -259,13 +295,14 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
 
         const next = current.map((ticket) => {
           if (!ids.has(ticket.id)) return ticket;
-          pending.push(...diffToEvents(ticket, patch));
+          const routed = routeOnStatusChange(ticket, patch);
+          pending.push(...diffToEvents(ticket, routed));
           return {
             ...ticket,
-            ...patch,
+            ...routed,
             updatedAt: at,
             statusChangedAt:
-              patch.status !== undefined && patch.status !== ticket.status
+              routed.status !== undefined && routed.status !== ticket.status
                 ? at
                 : ticket.statusChangedAt,
           };
@@ -277,7 +314,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
         return next;
       });
     },
-    [diffToEvents, recordEvents],
+    [diffToEvents, recordEvents, routeOnStatusChange],
   );
 
   const updateTicket = React.useCallback(
@@ -456,8 +493,25 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
               to: target.status,
             });
           }
+
+          // A drag across the board is a status change like any other, so it
+          // routes too: dropping a card into Ready for QA puts it on the QA
+          // person's list without anyone opening the ticket.
+          const routed = changedColumn
+            ? routeOnStatusChange(ticket, { status: target.status })
+            : {};
+          if (routed.assigneeIds) {
+            pending.push({
+              ticketId: ticket.id,
+              kind: "assignee",
+              from: auditValue("assigneeIds", ticket.assigneeIds),
+              to: auditValue("assigneeIds", routed.assigneeIds),
+            });
+          }
+
           return {
             ...ticket,
+            ...routed,
             status: target.status,
             order: target.order,
             updatedAt: changedColumn ? movedAt : ticket.updatedAt,
@@ -469,7 +523,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
         return next;
       });
     },
-    [recordEvents],
+    [recordEvents, routeOnStatusChange],
   );
 
   const createdCount = React.useRef(0);
@@ -507,7 +561,6 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
         buildVersion: input.buildVersion,
         requesterId: null,
         slaDueAt: null,
-        development: null,
         attachments: [],
         createdAt: at,
         updatedAt: at,
@@ -541,6 +594,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       leadId: CURRENT_USER_ID,
       memberIds: input.memberIds,
       workspaceId: input.workspaceId,
+      team: input.team,
       kind: input.kind,
       emoji: input.emoji,
       // Whoever creates a project administers it.

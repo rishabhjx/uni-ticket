@@ -30,6 +30,16 @@ export function projectsForWorkspace(all: Project[], workspaceId: string) {
   return all.filter((project) => project.workspaceId === workspaceId);
 }
 
+/** Somebody is actively holding it, as opposed to it sitting in a queue. */
+export const ACTIVE_STATUSES = new Set<TicketStatus>([
+  "in_design",
+  "design_review",
+  "in_progress",
+  "code_review",
+  "in_qa",
+  "product_review",
+]);
+
 /** Open work — everything that has not reached Done. */
 export function isOpen(ticket: Ticket) {
   return ticket.status !== "done";
@@ -76,10 +86,18 @@ export const STALE_AFTER_DAYS: Record<TicketStatus, number | null> = {
   // Roughly the 80th percentile of how long work actually sits in each
   // column. A flat seven days fired on more than half of everything, which
   // teaches people to ignore the signal; this flags the genuine tail.
+  triage: 14,
+  design_todo: 45,
+  in_design: 26,
+  design_review: 16,
   todo: 37,
   in_progress: 23,
-  in_review: 18,
-  resolved: 12,
+  code_review: 18,
+  ready_for_qa: 12,
+  in_qa: 14,
+  // A failed QA run is the one thing nobody should be able to sit on.
+  qa_failed: 7,
+  product_review: 15,
   done: null,
 };
 
@@ -281,7 +299,7 @@ export function personalKpis(
       (ticket) => ticket.status === "backlog" || ticket.status === "todo",
     ).length,
     inProgress: mine.filter(
-      (ticket) => ticket.status === "in_progress" || ticket.status === "in_review",
+      (ticket) => ACTIVE_STATUSES.has(ticket.status),
     ).length,
     overdue: mine.filter((ticket) => isOverdue(ticket, now)).length,
     assignedThisWeek: mine.filter(
@@ -302,7 +320,7 @@ export function kpisFor(scoped: Ticket[]): PersonalKpis {
       (ticket) => ticket.status === "backlog" || ticket.status === "todo",
     ).length,
     inProgress: scoped.filter(
-      (ticket) => ticket.status === "in_progress" || ticket.status === "in_review",
+      (ticket) => ACTIVE_STATUSES.has(ticket.status),
     ).length,
     overdue: scoped.filter((ticket) => isOverdue(ticket, now)).length,
     assignedThisWeek: scoped.filter(
@@ -345,14 +363,9 @@ export function projectStats(
 }
 
 export function countByStatus(scoped: Ticket[]) {
-  const counts: Record<TicketStatus, number> = {
-    backlog: 0,
-    todo: 0,
-    in_progress: 0,
-    in_review: 0,
-    resolved: 0,
-    done: 0,
-  };
+  const counts = Object.fromEntries(
+    TICKET_STATUSES.map((status) => [status, 0]),
+  ) as Record<TicketStatus, number>;
   for (const ticket of scoped) counts[ticket.status] += 1;
   return counts;
 }

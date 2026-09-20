@@ -8,6 +8,7 @@ import {
   isOverdue,
   isSlaBreached,
   isStale,
+  STATUS_DISCIPLINE,
   type Ticket,
   type TicketStatus,
 } from "@/lib/mock";
@@ -41,7 +42,18 @@ export const emptyFilters: TicketFilters = {
   breachedOnly: false,
 };
 
-export type GroupBy = "status" | "assignee" | "priority" | "severity" | "type";
+/**
+ * "discipline" is the default: thirteen statuses make thirteen columns, which
+ * is a horizontal scroll nobody reads. Six disciplines fit on a screen, and
+ * dropping a card into one means "this team has it now".
+ */
+export type GroupBy =
+  | "discipline"
+  | "status"
+  | "assignee"
+  | "priority"
+  | "severity"
+  | "type";
 
 /** A second dimension, drawn as rows while the columns stay the grouping. */
 export type Swimlane = "none" | "assignee" | "priority" | "epic";
@@ -220,7 +232,7 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
 
   const urlGroupBy = params.get("group") as GroupBy | null;
   const urlDensity = params.get("density") as Density | null;
-  const [groupByState, setGroupByState] = React.useState<GroupBy>("status");
+  const [groupByState, setGroupByState] = React.useState<GroupBy>("discipline");
 
   // A saved view carries its grouping, so the URL wins where it says something.
   const groupBy = urlGroupBy ?? groupByState;
@@ -229,7 +241,7 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
     (next: GroupBy) => {
       setGroupByState(next);
       const query = new URLSearchParams(params.toString());
-      if (next === "status") query.delete("group");
+      if (next === "discipline") query.delete("group");
       else query.set("group", next);
       const search = query.toString();
       router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
@@ -288,7 +300,7 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
       // for instance — survives, then layer the view controls on top.
       const query = new URLSearchParams(params.toString());
       query.delete("ticket");
-      if (groupBy !== "status") query.set("group", groupBy);
+      if (groupBy !== "discipline") query.set("group", groupBy);
       else query.delete("group");
       if (density !== "comfortable") query.set("density", density);
       else query.delete("density");
@@ -381,6 +393,8 @@ export const ROW_HEIGHT: Record<Density, number> = {
 
 export function groupKeyOf(ticket: Ticket, groupBy: GroupBy): string {
   switch (groupBy) {
+    case "discipline":
+      return STATUS_DISCIPLINE[ticket.status];
     case "assignee":
       // A card can only live in one column, so grouping follows the lead.
       return ticket.assigneeIds[0] ?? "unassigned";

@@ -14,12 +14,15 @@ import {
 } from "lucide-react";
 
 import {
+  DISCIPLINE_LABEL,
   ENVIRONMENT_LABEL,
   PRIORITY_LABEL,
   SEVERITY_LABEL,
   SEVERITY_SHORT,
+  STATUS_DISCIPLINE,
   STATUS_LABEL,
   TYPE_LABEL,
+  type Discipline,
   type Environment,
   type TicketPriority,
   type TicketSeverity,
@@ -32,14 +35,25 @@ import { cn } from "@/lib/utils";
  * The only colour in the product lives here. Every badge pairs its tint with a
  * text label, so colour never carries the meaning on its own.
  */
-const statusTint: Record<TicketStatus, string> = {
-  backlog: "bg-[var(--status-backlog-bg)] text-[var(--status-backlog-fg)]",
-  todo: "bg-[var(--status-todo-bg)] text-[var(--status-todo-fg)]",
-  in_progress: "bg-[var(--status-progress-bg)] text-[var(--status-progress-fg)]",
-  in_review: "bg-[var(--status-review-bg)] text-[var(--status-review-fg)]",
-  resolved: "bg-[var(--status-resolved-bg)] text-[var(--status-resolved-fg)]",
-  done: "bg-[var(--status-done-bg)] text-[var(--status-done-fg)]",
+/**
+ * A status is tinted by the DISCIPLINE that owns it, not individually.
+ * Thirteen tints would be thirteen things to learn; six map onto the teams
+ * people already think in, and the label still carries the exact status.
+ */
+const disciplineTint: Record<Discipline, string> = {
+  intake: "bg-[var(--discipline-intake-bg)] text-[var(--discipline-intake-fg)]",
+  design: "bg-[var(--discipline-design-bg)] text-[var(--discipline-design-fg)]",
+  development:
+    "bg-[var(--discipline-development-bg)] text-[var(--discipline-development-fg)]",
+  qa: "bg-[var(--discipline-qa-bg)] text-[var(--discipline-qa-fg)]",
+  product:
+    "bg-[var(--discipline-product-bg)] text-[var(--discipline-product-fg)]",
+  closed: "bg-[var(--discipline-closed-bg)] text-[var(--discipline-closed-fg)]",
 };
+
+export function disciplineTintOf(discipline: Discipline) {
+  return disciplineTint[discipline];
+}
 
 const priorityTint: Record<TicketPriority, string> = {
   urgent: "bg-[var(--priority-urgent-bg)] text-[var(--priority-urgent-fg)]",
@@ -81,19 +95,14 @@ export function StatusDot({ status }: { status: TicketStatus }) {
     <span
       aria-hidden
       className="size-2 shrink-0 rounded-full"
-      style={{ backgroundColor: `var(--status-${statusDotVar[status]}-fg)` }}
+      style={{
+        backgroundColor: `var(--discipline-${STATUS_DISCIPLINE[status]}-fg)`,
+      }}
     />
   );
 }
 
-const statusDotVar: Record<TicketStatus, string> = {
-  backlog: "backlog",
-  todo: "todo",
-  in_progress: "progress",
-  in_review: "review",
-  resolved: "resolved",
-  done: "done",
-};
+
 
 export function PriorityDot({ priority }: { priority: TicketPriority }) {
   const Icon = priorityIcon[priority];
@@ -128,7 +137,10 @@ export function StatusBadge({
   className?: string;
 }) {
   return (
-    <span className={cn(badgeBase, statusTint[status], className)}>
+    <span
+      title={`${DISCIPLINE_LABEL[STATUS_DISCIPLINE[status]]} · ${STATUS_LABEL[status]}`}
+      className={cn(badgeBase, disciplineTint[STATUS_DISCIPLINE[status]], className)}
+    >
       {STATUS_LABEL[status]}
     </span>
   );

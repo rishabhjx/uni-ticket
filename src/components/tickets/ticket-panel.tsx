@@ -15,10 +15,7 @@ import { ActivityFeed } from "@/components/tickets/activity-feed";
 import { AlertChip, TypeIcon } from "@/components/tickets/badges";
 import { CommentComposer } from "@/components/tickets/comment-composer";
 import { Description } from "@/components/tickets/description";
-import {
-  AttachmentsBlock,
-  DevelopmentBlock,
-} from "@/components/tickets/development-block";
+import { AttachmentsBlock } from "@/components/tickets/development-block";
 import { InlineEdit } from "@/components/tickets/inline-edit";
 import {
   PanelResizer,
@@ -238,9 +235,6 @@ export function TicketPanel() {
 
             <div className="hairline-t flex flex-col gap-4 px-5 py-4">
               <LinksBlock ticket={ticket} canEdit={editable} />
-              {ticket.development ? (
-                <DevelopmentBlock development={ticket.development} />
-              ) : null}
               <AttachmentsBlock
                 ticketId={ticket.id}
                 attachments={ticket.attachments}

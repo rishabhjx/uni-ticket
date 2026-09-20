@@ -3,6 +3,18 @@
 import * as React from "react";
 import { GitBranch, GitPullRequest, Paperclip, Upload, X } from "lucide-react";
 
+import {
+  // Aliased: `Attachment` is also this app's model type for a stored file.
+  Attachment as AttachmentCard,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentTitle,
+} from "@/components/reui/attachment";
+
 import { formatBytes } from "@/lib/format";
 import type { Attachment, Development } from "@/lib/mock";
 import { useTicketStore } from "@/lib/store/ticket-store";
@@ -126,30 +138,32 @@ export function AttachmentsBlock({
         }}
       />
 
-      <ul className="flex flex-col gap-1">
+      <AttachmentGroup className="flex flex-col">
         {attachments.map((file) => (
-          <li
-            key={file.id}
-            className="group/file flex items-center gap-2 rounded-md border border-grey-200 px-2.5 py-1.5"
-          >
-            <Paperclip className="size-3.5 shrink-0 text-grey-400" strokeWidth={1.75} />
-            <span className="truncate text-small text-grey-800">{file.name}</span>
-            <span className="tnum ml-auto shrink-0 text-caption text-grey-500">
-              {formatBytes(file.size)}
-            </span>
+          <AttachmentCard key={file.id} size="sm" className="w-full">
+            <AttachmentMedia className="rounded-md">
+              <Paperclip className="size-3.5 text-grey-400" strokeWidth={1.75} />
+            </AttachmentMedia>
+            <AttachmentContent>
+              <AttachmentTitle>{file.name}</AttachmentTitle>
+              <AttachmentDescription className="tnum">
+                {formatBytes(file.size)}
+              </AttachmentDescription>
+            </AttachmentContent>
             {canEdit ? (
-              <button
-                type="button"
-                onClick={() => removeAttachment(ticketId, file.id)}
-                aria-label={`Remove ${file.name}`}
-                className="flex size-5 shrink-0 items-center justify-center rounded-md text-grey-400 opacity-0 transition-opacity hover:bg-grey-150 hover:text-grey-700 focus-visible:opacity-100 group-hover/file:opacity-100"
-              >
-                <X className="size-3" strokeWidth={2} />
-              </button>
+              <AttachmentActions>
+                <AttachmentAction
+                  onClick={() => removeAttachment(ticketId, file.id)}
+                  aria-label={`Remove ${file.name}`}
+                  className="opacity-0 transition-opacity focus-visible:opacity-100 group-hover/attachment:opacity-100"
+                >
+                  <X className="size-3" strokeWidth={2} />
+                </AttachmentAction>
+              </AttachmentActions>
             ) : null}
-          </li>
+          </AttachmentCard>
         ))}
-      </ul>
+      </AttachmentGroup>
 
       {canEdit ? (
         <div

@@ -43,6 +43,8 @@ type ShellContextValue = {
   createProjectOpen: boolean;
   openCreateProject: () => void;
   setCreateProjectOpen: (open: boolean) => void;
+  shortcutsOpen: boolean;
+  setShortcutsOpen: (open: boolean) => void;
 };
 
 const ShellContext = React.createContext<ShellContextValue | null>(null);
@@ -69,7 +71,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  // ⌘B toggles the sidebar; C starts a ticket, the way every tracker does.
+  const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+
+  // ⌘B toggles the sidebar; C starts a ticket and ? lists the rest, the way
+  // every tracker does.
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === "b" && (event.metaKey || event.ctrlKey)) {
@@ -91,6 +96,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       if (event.key.toLowerCase() === "c") {
         event.preventDefault();
         setCreateOpen(true);
+        return;
+      }
+      if (event.key === "?") {
+        event.preventDefault();
+        setShortcutsOpen(true);
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -108,6 +118,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       createProjectOpen,
       openCreateProject,
       setCreateProjectOpen,
+      shortcutsOpen,
+      setShortcutsOpen,
     }),
     [
       sidebarOpen,
@@ -117,6 +129,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       openCreate,
       createProjectOpen,
       openCreateProject,
+      shortcutsOpen,
     ],
   );
 

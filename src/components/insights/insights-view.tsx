@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/reui/chart";
 import { CardsSkeleton } from "@/components/shared/skeletons";
 import { StatusBadge } from "@/components/tickets/badges";
 import { AvatarStack } from "@/components/tickets/user-avatar";
@@ -15,6 +22,7 @@ import {
 import {
   countByStatus,
   cycleTimeDays,
+  weeklyFlow,
   daysInColumn,
   flowMetrics,
   isStale,
@@ -26,6 +34,16 @@ import {
 } from "@/lib/mock";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
+
+/**
+ * Two series, because either one alone lies. Throughput on its own looks
+ * healthy while the backlog quietly doubles; the gap between opened and
+ * verified is the number a PM actually argues about in a planning meeting.
+ */
+const flowChartConfig = {
+  opened: { label: "Opened", color: "var(--grey-500)" },
+  verified: { label: "Verified", color: "var(--accent-600)" },
+} satisfies ChartConfig;
 
 function Metric({
   label,
@@ -82,6 +100,7 @@ export function InsightsView() {
   );
 
   const counts = React.useMemo(() => countByStatus(scoped), [scoped]);
+  const trend = React.useMemo(() => weeklyFlow(scoped, 12, now), [scoped, now]);
   const busiest = Math.max(...Object.values(counts), 1);
 
   const oldest = React.useMemo(
@@ -149,6 +168,84 @@ export function InsightsView() {
           value={String(oldest.length)}
           hint="Past the limit for the column it is in"
         />
+      </section>
+
+      <section className="px-6 pb-5">
+        <h2 className="mb-3 text-heading font-semibold text-grey-900">
+          Opened against verified
+        </h2>
+        <div className="rounded-md border border-grey-200 p-4">
+          <ChartContainer
+            config={flowChartConfig}
+            className="aspect-auto h-56 w-full"
+          >
+            <AreaChart data={trend} margin={{ left: -20, right: 8, top: 8 }}>
+              <defs>
+                {(["opened", "verified"] as const).map((key) => (
+                  <linearGradient
+                    key={key}
+                    id={`fill-${key}`}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="0%"
+                      stopColor={`var(--color-${key})`}
+                      stopOpacity={0.28}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={`var(--color-${key})`}
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid vertical={false} stroke="var(--grey-200)" />
+              <XAxis
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                interval="preserveStartEnd"
+                stroke="var(--grey-500)"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                width={44}
+                allowDecimals={false}
+                stroke="var(--grey-500)"
+              />
+              <ChartTooltip
+                cursor={{ stroke: "var(--grey-300)" }}
+                content={<ChartTooltipContent labelKey="label" indicator="dot" />}
+              />
+              <Area
+                dataKey="opened"
+                type="monotone"
+                stroke="var(--color-opened)"
+                fill="url(#fill-opened)"
+                strokeWidth={1.5}
+                dot={false}
+              />
+              <Area
+                dataKey="verified"
+                type="monotone"
+                stroke="var(--color-verified)"
+                fill="url(#fill-verified)"
+                strokeWidth={1.5}
+                dot={false}
+              />
+            </AreaChart>
+          </ChartContainer>
+          <p className="mt-2 text-small text-grey-500">
+            Weekly, over the last twelve. The right-hand bucket is the week in
+            progress, so it always reads low.
+          </p>
+        </div>
       </section>
 
       <section className="px-6 pb-5">

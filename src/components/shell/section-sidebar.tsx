@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import { Kbd, KbdGroup } from "@/components/reui/kbd";
 import {
   ChartLine,
   ChevronRight,
@@ -173,7 +175,10 @@ export function SectionSidebar() {
           >
             <Search className="size-3.5 shrink-0" strokeWidth={1.75} />
             <span>Search tickets</span>
-            <kbd className="ml-auto text-caption text-grey-400">⌘K</kbd>
+            <KbdGroup className="ml-auto">
+              <Kbd>⌘</Kbd>
+              <Kbd>K</Kbd>
+            </KbdGroup>
           </button>
         </div>
 

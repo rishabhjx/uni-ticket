@@ -2,6 +2,8 @@
 
 import { FolderPlus, PanelLeft, Plus, TicketPlus } from "lucide-react";
 
+import { Kbd } from "@/components/reui/kbd";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,7 +68,7 @@ export function PageHeader({
             <DropdownMenuItem onClick={openCreate} className="gap-2">
               <TicketPlus className="size-3.5 text-grey-400" strokeWidth={1.75} />
               New ticket
-              <kbd className="ml-auto text-caption text-grey-400">C</kbd>
+              <Kbd className="ml-auto">C</Kbd>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={openCreateProject} className="gap-2">
               <FolderPlus className="size-3.5 text-grey-400" strokeWidth={1.75} />

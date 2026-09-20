@@ -8,6 +8,7 @@ import { CommandPaletteProvider } from "@/components/shell/command-palette";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
 import { SectionSidebar } from "@/components/shell/section-sidebar";
+import { ShortcutsDialog } from "@/components/shell/shortcuts-dialog";
 import { TicketPanel } from "@/components/tickets/ticket-panel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TicketPanelProvider } from "@/lib/store/ticket-panel";
@@ -20,6 +21,8 @@ function CreateDialogHost() {
     setCreateOpen,
     createProjectOpen,
     setCreateProjectOpen,
+    shortcutsOpen,
+    setShortcutsOpen,
   } = useShell();
 
   return (
@@ -29,6 +32,7 @@ function CreateDialogHost() {
         open={createProjectOpen}
         onOpenChange={setCreateProjectOpen}
       />
+      <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </>
   );
 }

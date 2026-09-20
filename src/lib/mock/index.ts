@@ -177,6 +177,46 @@ export function flowMetrics(
   };
 }
 
+/**
+ * Opened and verified per week, for the trend chart on Insights. Weeks run
+ * back from today rather than from a calendar Monday, so the last bucket is
+ * always the week in progress and the shape does not jump on a Sunday.
+ */
+export function weeklyFlow(scoped: Ticket[], weeks = 12, now: Date = new Date()) {
+  const week = 7 * 86_400_000;
+  const end = now.getTime();
+  const buckets = Array.from({ length: weeks }, (_, index) => {
+    const from = end - (weeks - index) * week;
+    return { from, to: from + week, label: "", opened: 0, verified: 0 };
+  });
+
+  const indexOf = (iso: string) => {
+    const at = new Date(iso).getTime();
+    if (at < buckets[0].from || at > end) return -1;
+    return Math.min(weeks - 1, Math.floor((at - buckets[0].from) / week));
+  };
+
+  for (const ticket of scoped) {
+    const opened = indexOf(ticket.createdAt);
+    if (opened >= 0) buckets[opened].opened += 1;
+    if (ticket.status === "done") {
+      const closed = indexOf(ticket.statusChangedAt);
+      if (closed >= 0) buckets[closed].verified += 1;
+    }
+  }
+
+  return buckets.map((bucket, index) => ({
+    ...bucket,
+    label:
+      index === weeks - 1
+        ? "now"
+        : new Date(bucket.from).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+          }),
+  }));
+}
+
 /** Open tickets this one is waiting on. */
 export function blockersOf(all: Ticket[], ticket: Ticket) {
   const byId = new Map(all.map((item) => [item.id, item]));

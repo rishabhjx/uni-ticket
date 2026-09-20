@@ -3,6 +3,18 @@
 import * as React from "react";
 import { FileText, Film, ImageIcon, Paperclip, X } from "lucide-react";
 
+import {
+  // Aliased: `Attachment` is also this app's model type for a stored file.
+  Attachment as AttachmentCard,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentTitle,
+} from "@/components/reui/attachment";
+import { Kbd, KbdGroup } from "@/components/reui/kbd";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import { formatBytes } from "@/lib/format";
 import { CURRENT_USER_ID, type Attachment } from "@/lib/mock";
@@ -128,54 +140,59 @@ export function CommentComposer({ ticketId }: { ticketId: string }) {
           />
 
           {drafts.length > 0 ? (
-            <ul className="mt-2 flex flex-wrap gap-2">
+            /*
+             * ReUI's Attachment is the shape a pending upload takes here and
+             * on the ticket: media, then title and size, then the actions that
+             * hover in. Using it for the draft row means what you see before
+             * sending matches what the posted comment renders.
+             */
+            <AttachmentGroup className="mt-2 flex flex-wrap">
               {drafts.map((draft, index) => {
                 const Icon = attachmentIcon[draft.kind];
                 return (
-                  <li
+                  <AttachmentCard
                     key={`${draft.name}-${index}`}
-                    className="group/draft relative overflow-hidden rounded-md border border-grey-200"
+                    size="sm"
+                    className="w-[210px]"
                   >
-                    {draft.url && draft.kind === "image" ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={draft.url}
-                        alt={draft.name}
-                        className="size-16 object-cover"
-                      />
-                    ) : draft.url && draft.kind === "video" ? (
-                      <video
-                        src={draft.url}
-                        className="size-16 object-cover"
-                        muted
-                      />
-                    ) : (
-                      <span className="flex size-16 flex-col items-center justify-center gap-1 px-1 text-center">
-                        <Icon className="size-4 text-grey-400" strokeWidth={1.75} />
-                        <span className="w-full truncate text-[9px] text-grey-500">
-                          {draft.name}
-                        </span>
-                      </span>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setDrafts((current) =>
-                          current.filter((_, i) => i !== index),
-                        )
-                      }
-                      aria-label={`Remove ${draft.name}`}
-                      className="absolute top-0.5 right-0.5 flex size-5 items-center justify-center rounded-md bg-grey-0/80 text-grey-600 opacity-0 transition-opacity hover:text-grey-900 focus-visible:opacity-100 group-hover/draft:opacity-100"
+                    <AttachmentMedia
+                      variant={draft.url ? "image" : "icon"}
+                      className="rounded-md"
                     >
-                      <X className="size-3" strokeWidth={2.25} />
-                    </button>
-
-                    <span className="sr-only">{formatBytes(draft.size)}</span>
-                  </li>
+                      {draft.url && draft.kind === "image" ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={draft.url} alt={draft.name} />
+                      ) : draft.url && draft.kind === "video" ? (
+                        <video src={draft.url} muted />
+                      ) : (
+                        <Icon
+                          className="size-4 text-grey-400"
+                          strokeWidth={1.75}
+                        />
+                      )}
+                    </AttachmentMedia>
+                    <AttachmentContent>
+                      <AttachmentTitle>{draft.name}</AttachmentTitle>
+                      <AttachmentDescription>
+                        {formatBytes(draft.size)}
+                      </AttachmentDescription>
+                    </AttachmentContent>
+                    <AttachmentActions>
+                      <AttachmentAction
+                        onClick={() =>
+                          setDrafts((current) =>
+                            current.filter((_, i) => i !== index),
+                          )
+                        }
+                        aria-label={`Remove ${draft.name}`}
+                      >
+                        <X className="size-3" strokeWidth={2.25} />
+                      </AttachmentAction>
+                    </AttachmentActions>
+                  </AttachmentCard>
                 );
               })}
-            </ul>
+            </AttachmentGroup>
           ) : null}
 
           <input
@@ -209,7 +226,13 @@ export function CommentComposer({ ticketId }: { ticketId: string }) {
               <Paperclip className="size-4" strokeWidth={1.75} />
             </button>
 
-            <span className="text-caption text-grey-400">⌘↵ to send</span>
+            <span className="flex items-center gap-1.5 text-caption text-grey-400">
+              <KbdGroup>
+                <Kbd>⌘</Kbd>
+                <Kbd>↵</Kbd>
+              </KbdGroup>
+              to send
+            </span>
           </div>
         </div>
       </div>

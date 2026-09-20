@@ -8,6 +8,7 @@ import {
   StatusBadge,
 } from "@/components/tickets/badges";
 import { AssigneePicker } from "@/components/tickets/assignee-picker";
+import { DueDatePicker } from "@/components/tickets/due-date-picker";
 import {
   AvatarStack,
   assigneeNames,
@@ -252,14 +253,22 @@ export function TicketFields({
       </Field>
 
       <Field label="Due">
-        {ticket.dueAt && overdue ? (
-          <span className="px-1.5">
-            <AlertChip>{formatDueDate(ticket.dueAt)} · overdue</AlertChip>
-          </span>
+        {!canEdit ? (
+          ticket.dueAt && overdue ? (
+            <span className="px-1.5">
+              <AlertChip>{formatDueDate(ticket.dueAt)} · overdue</AlertChip>
+            </span>
+          ) : (
+            <span className="px-1.5 text-small text-grey-700">
+              {ticket.dueAt ? formatDueDate(ticket.dueAt) : "—"}
+            </span>
+          )
         ) : (
-          <span className="px-1.5 text-small text-grey-700">
-            {ticket.dueAt ? formatDueDate(ticket.dueAt) : "—"}
-          </span>
+          <DueDatePicker
+            value={ticket.dueAt}
+            overdue={overdue}
+            onChange={(dueAt) => updateTicket(ticket.id, { dueAt })}
+          />
         )}
       </Field>
 

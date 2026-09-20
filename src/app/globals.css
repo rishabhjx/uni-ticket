@@ -347,3 +347,128 @@
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/*
+ * ReUI's components carry `cn-*` hooks and leave the look to a stylesheet that
+ * ships with their theme. We vendored the components but not the theme — the
+ * whole point of the single token ramp above is that this app has one look, so
+ * pulling in a second one would defeat it. These rules are that missing layer,
+ * written in our own tokens: ReUI keeps its structure and behaviour, and the
+ * skin stays ours. Anything a component already styles with plain utilities is
+ * deliberately not repeated here.
+ */
+.cn-font-heading {
+  font-family: var(--font-sans);
+}
+
+/* Keycaps — used in the palette, the sidebar and the shortcut sheet */
+.cn-kbd {
+  height: 18px;
+  min-width: 18px;
+  padding: 0 5px;
+  border: 1px solid var(--grey-200);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background-color: var(--grey-100);
+  color: var(--grey-600);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+}
+.cn-kbd-group {
+  gap: 4px;
+}
+
+/* Empty states */
+.cn-empty-media-icon {
+  margin-bottom: 2px;
+}
+.cn-empty-content {
+  gap: 8px;
+}
+
+/* Attachments in the comment composer and on a ticket */
+.cn-attachment {
+  gap: 10px;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius);
+  background-color: var(--grey-50);
+  padding: 8px;
+}
+.cn-attachment-group {
+  gap: 6px;
+}
+.cn-attachment-orientation-horizontal {
+  flex-direction: row;
+  align-items: center;
+}
+.cn-attachment-orientation-vertical {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.cn-attachment-size-xs .cn-attachment-media,
+.cn-attachment-size-sm .cn-attachment-media {
+  --attachment-media: 32px;
+}
+.cn-attachment-media {
+  width: var(--attachment-media, 40px);
+  height: var(--attachment-media, 40px);
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 4px);
+  background-color: var(--grey-100);
+  color: var(--grey-500);
+}
+.cn-attachment-media-variant-image img,
+.cn-attachment-media-variant-image video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cn-attachment-content {
+  min-width: 0;
+  flex: 1;
+}
+.cn-attachment-title {
+  overflow: hidden;
+  color: var(--grey-900);
+  font-size: var(--text-small);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cn-attachment-description {
+  color: var(--grey-500);
+  font-size: var(--text-caption);
+}
+.cn-attachment-action {
+  display: inline-flex;
+  height: 22px;
+  width: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--radius) - 4px);
+  color: var(--grey-500);
+}
+.cn-attachment-action:hover {
+  background-color: var(--grey-200);
+  color: var(--grey-900);
+}
+
+/* Calendar and charts */
+.cn-calendar-caption-label {
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+.cn-chart-tooltip {
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius);
+  background-color: var(--glass-bg, var(--grey-50));
+  padding: 8px 10px;
+  font-size: var(--text-caption);
+}
+
+/* Their RTL helper; we are LTR-only, so it is a no-op that keeps the hook */
+[dir="rtl"] .cn-rtl-flip {
+  transform: scaleX(-1);
+}

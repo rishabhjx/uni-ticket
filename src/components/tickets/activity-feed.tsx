@@ -2,6 +2,21 @@
 
 import * as React from "react";
 
+import {
+  Timeline,
+  TimelineContent,
+  TimelineHeader,
+  TimelineIndicator,
+  TimelineItem,
+  TimelineSeparator,
+} from "@/components/reui/timeline";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/reui/empty";
 import { Reactions } from "@/components/tickets/reactions";
 import { CommentBody } from "@/components/tickets/comment-body";
 import { UserAvatar } from "@/components/tickets/user-avatar";
@@ -101,56 +116,82 @@ export function ActivityFeed({
 
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-1 py-8 text-center">
-        <span aria-hidden className="text-xl">💬</span>
-        <p className="text-small font-medium text-grey-900">Nothing yet</p>
-        <p className="text-small text-grey-500">
-          Comments and changes to this ticket will appear here.
-        </p>
-      </div>
+      <Empty className="border-0 py-8">
+        <EmptyHeader>
+          <EmptyMedia variant="icon" className="text-xl">
+            <span aria-hidden>💬</span>
+          </EmptyMedia>
+          <EmptyTitle className="mt-2 text-small font-medium text-grey-900">
+            Nothing yet
+          </EmptyTitle>
+          <EmptyDescription className="text-small text-grey-500">
+            Comments and changes to this ticket will appear here.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
   return (
-    <ul className="flex flex-col gap-4">
-      {entries.map((entry) =>
-        entry.kind === "comment" ? (
-          <li key={entry.comment.id} className="group/comment flex gap-2.5">
-            <UserAvatar
-              userId={entry.comment.authorId}
-              size="md"
-              className="mt-0.5"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline gap-2">
+    /*
+     * ReUI's Timeline draws the rail and the connecting line between entries,
+     * which is what turns a list of changes into a history you can read at a
+     * glance. Its `value` drives which steps render as completed; everything
+     * here has already happened, so it sits past the last step.
+     *
+     * The indicator is the differentiator: a comment shows the author's
+     * avatar on the rail, an event shows a plain dot. That is the same rule
+     * the flat list used, but now the rail carries it.
+     */
+    <Timeline value={entries.length} className="w-full">
+      {entries.map((entry, index) => (
+        <TimelineItem
+          key={entry.kind === "comment" ? entry.comment.id : entry.event.id}
+          step={index + 1}
+          className="ms-7! group-data-[orientation=vertical]/timeline:not-last:pb-5"
+        >
+          <TimelineSeparator className="-left-[18px]! bg-grey-200" />
+          {entry.kind === "comment" ? (
+            <>
+              <TimelineIndicator asChild className="-left-[18px]! border-0">
+                <UserAvatar userId={entry.comment.authorId} size="md" />
+              </TimelineIndicator>
+              <TimelineHeader className="flex items-baseline gap-2">
                 <span className="text-small font-medium text-grey-900">
                   {getUser(entry.comment.authorId)?.name}
                 </span>
                 <span className="text-caption text-grey-500">
                   {formatRelative(entry.comment.createdAt)}
                 </span>
-              </div>
-              <CommentBody comment={entry.comment} />
-              <Reactions comment={entry.comment} />
-            </div>
-          </li>
-        ) : (
-          <li key={entry.event.id} className="flex items-center gap-2.5">
-            <span className="flex size-6 shrink-0 items-center justify-center">
-              <span aria-hidden className="size-1.5 rounded-full bg-grey-300" />
-            </span>
-            <p className="text-small text-grey-500">
-              <span className="text-grey-700">
-                {getUser(entry.event.actorId)?.name}
-              </span>{" "}
-              {describe(entry.event)}
-              <span className="ml-1.5 text-caption text-grey-400">
-                {formatRelative(entry.event.createdAt)}
-              </span>
-            </p>
-          </li>
-        ),
-      )}
-    </ul>
+              </TimelineHeader>
+              <TimelineContent className="group/comment text-grey-700">
+                <CommentBody comment={entry.comment} />
+                <Reactions comment={entry.comment} />
+              </TimelineContent>
+            </>
+          ) : (
+            <>
+              <TimelineIndicator className="-left-[18px]! size-6 border-0">
+                <span className="flex size-6 items-center justify-center">
+                  <span
+                    aria-hidden
+                    className="size-1.5 rounded-full bg-grey-300 ring-4 ring-grey-0"
+                  />
+                </span>
+              </TimelineIndicator>
+              <TimelineContent className="py-0.5 text-small text-grey-500">
+                <span className="text-grey-700">
+                  {getUser(entry.event.actorId)?.name}
+                </span>{" "}
+                {describe(entry.event)}
+                <span className="ml-1.5 text-caption text-grey-400">
+                  {formatRelative(entry.event.createdAt)}
+                </span>
+              </TimelineContent>
+            </>
+          )}
+        </TimelineItem>
+      ))}
+    </Timeline>
   );
 }

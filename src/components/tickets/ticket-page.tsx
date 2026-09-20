@@ -13,6 +13,7 @@ import { Description } from "@/components/tickets/description";
 import { AttachmentsBlock } from "@/components/tickets/development-block";
 import { InlineEdit } from "@/components/tickets/inline-edit";
 import { LinksBlock } from "@/components/tickets/links-block";
+import { CustomFields } from "@/components/tickets/custom-fields";
 import { TicketFields } from "@/components/tickets/ticket-fields";
 import {
   blockersOf,
@@ -183,6 +184,7 @@ export function TicketPage({ ticketKey }: { ticketKey: string }) {
               canEdit={editable}
               sprintName={sprint?.name}
             />
+            <CustomFields ticket={ticket} canEdit={editable} />
             <LinksBlock ticket={ticket} canEdit={editable} />
             <AttachmentsBlock
               ticketId={ticket.id}

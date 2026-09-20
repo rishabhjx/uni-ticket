@@ -25,6 +25,9 @@ import {
   TypeIcon,
 } from "@/components/tickets/badges";
 import {
+  formatCustomValue,
+} from "@/components/tickets/custom-fields";
+import {
   AvatarStack,
   assigneeNames,
 } from "@/components/tickets/user-avatar";
@@ -41,6 +44,7 @@ import {
   TICKET_PRIORITIES,
   TICKET_SEVERITIES,
   TICKET_STATUSES,
+  type CustomField,
   type Ticket,
 } from "@/lib/mock";
 import { ROW_HEIGHT, useViewState } from "@/lib/store/view-state";
@@ -153,17 +157,18 @@ function SelectCell({ ticket }: { ticket: Ticket }) {
   );
 }
 
+/** A sortable header, with their menu: sort, pin, move, hide. */
+function header(title: string) {
+  const Header = ({
+    column,
+  }: HeaderContext<DataGridFeatures, Ticket, unknown>) => (
+    <DataGridColumnHeader column={column} title={title} />
+  );
+  Header.displayName = `Header(${title})`;
+  return Header;
+}
+
 function buildColumns(visible: Set<ColumnId>): Column[] {
-  // A sortable header, with their menu: sort, pin, move, hide.
-  const header = (title: string) => {
-    const Header = ({
-      column,
-    }: HeaderContext<DataGridFeatures, Ticket, unknown>) => (
-      <DataGridColumnHeader column={column} title={title} />
-    );
-    Header.displayName = `Header(${title})`;
-    return Header;
-  };
 
   const all: Record<ColumnId, Column> = {
     select: {
@@ -367,6 +372,34 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
 }
 
 /**
+ * One column per custom field the project marked for the card. They sort and
+ * filter like any other column, which is the whole reason a custom field is a
+ * field rather than a line in the description.
+ */
+function customColumns(fields: CustomField[]): Column[] {
+  return fields
+    .filter((field) => field.showOnCard)
+    .map((field) => ({
+      id: `custom:${field.id}`,
+      accessorFn: (ticket: Ticket) => {
+        const value = ticket.custom?.[field.id];
+        return value === null || value === undefined ? "" : value;
+      },
+      header: header(field.name),
+      size: 150,
+      meta: { cellClassName: "px-4 py-1.5 truncate" },
+      cell: ({ row }: { row: { original: Ticket } }) => {
+        const text = formatCustomValue(field, row.original.custom?.[field.id]);
+        return text ? (
+          <span className="truncate text-small text-grey-700">{text}</span>
+        ) : (
+          <span className="text-small text-grey-300">—</span>
+        );
+      },
+    })) as Column[];
+}
+
+/**
  * The list is ReUI's data-grid on TanStack Table v9. It replaces a
  * hand-rolled virtualiser built out of spacer rows, which held up at 150
  * tickets but had no answer for a column that is pinned, resized or hidden.
@@ -376,18 +409,21 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
 export function TicketTable({
   tickets,
   visibleColumns,
+  customFields = [],
   onOpenTicket,
   empty,
 }: {
   tickets: Ticket[];
   visibleColumns: Set<ColumnId>;
+  /** The project's own fields, appended as columns after the built-ins. */
+  customFields?: CustomField[];
   onOpenTicket?: (ticketId: string) => void;
   empty?: React.ReactNode;
 }) {
   const { density } = useViewState();
   const columns = React.useMemo(
-    () => buildColumns(visibleColumns),
-    [visibleColumns],
+    () => [...buildColumns(visibleColumns), ...customColumns(customFields)],
+    [visibleColumns, customFields],
   );
   const rowHeight = ROW_HEIGHT[density];
 

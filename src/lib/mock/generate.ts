@@ -2,6 +2,24 @@ import { criteriaByType, commentBodies, summariesByType } from "./content";
 import { daysFromToday } from "./dates";
 import { labels } from "./labels";
 import { placeholderImage } from "./placeholder";
+
+/** Plausible values for the text custom fields the seeded projects declare. */
+const CUSTOM_TEXT: Record<string, string[]> = {
+  "cf-customer": [
+    "Northwind Traders",
+    "Contoso",
+    "Fabrikam",
+    "Tailspin Toys",
+    "Wide World Importers",
+    "Proseware",
+  ],
+  "cf-figma": [
+    "figma.com/file/nav-refresh",
+    "figma.com/file/settings-ia",
+    "figma.com/file/empty-states",
+    "figma.com/file/mobile-shell",
+  ],
+};
 import { projects } from "./projects";
 import { createRandom, type Random } from "./random";
 import { sprintsForProject } from "./sprints";
@@ -301,6 +319,36 @@ function buildTickets(random: Random) {
                   : undefined,
             };
           }),
+        // Custom fields are filled where the project declares them, so the
+        // feature has data behind it rather than an empty column.
+        custom: Object.fromEntries(
+          (project.customFields ?? []).map((field) => {
+            switch (field.type) {
+              case "select":
+                return [field.id, random.pick(field.options ?? [])];
+              case "number":
+                return [field.id, random.int(1, 13)];
+              case "checkbox":
+                return [field.id, random.chance(0.22)];
+              case "date":
+                return [
+                  field.id,
+                  random.chance(0.5)
+                    ? daysFromToday(random.int(-6, 21), 15 * 60)
+                        .toISOString()
+                        .slice(0, 10)
+                    : null,
+                ];
+              default:
+                return [
+                  field.id,
+                  random.chance(0.8)
+                    ? random.pick(CUSTOM_TEXT[field.id] ?? ["—"])
+                    : null,
+                ];
+            }
+          }),
+        ),
         statusChangedAt: updatedAt.toISOString(),
         createdAt: createdAt.toISOString(),
         updatedAt: updatedAt.toISOString(),

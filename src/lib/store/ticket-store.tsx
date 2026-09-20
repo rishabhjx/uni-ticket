@@ -58,6 +58,8 @@ export type NewProjectInput = {
   workspaceId: string;
   /** Who owns each discipline; tickets route to them on a status change. */
   team: Project["team"];
+  /** Fields this project adds to its own tickets. */
+  customFields?: Project["customFields"];
 };
 
 export type NewWorkspaceInput = {
@@ -595,6 +597,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       memberIds: input.memberIds,
       workspaceId: input.workspaceId,
       team: input.team,
+      customFields: input.customFields,
       kind: input.kind,
       emoji: input.emoji,
       // Whoever creates a project administers it.

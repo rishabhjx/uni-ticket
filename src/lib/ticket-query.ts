@@ -69,6 +69,12 @@ function valuesOf(ticket: Ticket, field: string): FieldValue {
     case "description":
       return ticket.description;
     default:
+      // A project's own fields are addressed as `custom:<id>`, so adding one
+      // makes it filterable with no change here.
+      if (field.startsWith("custom:")) {
+        const value = ticket.custom?.[field.slice(7)];
+        return value === undefined ? null : value;
+      }
       return null;
   }
 }

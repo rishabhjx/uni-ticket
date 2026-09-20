@@ -149,6 +149,7 @@ export function ListView({
       <TicketTable
         tickets={filtered}
         visibleColumns={visibleColumns}
+        customFields={project?.customFields}
         onOpenTicket={openTicket}
         empty={
           scoped.length === 0 ? (

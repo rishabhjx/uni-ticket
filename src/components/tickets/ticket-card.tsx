@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import { CalendarClock, GitPullRequest, Hourglass, Paperclip } from "lucide-react";
 
 import {
@@ -11,14 +13,17 @@ import {
   TypeIcon,
 } from "@/components/tickets/badges";
 import { QuickAssign, QuickStatus } from "@/components/tickets/quick-actions";
+import { formatCustomValue } from "@/components/tickets/custom-fields";
 import { AvatarStack } from "@/components/tickets/user-avatar";
 import { formatDueDate } from "@/lib/format";
 import {
   daysInColumn,
+  getProject,
   getLabel,
   isOverdue,
   isSlaBreached,
   isStale,
+  type CustomField,
   type Ticket,
 } from "@/lib/mock";
 import { cn } from "@/lib/utils";
@@ -33,6 +38,19 @@ export function TicketCard({
   onOpen?: (ticketId: string) => void;
   showStatus?: boolean;
 }) {
+  const cardFields = React.useMemo(() => {
+    const fields = getProject(ticket.projectId)?.customFields ?? [];
+    return fields
+      .filter((field) => field.showOnCard)
+      .map((field) => ({
+        field,
+        text: formatCustomValue(field, ticket.custom?.[field.id]),
+      }))
+      .filter((entry): entry is { field: CustomField; text: string } =>
+        Boolean(entry.text),
+      );
+  }, [ticket.projectId, ticket.custom]);
+
   const overdue = isOverdue(ticket);
   const breached = isSlaBreached(ticket);
   const stale = isStale(ticket);
@@ -67,6 +85,22 @@ export function TicketCard({
 
       <div className="flex flex-wrap items-center gap-1">
         <PriorityBadge priority={ticket.priority} />
+        {/* Only the fields the project marked for the card: a card with
+            every custom field on it stops being scannable. */}
+        {cardFields.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {cardFields.map(({ field, text }) => (
+              <span
+                key={field.id}
+                title={field.name}
+                className="rounded-md bg-grey-100 px-1.5 py-0.5 text-caption text-grey-600"
+              >
+                {text}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
         {ticket.labelIds.slice(0, 2).map((id) => {
           const label = getLabel(id);
           return label ? <LabelChip key={id} name={label.name} /> : null;

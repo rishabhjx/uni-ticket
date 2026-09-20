@@ -151,6 +151,8 @@ export type Project = {
   roles: Record<string, ProjectRole>;
   /** Cards per column before the board warns you. */
   wipLimits?: Partial<Record<TicketStatus, number>>;
+  /** Fields this project adds to its own tickets. */
+  customFields?: CustomField[];
   /**
    * Who owns each discipline here. Moving a ticket into a discipline's status
    * hands it to that person, which is the whole point of the split: a ticket
@@ -171,6 +173,34 @@ export type Workspace = {
   emoji: string;
   memberIds: string[];
 };
+
+/**
+ * A field a project adds to its own tickets. Every project asks for something
+ * the shared model does not carry — a customer name on a support queue, a
+ * design-review link, a risk score — and the alternative is a convention in
+ * the description that nothing can filter on.
+ */
+export const CUSTOM_FIELD_TYPES = [
+  "text",
+  "number",
+  "select",
+  "checkbox",
+  "date",
+] as const;
+
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
+
+export type CustomField = {
+  id: string;
+  name: string;
+  type: CustomFieldType;
+  /** Only for `select`. */
+  options?: string[];
+  /** Shown on the board card and as a list column when true. */
+  showOnCard?: boolean;
+};
+
+export type CustomFieldValue = string | number | boolean | null;
 
 export type Label = {
   id: string;
@@ -216,6 +246,8 @@ export type Ticket = {
   dueAt: string | null;
   /** Position within its status column on the board. */
   order: number;
+  /** Values for the project's custom fields, keyed by field id. */
+  custom?: Record<string, CustomFieldValue>;
 };
 
 export const LINK_TYPES = [

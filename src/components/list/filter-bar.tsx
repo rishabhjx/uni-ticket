@@ -16,6 +16,7 @@ import {
   Search,
   Server,
   Shapes,
+  Sparkles,
   Star,
   Tag,
   Timer,
@@ -305,6 +306,41 @@ function buildFields(project: Project | undefined, projects: Project[]) {
         icon(<AlarmClock className="size-3.5" strokeWidth={1.75} />),
       ),
     );
+  }
+
+  // The project's own fields, filterable like any other. A select becomes a
+  // pick list, a checkbox a yes/no, and the rest fall back to text.
+  for (const field of project?.customFields ?? []) {
+    const id = `custom:${field.id}`;
+    if (field.type === "select") {
+      fields.push(
+        selectField(
+          id,
+          field.name,
+          icon(<Sparkles className="size-3.5" strokeWidth={1.75} />),
+          (field.options ?? []).map((option) => ({
+            value: option,
+            label: option,
+          })),
+        ),
+      );
+    } else if (field.type === "checkbox") {
+      fields.push(
+        boolField(
+          id,
+          field.name,
+          icon(<Sparkles className="size-3.5" strokeWidth={1.75} />),
+        ),
+      );
+    } else {
+      fields.push({
+        id,
+        label: field.name,
+        icon: icon(<Sparkles className="size-3.5" strokeWidth={1.75} />),
+        type: field.type === "number" ? "number" : "text",
+        defaultOperator: field.type === "number" ? "gte" : "contains",
+      });
+    }
   }
 
   return fields;

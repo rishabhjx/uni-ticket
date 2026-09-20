@@ -27,6 +27,7 @@ import {
   writePanelWidth,
 } from "@/components/tickets/panel-resizer";
 import { LinksBlock } from "@/components/tickets/links-block";
+import { CustomFields } from "@/components/tickets/custom-fields";
 import { TicketFields } from "@/components/tickets/ticket-fields";
 import {
   blockersOf,
@@ -296,6 +297,7 @@ export function TicketPanel() {
 
             <div className="hairline-t px-5 py-4">
               <TicketFields ticket={ticket} canEdit={editable} sprintName={sprint?.name} />
+              <CustomFields ticket={ticket} canEdit={editable} />
             </div>
 
             <div className="hairline-t px-5 py-4">

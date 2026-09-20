@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Columns3, Rows3 } from "lucide-react";
+import { Columns3, GanttChartSquare, Rows3 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const views = [
   { segment: "board", label: "Board", icon: Columns3 },
   { segment: "list", label: "List", icon: Rows3 },
+  { segment: "roadmap", label: "Roadmap", icon: GanttChartSquare },
 ] as const;
 
 export function ViewSwitcher({ projectSlug }: { projectSlug: string }) {

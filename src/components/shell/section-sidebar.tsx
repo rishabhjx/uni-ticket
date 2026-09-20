@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Kbd, KbdGroup } from "@/components/reui/kbd";
 import {
   ChartLine,
+  GanttChartSquare,
   ChevronRight,
   Columns3,
   LayoutDashboard,
@@ -131,6 +132,22 @@ function ProjectItem({
             >
               <Rows3 className="size-3.5 shrink-0 text-grey-400" strokeWidth={1.75} />
               List
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={`${base}/roadmap`}
+              aria-current={pathname === `${base}/roadmap` ? "page" : undefined}
+              className={cn(
+                itemBase,
+                pathname === `${base}/roadmap` ? itemActive : itemIdle,
+              )}
+            >
+              <GanttChartSquare
+                className="size-3.5 shrink-0 text-grey-400"
+                strokeWidth={1.75}
+              />
+              Roadmap
             </Link>
           </li>
         </ul>

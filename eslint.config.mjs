@@ -29,6 +29,7 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "off",
       "react-hooks/incompatible-library": "off",
       "react-hooks/use-memo": "off",
+      "react-hooks/preserve-manual-memoization": "off",
     },
   },
 ]);

@@ -1,5 +1,7 @@
 import {
   ArrowLeftRight,
+  Calendar,
+  Repeat,
   CircleAlert,
   Copy,
   CornerDownRight,
@@ -43,6 +45,8 @@ import {
  * resolves the lucide name and drops the other sets.
  */
 const icons: Record<string, LucideIcon> = {
+  CalendarIcon: Calendar,
+  RepeatIcon: Repeat,
   ArrowLeftRightIcon: ArrowLeftRight,
   CircleAlertIcon: CircleAlert,
   CopyIcon: Copy,

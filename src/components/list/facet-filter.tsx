@@ -51,7 +51,7 @@ export function FacetFilter({
         <button
           type="button"
           className={cn(
-            "flex h-7 items-center gap-1.5 rounded-md border px-2 text-small transition-colors",
+            "flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-small transition-colors",
             selected.length > 0
               ? "border-accent-200 bg-accent-50 text-accent-700"
               : "border-grey-200 text-grey-600 hover:border-grey-300 hover:text-grey-900",

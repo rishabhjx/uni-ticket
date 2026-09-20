@@ -34,7 +34,7 @@ export function GroupBySelect() {
 
   return (
     <>
-    <label className="flex items-center gap-1.5">
+    <label className="flex shrink-0 items-center gap-1.5">
       <span className="text-caption tracking-wide text-grey-500 uppercase">
         Group
       </span>
@@ -55,7 +55,7 @@ export function GroupBySelect() {
       </Select>
     </label>
 
-    <label className="flex items-center gap-1.5">
+    <label className="flex shrink-0 items-center gap-1.5">
       <span className="text-caption tracking-wide text-grey-500 uppercase">
         Lanes
       </span>

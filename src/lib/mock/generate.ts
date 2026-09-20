@@ -345,6 +345,7 @@ function buildComments(random: Random, tickets: Ticket[]) {
         body,
         createdAt: new Date(at).toISOString(),
         reactions,
+        attachments: [],
       });
     });
   }

@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 
 import { useCommandPalette } from "@/components/shell/command-palette";
-import { projects, type Project } from "@/lib/mock";
+import { type Project } from "@/lib/mock";
+import { useTicketStore } from "@/lib/store/ticket-store";
 import { useViewState } from "@/lib/store/view-state";
 import { useShell } from "@/hooks/use-shell";
 import { cn } from "@/lib/utils";
@@ -141,6 +142,7 @@ export function SectionSidebar() {
   const { sidebarOpen } = useShell();
   const { open: openCommandPalette } = useCommandPalette();
   const { savedViews, removeSavedView } = useViewState();
+  const { projects } = useTicketStore();
 
   return (
     <div

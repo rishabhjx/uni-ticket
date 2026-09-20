@@ -8,7 +8,6 @@ import { CardsSkeleton } from "@/components/shared/skeletons";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   getUser,
-  projects,
   projectStats,
   type Project,
 } from "@/lib/mock";
@@ -98,7 +97,7 @@ function ProjectCard({
 }
 
 export function ProjectsView() {
-  const { tickets, isLoading } = useTicketStore();
+  const { projects, tickets, isLoading } = useTicketStore();
 
   if (isLoading) return <CardsSkeleton count={5} />;
 

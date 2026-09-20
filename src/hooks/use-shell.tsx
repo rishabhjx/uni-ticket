@@ -40,6 +40,9 @@ type ShellContextValue = {
   createOpen: boolean;
   openCreate: () => void;
   setCreateOpen: (open: boolean) => void;
+  createProjectOpen: boolean;
+  openCreateProject: () => void;
+  setCreateProjectOpen: (open: boolean) => void;
 };
 
 const ShellContext = React.createContext<ShellContextValue | null>(null);
@@ -60,6 +63,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   const [createOpen, setCreateOpen] = React.useState(false);
   const openCreate = React.useCallback(() => setCreateOpen(true), []);
+  const [createProjectOpen, setCreateProjectOpen] = React.useState(false);
+  const openCreateProject = React.useCallback(
+    () => setCreateProjectOpen(true),
+    [],
+  );
 
   // ⌘B toggles the sidebar; C starts a ticket, the way every tracker does.
   React.useEffect(() => {
@@ -97,8 +105,19 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       createOpen,
       openCreate,
       setCreateOpen,
+      createProjectOpen,
+      openCreateProject,
+      setCreateProjectOpen,
     }),
-    [sidebarOpen, toggleSidebar, setSidebarOpen, createOpen, openCreate],
+    [
+      sidebarOpen,
+      toggleSidebar,
+      setSidebarOpen,
+      createOpen,
+      openCreate,
+      createProjectOpen,
+      openCreateProject,
+    ],
   );
 
   return <ShellContext value={value}>{children}</ShellContext>;

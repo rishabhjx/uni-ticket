@@ -61,7 +61,7 @@ export function TicketCard({
         </span>
       </div>
 
-      <p className="line-clamp-2 text-small leading-[18px] font-medium text-grey-900">
+      <p className="truncate text-small leading-[18px] font-medium text-grey-900">
         {ticket.title}
       </p>
 

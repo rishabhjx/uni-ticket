@@ -5,6 +5,7 @@ import * as React from "react";
 import {
   comments as seedComments,
   events as seedEvents,
+  projects as seedProjects,
   tickets as seedTickets,
   getProject,
   CURRENT_USER_ID,
@@ -13,6 +14,7 @@ import {
   type TicketEvent,
   type Attachment,
   type LinkType,
+  type Project,
   type TicketStatus,
   type TicketType,
   LINK_INVERSE,
@@ -41,7 +43,17 @@ export type NewTicketInput = {
  * locally — every change also writes to the audit trail, so the history in the
  * panel is never out of step with the ticket.
  */
+export type NewProjectInput = {
+  name: string;
+  key: string;
+  description: string;
+  emoji: string;
+  kind: Project["kind"];
+  memberIds: string[];
+};
+
 type TicketStoreValue = {
+  projects: Project[];
   tickets: Ticket[];
   comments: Comment[];
   events: TicketEvent[];
@@ -52,6 +64,7 @@ type TicketStoreValue = {
   /** Applies the same patch to many tickets at once. */
   updateMany: (ticketIds: string[], patch: Partial<Ticket>) => void;
   createTicket: (input: NewTicketInput) => Ticket;
+  createProject: (input: NewProjectInput) => Project;
   /** Sends a verified ticket back to be worked on, and says so in the history. */
   reopenTicket: (ticketId: string) => void;
   linkTickets: (ticketId: string, otherId: string, type: LinkType) => void;
@@ -60,13 +73,34 @@ type TicketStoreValue = {
   removeAttachment: (ticketId: string, attachmentId: string) => void;
   /** Restores the snapshot taken before the last bulk change. */
   undo: (() => void) | null;
-  addComment: (ticketId: string, body: string) => void;
+  addComment: (
+    ticketId: string,
+    body: string,
+    attachments?: Omit<Attachment, "id">[],
+  ) => void;
   toggleReaction: (commentId: string, emoji: string) => void;
   editComment: (commentId: string, body: string) => void;
   deleteComment: (commentId: string) => void;
 };
 
 const TicketStoreContext = React.createContext<TicketStoreValue | null>(null);
+
+const CREATED_PROJECTS_KEY = "uni.createdProjects";
+
+/**
+ * Projects created at runtime are persisted. A static host has no route for a
+ * new project, so it falls through to the not-found page — which mounts its
+ * own store. Without this the project would vanish on the way there.
+ */
+function loadCreatedProjects(): Project[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = window.localStorage.getItem(CREATED_PROJECTS_KEY);
+    return stored ? (JSON.parse(stored) as Project[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 /** Field changes worth recording in the history. */
 const trackedFields = [
@@ -117,6 +151,10 @@ function reorderColumn(
 }
 
 export function TicketStoreProvider({ children }: { children: React.ReactNode }) {
+  const [projects, setProjects] = React.useState<Project[]>(() => [
+    ...seedProjects,
+    ...loadCreatedProjects(),
+  ]);
   const [tickets, setTickets] = React.useState<Ticket[]>(seedTickets);
   const [comments, setComments] = React.useState<Comment[]>(seedComments);
   const [events, setEvents] = React.useState<TicketEvent[]>(seedEvents);
@@ -447,10 +485,54 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
     [recordEvents],
   );
 
+  const createProject = React.useCallback((input: NewProjectInput) => {
+    const slug = input.key.toLowerCase();
+    const project: Project = {
+      id: `p-${slug}`,
+      key: input.key.toUpperCase(),
+      slug,
+      name: input.name.trim(),
+      description: input.description.trim(),
+      leadId: CURRENT_USER_ID,
+      memberIds: input.memberIds,
+      kind: input.kind,
+      emoji: input.emoji,
+      // Whoever creates a project administers it.
+      roles: Object.fromEntries(
+        input.memberIds.map((id) => [
+          id,
+          id === CURRENT_USER_ID ? "admin" : "member",
+        ]),
+      ),
+      startedOn: new Date().toISOString(),
+    };
+
+    setProjects((current) => {
+      const next = [...current, project];
+      try {
+        window.localStorage.setItem(
+          CREATED_PROJECTS_KEY,
+          JSON.stringify(next.filter((item) => !seedProjects.includes(item))),
+        );
+      } catch {
+        // Persisting is a convenience; the project still exists in memory.
+      }
+      return next;
+    });
+    return project;
+  }, []);
+
+  const commentFileSeq = React.useRef(0);
+
   const addComment = React.useCallback(
-    (ticketId: string, body: string) => {
+    (
+      ticketId: string,
+      body: string,
+      attachments: Omit<Attachment, "id">[] = [],
+    ) => {
       const trimmed = body.trim();
-      if (!trimmed) return;
+      // A comment that is only a screenshot is still a comment.
+      if (!trimmed && attachments.length === 0) return;
       const at = new Date().toISOString();
 
       setComments((current) => [
@@ -462,6 +544,10 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
           body: trimmed,
           createdAt: at,
           reactions: {},
+          attachments: attachments.map((file) => {
+            commentFileSeq.current += 1;
+            return { ...file, id: `ca-${commentFileSeq.current}` };
+          }),
         },
       ]);
       setTickets((current) =>
@@ -508,6 +594,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
 
   const value = React.useMemo(
     () => ({
+      projects,
       tickets,
       comments,
       events,
@@ -517,6 +604,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       updateTicket,
       updateMany,
       createTicket,
+      createProject,
       reopenTicket,
       linkTickets,
       unlinkTickets,
@@ -529,6 +617,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       deleteComment,
     }),
     [
+      projects,
       tickets,
       comments,
       events,
@@ -538,6 +627,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       updateTicket,
       updateMany,
       createTicket,
+      createProject,
       reopenTicket,
       linkTickets,
       unlinkTickets,

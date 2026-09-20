@@ -3,6 +3,8 @@
 import * as React from "react";
 import { Pencil, Trash2 } from "lucide-react";
 
+import { attachmentIcon } from "@/components/tickets/comment-composer";
+import { formatBytes } from "@/lib/format";
 import { CURRENT_USER_ID, users, type Comment } from "@/lib/mock";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
@@ -78,9 +80,33 @@ export function CommentBody({ comment }: { comment: Comment }) {
 
   return (
     <div className="mt-0.5 flex items-start gap-1">
-      <p className="min-w-0 flex-1 text-small leading-[20px] text-grey-700">
-        {withMentions(comment.body)}
-      </p>
+      <div className="min-w-0 flex-1">
+        {comment.body ? (
+          <p className="text-small leading-[20px] text-grey-700">
+            {withMentions(comment.body)}
+          </p>
+        ) : null}
+
+        {comment.attachments.length > 0 ? (
+          <ul className="mt-1.5 flex flex-wrap gap-1.5">
+            {comment.attachments.map((file) => {
+              const Icon = attachmentIcon[file.kind];
+              return (
+                <li
+                  key={file.id}
+                  title={`${file.name} · ${formatBytes(file.size)}`}
+                  className="flex items-center gap-1.5 rounded-md border border-grey-200 px-1.5 py-1"
+                >
+                  <Icon className="size-3 shrink-0 text-grey-400" strokeWidth={2} />
+                  <span className="max-w-[160px] truncate text-caption text-grey-600">
+                    {file.name}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </div>
 
       {mine ? (
         <span

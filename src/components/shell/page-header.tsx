@@ -1,8 +1,13 @@
 "use client";
 
-import { PanelLeft, Plus } from "lucide-react";
+import { FolderPlus, PanelLeft, Plus, TicketPlus } from "lucide-react";
 
-import { Notifications } from "@/components/shell/notifications";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -19,7 +24,7 @@ export function PageHeader({
   meta?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
-  const { sidebarOpen, toggleSidebar, openCreate } = useShell();
+  const { sidebarOpen, toggleSidebar, openCreate, openCreateProject } = useShell();
 
   return (
     <header className="glass-strong hairline-b relative z-10 flex h-topbar shrink-0 items-center gap-3 px-4 sm:px-6">
@@ -41,28 +46,34 @@ export function PageHeader({
         </Tooltip>
       ) : null}
 
-      <h1 className="text-title font-semibold text-grey-900">{title}</h1>
+      <h1 className="truncate text-title font-semibold text-grey-900">{title}</h1>
       {meta ? <div className="flex items-center gap-2">{meta}</div> : null}
 
       <div className="ml-auto flex items-center gap-2">
         {actions}
-        <Notifications />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <button
               type="button"
-              onClick={openCreate}
               className="flex h-7 items-center gap-1.5 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"
             >
               <Plus className="size-3.5" strokeWidth={2.25} />
               New
             </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" sideOffset={8}>
-            New ticket · C
-          </TooltipContent>
-        </Tooltip>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={openCreate} className="gap-2">
+              <TicketPlus className="size-3.5 text-grey-400" strokeWidth={1.75} />
+              New ticket
+              <kbd className="ml-auto text-caption text-grey-400">C</kbd>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={openCreateProject} className="gap-2">
+              <FolderPlus className="size-3.5 text-grey-400" strokeWidth={1.75} />
+              New project
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

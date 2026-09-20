@@ -18,7 +18,6 @@ import {
   daysInColumn,
   flowMetrics,
   isStale,
-  projects,
   STALE_AFTER_DAYS,
   STATUS_LABEL,
   TICKET_STATUSES,
@@ -63,7 +62,7 @@ function Metric({
  * act on. Nothing here is a new number; it is all derived from the history.
  */
 export function InsightsView() {
-  const { tickets, events, isLoading } = useTicketStore();
+  const { projects, tickets, events, isLoading } = useTicketStore();
   const [projectId, setProjectId] = React.useState("all");
 
   const scoped = React.useMemo(

@@ -3,9 +3,9 @@
 import { PanelLeftClose } from "lucide-react";
 
 import { CelebrateProvider } from "@/components/shared/celebrate";
-import { InboxProvider } from "@/lib/store/inbox";
 import { AppRail } from "@/components/shell/app-rail";
 import { CommandPaletteProvider } from "@/components/shell/command-palette";
+import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
 import { SectionSidebar } from "@/components/shell/section-sidebar";
 import { TicketPanel } from "@/components/tickets/ticket-panel";
@@ -15,8 +15,22 @@ import { ShellProvider, useShell } from "@/hooks/use-shell";
 import { ViewStateProvider } from "@/lib/store/view-state";
 
 function CreateDialogHost() {
-  const { createOpen, setCreateOpen } = useShell();
-  return <CreateTicketDialog open={createOpen} onOpenChange={setCreateOpen} />;
+  const {
+    createOpen,
+    setCreateOpen,
+    createProjectOpen,
+    setCreateProjectOpen,
+  } = useShell();
+
+  return (
+    <>
+      <CreateTicketDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateProjectDialog
+        open={createProjectOpen}
+        onOpenChange={setCreateProjectOpen}
+      />
+    </>
+  );
 }
 
 function SidebarCollapseButton() {
@@ -40,7 +54,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ShellProvider>
       <CelebrateProvider>
-      <InboxProvider>
       <ViewStateProvider>
       <TicketPanelProvider>
       <CommandPaletteProvider>
@@ -59,7 +72,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </CommandPaletteProvider>
       </TicketPanelProvider>
       </ViewStateProvider>
-      </InboxProvider>
       </CelebrateProvider>
     </ShellProvider>
   );

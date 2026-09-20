@@ -7,7 +7,6 @@ import { CardsSkeleton } from "@/components/shared/skeletons";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   countByStatus,
-  projects,
   STATUS_LABEL,
   TICKET_STATUSES,
   ticketsForProject,
@@ -15,7 +14,7 @@ import {
 import { useTicketStore } from "@/lib/store/ticket-store";
 
 export function BoardsView() {
-  const { tickets, isLoading } = useTicketStore();
+  const { projects, tickets, isLoading } = useTicketStore();
 
   if (isLoading) return <CardsSkeleton count={5} />;
 

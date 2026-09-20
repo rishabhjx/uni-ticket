@@ -28,7 +28,6 @@ import {
   getUser,
   isDefect,
   labels,
-  projects,
   sprintsForProject,
   SEVERITY_LABEL,
   TICKET_PRIORITIES,
@@ -69,7 +68,7 @@ export function CreateTicketDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const pathname = usePathname();
-  const { createTicket, tickets } = useTicketStore();
+  const { createTicket, tickets, projects } = useTicketStore();
   const { openTicket } = useTicketPanel();
 
   // Default to whichever project you are looking at.

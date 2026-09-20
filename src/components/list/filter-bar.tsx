@@ -84,7 +84,7 @@ const labelOptions: FacetOption[] = labels.map((label) => ({
 }));
 
 const chipBase =
-  "flex h-7 items-center gap-1.5 rounded-md border px-2 text-small transition-colors";
+  "flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-small transition-colors";
 const chipIdle =
   "border-grey-200 text-grey-600 hover:border-grey-300 hover:text-grey-900";
 const chipOn = "border-accent-200 bg-accent-50 text-accent-700";
@@ -168,8 +168,8 @@ export function FilterBar({
   ];
 
   return (
-    <div className="hairline-b flex flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
-      <div className="relative min-w-0 flex-1 sm:flex-none">
+    <div className="hairline-b flex items-center gap-2 overflow-x-auto overscroll-x-contain px-4 py-2.5 sm:px-6">
+      <div className="relative shrink-0">
         <Search
           className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-grey-400"
           strokeWidth={1.75}
@@ -182,7 +182,7 @@ export function FilterBar({
           }
           placeholder={SEARCH_PLACEHOLDER}
           aria-label="Search tickets"
-          className="h-7 w-full min-w-48 rounded-md sm:w-80 border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+          className="h-7 w-72 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
         />
       </div>
 
@@ -303,7 +303,7 @@ export function FilterBar({
         </>
       ) : null}
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2 pl-2">
         {extra}
 
         <Tooltip>

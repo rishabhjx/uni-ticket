@@ -213,6 +213,8 @@ export type Comment = {
   createdAt: string;
   /** emoji -> the people who reacted with it. */
   reactions: Record<string, string[]>;
+  /** Screenshots, recordings and logs pasted into the thread. */
+  attachments: Attachment[];
 };
 
 /** The reactions offered on a comment. Deliberately a short list. */

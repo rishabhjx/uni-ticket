@@ -1,7 +1,14 @@
 import { generateDataset } from "./generate";
 import { startOfWeek, TODAY } from "./dates";
 import { projects } from "./projects";
-import { TICKET_STATUSES, type Comment, type Ticket, type TicketEvent, type TicketStatus } from "./types";
+import {
+  TICKET_STATUSES,
+  type Comment,
+  type Project,
+  type Ticket,
+  type TicketEvent,
+  type TicketStatus,
+} from "./types";
 import { CURRENT_USER_ID, reporteeIds } from "./users";
 
 const dataset = generateDataset();
@@ -305,8 +312,13 @@ export function countByStatus(scoped: Ticket[]) {
 }
 
 /** Projects the current user is assigned work on, busiest first. */
-export function myProjects(all: Ticket[], userId: string = CURRENT_USER_ID) {
-  return projects
+export function myProjects(
+  all: Ticket[],
+  userId: string = CURRENT_USER_ID,
+  /** Defaults to the seeded set; pass the store's list to include new ones. */
+  scope: Project[] = projects,
+) {
+  return scope
     .map((project) => ({
       project,
       stats: projectStats(all, project.id, userId),

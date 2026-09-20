@@ -13,7 +13,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { projects } from "@/lib/mock";
 import { matchesSearch, parseSearch, SEARCH_HINTS, SEARCH_PLACEHOLDER } from "@/lib/search";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
@@ -41,7 +40,7 @@ export function CommandPaletteProvider({
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const router = useRouter();
-  const { tickets } = useTicketStore();
+  const { projects, tickets } = useTicketStore();
   const { openCreate } = useShell();
   const { openTicket } = useTicketPanel();
 

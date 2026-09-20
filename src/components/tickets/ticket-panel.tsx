@@ -1,7 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { History, MessageSquare, RotateCcw, ShieldAlert, X } from "lucide-react";
+import {
+  History,
+  Maximize2,
+  MessageSquare,
+  Minimize2,
+  RotateCcw,
+  ShieldAlert,
+  X,
+} from "lucide-react";
 
 import { ActivityFeed } from "@/components/tickets/activity-feed";
 import { AlertChip, TypeIcon } from "@/components/tickets/badges";
@@ -31,7 +39,8 @@ import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
 export function TicketPanel() {
-  const { openTicketKey, closeTicket } = useTicketPanel();
+  const { openTicketKey, closeTicket, expanded, toggleExpanded } =
+    useTicketPanel();
   const { tickets, comments, updateTicket, reopenTicket } = useTicketStore();
   const headingRef = React.useRef<HTMLDivElement>(null);
   const [showHistory, setShowHistory] = React.useState(true);
@@ -72,7 +81,8 @@ export function TicketPanel() {
       aria-hidden={!open}
       inert={!open}
       className={cn(
-        "glass absolute inset-y-0 right-0 z-20 flex w-panel max-w-full flex-col border-l border-grey-200 transition-transform duration-[--duration-slow] max-md:w-full",
+        "glass absolute inset-y-0 right-0 z-20 flex max-w-full flex-col border-l border-grey-200 transition-[transform,width] duration-[--duration-slow] max-md:w-full",
+        expanded ? "w-[min(920px,100%)]" : "w-panel",
         open ? "translate-x-0 shadow-overlay" : "translate-x-full",
       )}
     >
@@ -114,15 +124,29 @@ export function TicketPanel() {
 
             <button
               type="button"
+              onClick={toggleExpanded}
+              aria-label={expanded ? "Collapse ticket" : "Expand ticket"}
+              title={expanded ? "Collapse" : "Expand"}
+              className="ml-auto flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+            >
+              {expanded ? (
+                <Minimize2 className="size-4" strokeWidth={1.75} />
+              ) : (
+                <Maximize2 className="size-4" strokeWidth={1.75} />
+              )}
+            </button>
+
+            <button
+              type="button"
               onClick={closeTicket}
               aria-label="Close ticket"
-              className="-mr-1.5 ml-auto flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+              className="-mr-1.5 flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
               <X className="size-4" strokeWidth={1.75} />
             </button>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className={cn("min-h-0 flex-1 overflow-y-auto", expanded && "px-2")}>
             {blockers.length > 0 ? (
               <div className="hairline-b flex items-start gap-2 bg-[var(--priority-urgent-bg)] px-5 py-2.5">
                 <ShieldAlert

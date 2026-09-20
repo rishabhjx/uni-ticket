@@ -119,7 +119,7 @@ function ProjectSummary({
 }
 
 export function OverviewView() {
-  const { tickets, isLoading } = useTicketStore();
+  const { projects: allProjects, tickets, isLoading } = useTicketStore();
 
   if (isLoading) {
     return (
@@ -135,7 +135,7 @@ export function OverviewView() {
   const kpis = personalKpis(tickets);
   const team = kpisFor(ticketsForTeam(tickets));
   const reportees = reporteesOf();
-  const projects = myProjects(tickets);
+  const projects = myProjects(tickets, undefined, allProjects);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">

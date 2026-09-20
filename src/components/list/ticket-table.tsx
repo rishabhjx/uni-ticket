@@ -116,8 +116,10 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
       accessorKey: "title",
       header: ({ column }) => <TableColumnHeader column={column} title="Title" />,
       cell: ({ row }) => (
-        <span className="flex items-center gap-1.5">
-          <span className="truncate text-small text-grey-900">
+        <span className="flex min-w-0 items-center gap-1.5">
+          {/* min-w-0 on both: a flex child will not shrink below its content
+              width without it, so the title would never ellipsis. */}
+          <span className="min-w-0 flex-1 truncate text-small text-grey-900">
             {row.original.title}
           </span>
           {row.original.development ? (
@@ -181,9 +183,9 @@ function buildColumns(visible: Set<ColumnId>): ColumnDef<Ticket>[] {
       accessorFn: (ticket) => getUser(ticket.assigneeId)?.name ?? "￿",
       header: ({ column }) => <TableColumnHeader column={column} title="Assignee" />,
       cell: ({ row }) => (
-        <span className="flex items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2">
           <UserAvatar userId={row.original.assigneeId} />
-          <span className="truncate text-small text-grey-700">
+          <span className="min-w-0 truncate text-small text-grey-700">
             {getUser(row.original.assigneeId)?.name ?? "Unassigned"}
           </span>
         </span>

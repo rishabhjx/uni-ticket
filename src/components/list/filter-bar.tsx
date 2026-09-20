@@ -403,7 +403,7 @@ export function FilterBar({
           }
           placeholder={SEARCH_PLACEHOLDER}
           aria-label="Search tickets"
-          className="h-7 w-64 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+          className="h-7 w-64 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
         />
       </div>
 

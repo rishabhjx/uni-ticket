@@ -145,6 +145,11 @@ function SelectCell({ ticket }: { ticket: Ticket }) {
   return (
     <span
       className="flex items-center"
+      // The row's own styling keys off this: selection lives in view-state
+      // rather than in the table, so the <tr> has no way to know. `:has()`
+      // lets the row read it from the cell instead of threading a class
+      // through the grid.
+      data-selected={selection.includes(ticket.id) ? "true" : undefined}
       // The row opens the ticket; ticking a box must not also open it.
       onClick={(event) => event.stopPropagation()}
     >
@@ -295,7 +300,7 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
       header: header("Due"),
       cell: ({ row }) => {
         const ticket = row.original;
-        if (isSlaBreached(ticket)) return <AlertChip>SLA breached</AlertChip>;
+        if (isSlaBreached(ticket)) return <AlertChip tone="breached">SLA breached</AlertChip>;
         if (!ticket.dueAt) return <span className="text-small text-grey-300">—</span>;
         return isOverdue(ticket) ? (
           <AlertChip>{formatDueDate(ticket.dueAt)}</AlertChip>
@@ -439,6 +444,16 @@ export function TicketTable({
     state: { pagination: { pageIndex: 0, pageSize: Math.max(tickets.length, 1) } },
   });
 
+  /*
+   * With no rows, the sticky header is a row of sort and pin controls for
+   * nothing -- and it sits directly above a message explaining that there is
+   * nothing. The empty state replaces the grid rather than being hung below
+   * its chrome.
+   */
+  if (tickets.length === 0 && empty) {
+    return <div className="min-h-0 flex-1 overflow-y-auto">{empty}</div>;
+  }
+
   return (
     <DataGrid
       table={table}
@@ -471,8 +486,19 @@ export function TicketTable({
          * the virtualiser spaced them 48px apart — which is both why the table
          * read as a solid block and why scrolling it jumped.
          */
-        bodyRow:
-          "h-[var(--grid-row-h)] cursor-pointer border-b border-grey-150 transition-colors",
+        /*
+         * Selected and hovered used to be the same tint at two opacities
+         * (muted/50 and muted/40), so you could not tell which rows you had
+         * picked. Selection is a state you leave behind and gets a fill AND a
+         * rule down the leading edge; hover is transient and gets only a
+         * fill, a step lighter.
+         */
+        bodyRow: cn(
+          "h-[var(--grid-row-h)] cursor-pointer border-b border-grey-150",
+          "transition-colors hover:bg-grey-50",
+          "has-[[data-selected=true]]:bg-[var(--selected-bg)]",
+          "has-[[data-selected=true]]:shadow-[inset_2px_0_0_var(--selected-edge)]",
+        ),
       }}
     >
       {/* The var rides a wrapper because DataGridContainer takes no style. */}

@@ -148,7 +148,7 @@ export function ProjectsView({ workspaceId }: { workspaceId?: string } = {}) {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search projects"
             aria-label="Search projects"
-            className="h-7 w-64 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+            className="h-7 w-64 rounded-md border border-grey-200 pr-2 pl-7 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
           />
         </div>
         <span className="tnum ml-auto text-small text-grey-500">

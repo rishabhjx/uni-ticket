@@ -94,7 +94,7 @@ export function StatusDot({ status }: { status: TicketStatus }) {
   return (
     <span
       aria-hidden
-      className="size-2 shrink-0 rounded-full"
+      className="size-1.5 shrink-0 rounded-full"
       style={{
         backgroundColor: `var(--discipline-${STATUS_DISCIPLINE[status]}-fg)`,
       }}
@@ -127,6 +127,17 @@ export function SeverityDot({ severity }: { severity: TicketSeverity }) {
   );
 }
 
+/**
+ * Two of the thirteen statuses are events rather than places: QA failed is
+ * something breaking, Done is something landing. Those two get colour. The
+ * other eleven are just where the ticket currently sits, and a board of
+ * eleven tinted chips is a board with no emphasis left to spend.
+ */
+const statusAccent: Partial<Record<TicketStatus, string>> = {
+  qa_failed: "bg-[var(--danger-bg)] text-[var(--danger)]",
+  done: "bg-[var(--success-bg)] text-[var(--success)]",
+};
+
 export function StatusBadge({
   status,
   className,
@@ -134,11 +145,23 @@ export function StatusBadge({
   status: TicketStatus;
   className?: string;
 }) {
+  const accent = statusAccent[status];
   return (
     <span
       title={`${DISCIPLINE_LABEL[STATUS_DISCIPLINE[status]]} · ${STATUS_LABEL[status]}`}
-      className={cn(badgeBase, disciplineTint[STATUS_DISCIPLINE[status]], className)}
+      className={cn(
+        badgeBase,
+        // The chip used to be tinted by discipline, which meant six colours
+        // differing only in hue at the same lightness -- exactly the axis
+        // colour-blind readers lose, and the axis a tinted background is
+        // worst at carrying. The discipline now rides on a dot, which is a
+        // second signal (position) on top of the hue, and the chip itself
+        // stays legible neutral.
+        accent ?? "bg-grey-100 text-grey-700",
+        className,
+      )}
     >
+      {accent ? null : <StatusDot status={status} />}
       {STATUS_LABEL[status]}
     </span>
   );
@@ -233,11 +256,18 @@ export function EnvironmentChip({
  * Overdue and SLA breaches are the one place I overruled the brief's "colour
  * only on status and priority" rule: a date you have already missed is exactly
  * the kind of meaning colour exists for, and in grey it was unfindable.
+ *
+ * They are not the same alarm, though. Red used to mean overdue AND breached
+ * AND urgent AND destructive -- four meanings on one colour, so a board of
+ * slightly-late tickets looked like a board on fire. Late is amber, which is
+ * "this wants you"; terracotta is kept for a promise already broken.
  */
 export function AlertChip({
+  tone = "late",
   children,
   className,
 }: {
+  tone?: "late" | "breached";
   children: React.ReactNode;
   className?: string;
 }) {
@@ -245,7 +275,9 @@ export function AlertChip({
     <span
       className={cn(
         badgeBase,
-        "bg-[var(--priority-urgent-bg)] text-[var(--priority-urgent-fg)]",
+        tone === "breached"
+          ? "bg-[var(--danger-bg)] text-[var(--danger)]"
+          : "bg-[var(--warning-bg)] text-[var(--warning)]",
         className,
       )}
     >

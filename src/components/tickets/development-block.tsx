@@ -67,7 +67,7 @@ export function AttachmentsBlock({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="ml-auto flex h-6 items-center gap-1 rounded-md border border-grey-200 px-1.5 text-caption text-grey-600 transition-colors hover:border-grey-300 hover:text-grey-900"
+            className="tap ml-auto flex h-6 items-center gap-1 rounded-md border border-grey-200 px-1.5 text-caption text-grey-600 transition-colors hover:border-grey-300 hover:text-grey-900"
           >
             <Upload className="size-3" strokeWidth={2} />
             Add

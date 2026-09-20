@@ -569,6 +569,27 @@ html.light {
 
 @layer utilities {
   /*
+     WCAG 2.5.8 puts the floor for a pointer target at 24x24. Several controls
+     here are optically smaller than that on purpose -- a 16px checkbox, a
+     20px icon button in a comment -- and growing the box would wreck the
+     density. This pushes an invisible 24x24 pad out from the centre instead,
+     so the target grows and the layout does not move.
+  */
+  .tap {
+    position: relative;
+  }
+
+  .tap::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 24px);
+    height: max(100%, 24px);
+    transform: translate(-50%, -50%);
+  }
+
+  /*
      Floating layers only. Never on cards or rows: a person reads those all
      day and translucency costs them contrast.
   */

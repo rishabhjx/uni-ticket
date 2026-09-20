@@ -150,7 +150,7 @@ export function TicketPanel() {
             </span>
 
             {isSlaBreached(ticket) ? (
-              <AlertChip>SLA breached</AlertChip>
+              <AlertChip tone="breached">SLA breached</AlertChip>
             ) : isStale(ticket) ? (
               <span className="rounded-md bg-grey-100 px-1.5 py-0.5 text-caption font-medium text-grey-700">
                 {daysInColumn(ticket)}d in column
@@ -167,7 +167,7 @@ export function TicketPanel() {
               <button
                 type="button"
                 onClick={() => reopenTicket(ticket.id)}
-                className="flex h-6 items-center gap-1 rounded-md border border-grey-200 px-1.5 text-caption text-grey-700 transition-colors hover:border-grey-300 hover:text-grey-900"
+                className="tap flex h-6 items-center gap-1 rounded-md border border-grey-200 px-1.5 text-caption text-grey-700 transition-colors hover:border-grey-300 hover:text-grey-900"
               >
                 <RotateCcw className="size-3" strokeWidth={2} />
                 Reopen

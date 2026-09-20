@@ -67,7 +67,7 @@ function TicketRow({
           type="button"
           onClick={onRemove}
           aria-label={`Remove link to ${ticket.key}`}
-          className="flex size-5 shrink-0 items-center justify-center rounded-md text-grey-400 opacity-0 transition-opacity hover:bg-grey-150 hover:text-grey-700 focus-visible:opacity-100 group-hover/link:opacity-100"
+          className="tap flex size-5 shrink-0 items-center justify-center rounded-md text-grey-400 opacity-0 transition-opacity hover:bg-grey-150 hover:text-grey-700 focus-visible:opacity-100 group-hover/link:opacity-100"
         >
           <X className="size-3" strokeWidth={2} />
         </button>
@@ -135,7 +135,7 @@ export function LinksBlock({ ticket, canEdit }: { ticket: Ticket; canEdit: boole
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="ml-auto flex h-6 items-center gap-1 rounded-md border border-grey-200 px-1.5 text-caption text-grey-600 transition-colors hover:border-grey-300 hover:text-grey-900"
+                className="tap ml-auto flex h-6 items-center gap-1 rounded-md border border-grey-200 px-1.5 text-caption text-grey-600 transition-colors hover:border-grey-300 hover:text-grey-900"
               >
                 <Plus className="size-3" strokeWidth={2.25} />
                 Link

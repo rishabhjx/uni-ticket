@@ -53,7 +53,7 @@ import { cn } from "@/lib/utils";
 const LAST_TYPE_KEY = "uni.lastTicketType";
 
 const fieldClass =
-  "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
+  "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -219,7 +219,7 @@ export function CreateTicketDialog({
                   : "Context, scope and anything the next person needs."
               }
               aria-label="Description"
-              className="w-full resize-none rounded-md border border-grey-200 px-2.5 py-2 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+              className="w-full resize-none rounded-md border border-grey-200 px-2.5 py-2 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
             />
 
             <Row label="Project">

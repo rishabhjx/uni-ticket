@@ -38,7 +38,7 @@ import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
 const fieldClass =
-  "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
+  "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -355,7 +355,7 @@ export function CreateProjectDialog({
                 rows={2}
                 placeholder="What this project covers."
                 aria-label="Description"
-                className="w-full resize-none rounded-md border border-grey-200 px-2.5 py-2 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+                className="w-full resize-none rounded-md border border-grey-200 px-2.5 py-2 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
               />
             </Row>
 

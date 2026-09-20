@@ -230,7 +230,7 @@ export function TicketFields({
         <Field label="SLA">
           {isSlaBreached(ticket) ? (
             <span className="px-1.5">
-              <AlertChip>Breached {formatDueDate(ticket.slaDueAt)}</AlertChip>
+              <AlertChip tone="breached">Breached {formatDueDate(ticket.slaDueAt)}</AlertChip>
             </span>
           ) : (
             <span className="px-1.5 text-small text-grey-700">

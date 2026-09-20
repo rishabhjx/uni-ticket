@@ -105,7 +105,7 @@ export function TicketPage({ ticketKey }: { ticketKey: string }) {
           <span className="text-caption text-grey-400">
             {TYPE_LABEL[ticket.type]}
           </span>
-          {isSlaBreached(ticket) ? <AlertChip>SLA breached</AlertChip> : null}
+          {isSlaBreached(ticket) ? <AlertChip tone="breached">SLA breached</AlertChip> : null}
 
           <CallButton
             subject={`${ticket.key} ${ticket.title}`}

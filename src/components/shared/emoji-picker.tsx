@@ -58,7 +58,7 @@ export function EmojiPicker({
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search — try bug, release, qa…"
             aria-label="Search emoji"
-            className="h-7 w-full rounded-md border border-grey-200 px-2 text-small text-grey-900 placeholder:text-grey-400 focus:border-accent-600 focus:outline-none"
+            className="h-7 w-full rounded-md border border-grey-200 px-2 text-small text-grey-900 placeholder:text-grey-500 focus:border-accent-600 focus:outline-none"
           />
         </div>
 

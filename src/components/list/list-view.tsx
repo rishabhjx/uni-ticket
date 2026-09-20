@@ -7,7 +7,7 @@ import { ColumnChooser } from "@/components/list/column-chooser";
 import { FilterBar } from "@/components/list/filter-bar";
 import { ProjectActions } from "@/components/projects/project-actions";
 import { TicketTable, type ColumnId } from "@/components/list/ticket-table";
-import { RowsSkeleton } from "@/components/shared/skeletons";
+import { FilterBarSkeleton, RowsSkeleton } from "@/components/shared/skeletons";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { applyFilters, useViewState } from "@/lib/store/view-state";
@@ -38,7 +38,7 @@ export function ListView({
 }) {
   const { tickets: allTickets, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
-  const { filters, selection, setSelection } = useViewState();
+  const { filters, selection, setSelection, clearFilters } = useViewState();
 
   const [visibleColumns, setVisibleColumns] = React.useState<Set<ColumnId>>(
     () =>
@@ -125,7 +125,16 @@ export function ListView({
   if (isLoading) {
     return (
       <>
-        <div className="hairline-b h-[45px] shrink-0" />
+        <FilterBarSkeleton extra={4} />
+        <div className="hairline-b flex h-9 shrink-0 items-center gap-8 px-4">
+          {[60, 180, 70, 72, 90, 80].map((w) => (
+            <div
+              key={w}
+              className="h-3 animate-pulse rounded-md bg-grey-150"
+              style={{ width: w }}
+            />
+          ))}
+        </div>
         <RowsSkeleton rows={12} />
       </>
     );
@@ -155,14 +164,32 @@ export function ListView({
           scoped.length === 0 ? (
             emptyState
           ) : (
-            <span className="flex flex-col items-center gap-1 py-12 text-center">
-              <span aria-hidden className="text-2xl">🔍</span>
-              <span className="text-heading font-medium text-grey-900">
+            /*
+             * "Try removing a filter" is advice, not a way out. The one thing
+             * the person wants here is a button that undoes what hid their
+             * work, so that is the only thing this offers.
+             */
+            <span className="flex flex-col items-center gap-1.5 py-12 text-center">
+              <span
+                aria-hidden
+                className="mb-2 flex size-14 items-center justify-center rounded-full bg-grey-50 text-2xl ring-1 ring-grey-200 ring-inset"
+              >
+                🔍
+              </span>
+              <span className="text-heading font-semibold text-grey-900">
                 No tickets match these filters
               </span>
-              <span className="text-small text-grey-500">
-                Try removing a filter or widening your search.
+              <span className="max-w-xs text-small text-grey-600">
+                All {scoped.length} tickets here are hidden by the conditions
+                you have set.
               </span>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-3 flex h-8 items-center rounded-md bg-accent-600 px-3 text-small font-medium text-grey-0 transition-[background-color,transform] hover:bg-accent-700 active:scale-[0.98]"
+              >
+                Clear filters
+              </button>
             </span>
           )
         }

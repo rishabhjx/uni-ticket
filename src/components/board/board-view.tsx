@@ -7,6 +7,7 @@ import { FilterBar } from "@/components/list/filter-bar";
 import { ProjectActions } from "@/components/projects/project-actions";
 import { randomCheer, useCelebrate } from "@/components/shared/celebrate";
 import { EmptyState } from "@/components/shared/empty-state";
+import { useShell } from "@/hooks/use-shell";
 import { BoardSkeleton } from "@/components/shared/skeletons";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { UserAvatar } from "@/components/tickets/user-avatar";
@@ -96,7 +97,8 @@ function columnsFor(groupBy: GroupBy, project: Project) {
 export function BoardView({ project }: { project: Project }) {
   const { tickets, applyBoardOrder, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
-  const { filters, groupBy, swimlane } = useViewState();
+  const { filters, groupBy, swimlane, clearFilters } = useViewState();
+  const { openCreate } = useShell();
   const celebrate = useCelebrate();
 
   const scoped = React.useMemo(
@@ -302,19 +304,27 @@ export function BoardView({ project }: { project: Project }) {
       />
 
       {filtered.length === 0 ? (
-        <EmptyState
-          emoji="🧊"
-          title={
-            scoped.length === 0
-              ? "This board is empty"
-              : "No tickets match these filters"
-          }
-          description={
-            scoped.length === 0
-              ? `No tickets in ${project.name} yet. Tickets added to this project show up in Backlog.`
-              : "Try removing a filter or widening your search."
-          }
-        />
+        /*
+         * Two different emptinesses. A project with no tickets is a beginning
+         * and wants a way to start; a project whose filters exclude everything
+         * is a dead end and wants a way out. They used to share one message
+         * and neither offered a way forward.
+         */
+        scoped.length === 0 ? (
+          <EmptyState
+            emoji="🌱"
+            title="This board is empty"
+            description={`Nothing in ${project.name} yet. The first ticket you add lands in Backlog.`}
+            action={{ label: "New ticket", onClick: openCreate }}
+          />
+        ) : (
+          <EmptyState
+            emoji="🔍"
+            title="No tickets match these filters"
+            description={`All ${scoped.length} tickets in ${project.name} are hidden by the conditions you have set.`}
+            action={{ label: "Clear filters", onClick: clearFilters }}
+          />
+        )
       ) : lanes.length > 1 ? (
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
           {lanes.map((lane) => (

@@ -18,7 +18,7 @@ import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
 const fieldClass =
-  "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-400 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
+  "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (

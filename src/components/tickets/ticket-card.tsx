@@ -114,7 +114,7 @@ export function TicketCard({
 
       <div className="flex items-center gap-2">
         {breached ? (
-          <AlertChip>SLA breached</AlertChip>
+          <AlertChip tone="breached">SLA breached</AlertChip>
         ) : overdue && ticket.dueAt ? (
           <AlertChip>{formatDueDate(ticket.dueAt)}</AlertChip>
         ) : ticket.dueAt ? (

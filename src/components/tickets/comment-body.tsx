@@ -70,7 +70,7 @@ export function CommentBody({ comment }: { comment: Comment }) {
               editComment(comment.id, draft);
               setEditing(false);
             }}
-            className="h-6 rounded-md bg-accent-600 px-2 text-caption font-medium text-grey-0 transition-colors hover:bg-accent-700"
+            className="tap h-6 rounded-md bg-accent-600 px-2 text-caption font-medium text-grey-0 transition-colors hover:bg-accent-700"
           >
             Save
           </button>
@@ -80,7 +80,7 @@ export function CommentBody({ comment }: { comment: Comment }) {
               setDraft(comment.body);
               setEditing(false);
             }}
-            className="h-6 rounded-md px-2 text-caption text-grey-600 transition-colors hover:bg-grey-100"
+            className="tap h-6 rounded-md px-2 text-caption text-grey-600 transition-colors hover:bg-grey-100"
           >
             Cancel
           </button>
@@ -146,7 +146,7 @@ export function CommentBody({ comment }: { comment: Comment }) {
             type="button"
             onClick={() => setEditing(true)}
             aria-label="Edit comment"
-            className="flex size-5 items-center justify-center rounded-md text-grey-400 hover:bg-grey-100 hover:text-grey-700"
+            className="tap flex size-5 items-center justify-center rounded-md text-grey-400 hover:bg-grey-100 hover:text-grey-700"
           >
             <Pencil className="size-3" strokeWidth={2} />
           </button>
@@ -154,7 +154,7 @@ export function CommentBody({ comment }: { comment: Comment }) {
             type="button"
             onClick={() => deleteComment(comment.id)}
             aria-label="Delete comment"
-            className="flex size-5 items-center justify-center rounded-md text-grey-400 hover:bg-grey-100 hover:text-grey-700"
+            className="tap flex size-5 items-center justify-center rounded-md text-grey-400 hover:bg-grey-100 hover:text-grey-700"
           >
             <Trash2 className="size-3" strokeWidth={2} />
           </button>

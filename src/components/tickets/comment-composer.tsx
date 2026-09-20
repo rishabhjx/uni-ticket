@@ -155,7 +155,7 @@ export function CommentComposer({ ticketId }: { ticketId: string }) {
             placeholder="Leave a comment, or drop a screenshot in"
             aria-label="Comment"
             className={cn(
-              "w-full resize-none rounded-md border px-2.5 py-1.5 text-small text-grey-900 transition-colors placeholder:text-grey-400 focus:border-accent-600 focus:outline-none",
+              "w-full resize-none rounded-md border px-2.5 py-1.5 text-small text-grey-900 transition-colors placeholder:text-grey-500 focus:border-accent-600 focus:outline-none",
               dragging
                 ? "border-accent-600 bg-accent-50"
                 : "border-grey-200 hover:border-grey-300",

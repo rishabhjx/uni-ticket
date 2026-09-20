@@ -70,7 +70,7 @@ export function CelebrateProvider({ children }: { children: React.ReactNode }) {
                     current.filter((entry) => entry.id !== item.id),
                   );
                 }}
-                className="pointer-events-auto ml-1 h-6 rounded-md border border-grey-300 px-2 text-caption font-medium text-grey-800 transition-colors hover:border-grey-400"
+                className="tap pointer-events-auto ml-1 h-6 rounded-md border border-grey-300 px-2 text-caption font-medium text-grey-800 transition-colors hover:border-grey-400"
               >
                 Undo
               </button>

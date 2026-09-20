@@ -120,9 +120,7 @@ export function SeverityDot({ severity }: { severity: TicketSeverity }) {
     <span
       aria-hidden
       className="tnum text-caption font-semibold"
-      style={{ color: severity === "s1" || severity === "s2"
-        ? "var(--priority-urgent-fg)"
-        : "var(--grey-500)" }}
+      style={{ color: `var(--severity-${severity}-fg)` }}
     >
       {severity.toUpperCase()}
     </span>
@@ -181,14 +179,16 @@ export function TypeIcon({
 }
 
 /**
- * Severity is how bad it is, separate from when we will fix it. S1 and S2 earn
- * colour; the lower two stay neutral so the serious ones stand out.
+ * Severity is how bad it is; priority is when we will fix it. They used to
+ * share the same two tints, which made an S1 and an Urgent pixel-identical
+ * while meaning different things. Only S1 keeps colour now — the rest are a
+ * neutral code, and the tnum/uppercase shape tells them apart from priority.
  */
 const severityTint: Record<TicketSeverity, string> = {
-  s1: "bg-[var(--priority-urgent-bg)] text-[var(--priority-urgent-fg)]",
-  s2: "bg-[var(--priority-high-bg)] text-[var(--priority-high-fg)]",
-  s3: "bg-grey-100 text-grey-600",
-  s4: "bg-grey-50 text-grey-500",
+  s1: "bg-[var(--severity-s1-bg)] text-[var(--severity-s1-fg)]",
+  s2: "bg-[var(--severity-s2-bg)] text-[var(--severity-s2-fg)]",
+  s3: "bg-[var(--severity-s3-bg)] text-[var(--severity-s3-fg)]",
+  s4: "bg-[var(--severity-s4-bg)] text-[var(--severity-s4-fg)]",
 };
 
 export function SeverityBadge({

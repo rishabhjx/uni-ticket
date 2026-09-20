@@ -242,7 +242,7 @@ export function CommentComposer({ ticketId }: { ticketId: string }) {
               type="button"
               onClick={submit}
               disabled={!body.trim() && drafts.length === 0}
-              className="h-7 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700 disabled:bg-grey-200 disabled:text-grey-400"
+              className="h-7 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700 disabled:bg-grey-100 disabled:text-grey-500"
             >
               Comment
             </button>

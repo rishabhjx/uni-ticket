@@ -42,115 +42,167 @@
      values are ReUI's `.dark` block; the in-between steps are interpolated on
      the same lightness curve.
      --------------------------------------------------------------------- */
-  --grey-0: oklch(0.145 0 0);   /* their --background */
-  --grey-25: oklch(0.175 0 0);
-  --grey-50: oklch(0.205 0 0);  /* their --card, --sidebar */
-  --grey-100: oklch(0.238 0 0);
-  --grey-150: oklch(0.255 0 0);
-  --grey-200: oklch(0.269 0 0); /* their --muted, --secondary */
-  --grey-300: oklch(0.32 0 0);
-  --grey-400: oklch(0.439 0 0); /* their --sidebar-ring */
-  --grey-500: oklch(0.556 0 0); /* their --ring */
-  --grey-600: oklch(0.646 0 0);
-  --grey-700: oklch(0.708 0 0); /* their --muted-foreground */
-  --grey-800: oklch(0.85 0 0);
-  --grey-900: oklch(0.985 0 0); /* their --foreground */
+  /* ------------------------------------------------------------------------
+     Warm stone, not blue-grey. Every neutral sits on hue 60 with chroma
+     climbing 0.004 → 0.012, so the darks read as pigment rather than as a
+     switched-off screen, and the lightest step is bone (#f9f4f0) rather than
+     paper white. Thirteen steps, evenly spaced on the lightness curve: the
+     old ramp crowded five values between 0.238 and 0.32 and then jumped.
+     --------------------------------------------------------------------- */
+  --grey-0: oklch(0.155 0.004 60);   /* page */
+  --grey-25: oklch(0.182 0.005 60);
+  --grey-50: oklch(0.208 0.006 60);  /* card, raised surface */
+  --grey-100: oklch(0.24 0.006 60);
+  --grey-150: oklch(0.268 0.007 60); /* muted fill, popover */
+  --grey-200: oklch(0.315 0.008 60); /* chip, hover */
+  --grey-300: oklch(0.37 0.009 60);  /* hairline on a raised surface */
+  --grey-400: oklch(0.5 0.01 60);    /* disabled floor — 3.25:1 */
+  --grey-500: oklch(0.64 0.011 60);  /* 5.8:1  — tertiary */
+  --grey-600: oklch(0.73 0.012 60);  /* 8.1:1  — secondary, quiet buttons */
+  --grey-700: oklch(0.81 0.012 60);  /* 10.8:1 — body */
+  --grey-800: oklch(0.895 0.01 60);
+  --grey-900: oklch(0.97 0.008 60);  /* 17.9:1 — headings */
 
-  /* --- The one accent ----------------------------------------------------
-     ReUI's dark --sidebar-primary / --chart-1, which is the blue-violet their
-     own screenshots lead with.                                              */
-  --accent-50: oklch(0.269 0.06 264.376);
-  --accent-100: oklch(0.32 0.09 264.376);
-  --accent-200: oklch(0.38 0.13 264.376);
-  --accent-500: oklch(0.55 0.22 264.376);
-  --accent-600: oklch(0.488 0.243 264.376);
-  --accent-700: oklch(0.58 0.22 264.376);
+  /* --- The one accent: bone -----------------------------------------------
+     A filled action used to be a saturated blue-violet, which is the single
+     loudest thing on a dark screen and the cheapest-looking. The accent is
+     now a warm off-white: the button is the brightest object in the room and
+     needs no hue to earn that. Hue survives for meaning, not for chrome.
+     Hover goes LIGHTER, like every other surface here.                      */
+  --accent-50: oklch(0.24 0.012 83);
+  --accent-100: oklch(0.29 0.018 83);
+  --accent-200: oklch(0.36 0.024 83);
+  --accent-500: oklch(0.86 0.035 83);
+  --accent-600: oklch(0.91 0.03 83);   /* filled action — ink on it is 13.8:1 */
+  --accent-700: oklch(0.95 0.02 83);   /* hover */
+  --accent-ink: oklch(0.2 0.012 83);   /* text that sits on the two above */
+
+  /* --- Pigments -----------------------------------------------------------
+     Four hues, one meaning each, chroma capped at 0.135. Red is terracotta,
+     yellow is honey, green is sage, blue is wedgwood — earths and glazes
+     rather than the primaries, which at full chroma on black read as alert
+     boxes. Each is a triple: a fill for a chip, a foreground for text on it,
+     and a solid for the rare case where the colour itself is the button.    */
+  --danger: oklch(0.745 0.125 33);
+  --danger-bg: oklch(0.285 0.05 33);
+  --danger-solid: oklch(0.645 0.135 33);
+  --warning: oklch(0.835 0.105 78);
+  --warning-bg: oklch(0.3 0.042 78);
+  --warning-solid: oklch(0.79 0.115 78);
+  --success: oklch(0.8 0.075 148);
+  --success-bg: oklch(0.285 0.032 148);
+  --success-solid: oklch(0.7 0.09 148);
+  --info: oklch(0.79 0.065 245);
+  --info-bg: oklch(0.285 0.035 245);
+  --info-solid: oklch(0.7 0.08 245);
 
   /* --- Discipline (status badges) -----------------------------------------
      Colour says WHO HAS IT, not which of thirteen boxes it is in. Thirteen
      tints would be thirteen things to learn; six map onto the teams people
-     already think in. Built from ReUI's --chart-* series.                    */
-  --discipline-intake-bg: oklch(0.269 0 0);
-  --discipline-intake-fg: oklch(0.708 0 0);
-  --discipline-design-bg: oklch(0.28 0.06 303.9);
-  --discipline-design-fg: oklch(0.75 0.15 303.9);
-  --discipline-development-bg: oklch(0.269 0.05 264.376);
-  --discipline-development-fg: oklch(0.74 0.13 264.376);
-  --discipline-qa-bg: oklch(0.28 0.06 70.08);
-  --discipline-qa-fg: oklch(0.769 0.188 70.08);
-  --discipline-product-bg: oklch(0.27 0.05 184.704);
-  --discipline-product-fg: oklch(0.72 0.12 184.704);
-  --discipline-closed-bg: oklch(0.27 0.05 162.48);
-  --discipline-closed-fg: oklch(0.696 0.17 162.48);
+     already think in. Drawn from the pigments above so a board never shows a
+     hue that means nothing elsewhere.                                        */
+  --discipline-intake-bg: var(--grey-200);
+  --discipline-intake-fg: var(--grey-600);
+  --discipline-design-bg: oklch(0.29 0.035 340);   /* mauve */
+  --discipline-design-fg: oklch(0.79 0.075 340);
+  --discipline-development-bg: var(--info-bg);
+  --discipline-development-fg: var(--info);
+  --discipline-qa-bg: var(--warning-bg);
+  --discipline-qa-fg: var(--warning);
+  --discipline-product-bg: oklch(0.285 0.03 205);  /* verdigris */
+  --discipline-product-fg: oklch(0.795 0.06 205);
+  --discipline-closed-bg: var(--success-bg);
+  --discipline-closed-fg: var(--success);
 
-  /* --- Priority (badges only) --------------------------------------------- */
-  --priority-urgent-bg: oklch(0.28 0.07 22.216);
-  --priority-urgent-fg: oklch(0.704 0.191 22.216);
-  --priority-high-bg: oklch(0.28 0.06 70.08);
-  --priority-high-fg: oklch(0.769 0.188 70.08);
-  --priority-medium-bg: oklch(0.269 0 0);
-  --priority-medium-fg: oklch(0.708 0 0);
-  --priority-low-bg: oklch(0.205 0 0);
-  --priority-low-fg: oklch(0.556 0 0);
+  /* --- Priority: when we deal with it ------------------------------------- */
+  --priority-urgent-bg: var(--danger-bg);
+  --priority-urgent-fg: var(--danger);
+  --priority-high-bg: var(--warning-bg);
+  --priority-high-fg: var(--warning);
+  --priority-medium-bg: var(--grey-200);
+  --priority-medium-fg: var(--grey-600);
+  --priority-low-bg: var(--grey-100);
+  --priority-low-fg: var(--grey-500);
 
-  /* --- Feedback (ReUI's extended colours) --------------------------------- */
-  --danger: oklch(0.704 0.191 22.216);
-  --danger-bg: oklch(0.28 0.07 22.216);
-  --success: var(--color-emerald-500);
-  --info: var(--color-violet-500);
-  --warning: var(--color-yellow-500);
+  /* --- Severity: how bad it is -------------------------------------------
+     A different question from priority, so it must not borrow priority's
+     colours — s1 and "Urgent" used to be pixel-identical. Severity is a
+     neutral code; only s1 is allowed the danger hue.                        */
+  --severity-s1-bg: var(--danger-bg);
+  --severity-s1-fg: var(--danger);
+  --severity-s2-bg: var(--grey-200);
+  --severity-s2-fg: var(--grey-700);
+  --severity-s3-bg: var(--grey-100);
+  --severity-s3-fg: var(--grey-600);
+  --severity-s4-bg: var(--grey-100);
+  --severity-s4-fg: var(--grey-500);
+
+  /* --- Avatars ------------------------------------------------------------
+     Eight hues at 45° apart, one lightness pair, instead of sixteen loose
+     hex values answering to nothing.                                        */
+  --avatar-1-bg: oklch(0.3 0.035 25);   --avatar-1-fg: oklch(0.82 0.08 25);
+  --avatar-2-bg: oklch(0.3 0.035 70);   --avatar-2-fg: oklch(0.82 0.08 70);
+  --avatar-3-bg: oklch(0.3 0.035 115);  --avatar-3-fg: oklch(0.82 0.08 115);
+  --avatar-4-bg: oklch(0.3 0.035 160);  --avatar-4-fg: oklch(0.82 0.08 160);
+  --avatar-5-bg: oklch(0.3 0.035 205);  --avatar-5-fg: oklch(0.82 0.08 205);
+  --avatar-6-bg: oklch(0.3 0.035 250);  --avatar-6-fg: oklch(0.82 0.08 250);
+  --avatar-7-bg: oklch(0.3 0.035 295);  --avatar-7-fg: oklch(0.82 0.08 295);
+  --avatar-8-bg: oklch(0.3 0.035 340);  --avatar-8-fg: oklch(0.82 0.08 340);
 
   /* Native controls, scrollbars and form widgets follow the theme. */
   color-scheme: dark;
 
-  /* --- Semantic tokens: ReUI's `.dark` block, verbatim --------------------
-     Their components resolve everything through these, so this is what makes
-     the vendored markup look like theirs rather than like ours.              */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.269 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: var(--color-red-600);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.439 0 0);
-  --success-foreground: var(--color-emerald-600);
-  --info-foreground: var(--color-violet-600);
-  --warning-foreground: var(--color-yellow-600);
-  --invert: var(--color-zinc-700);
-  --invert-foreground: var(--color-zinc-50);
-  --surface: oklch(0.2 0 0);
-  --surface-foreground: oklch(0.708 0 0);
+  /* --- Semantic tokens ----------------------------------------------------
+     ReUI's components resolve everything through these names, so they are
+     kept exactly — but every value now points into the ramp above, which is
+     what makes the vendored markup and our own read as one palette.         */
+  --background: var(--grey-0);
+  --foreground: var(--grey-900);
+  --card: var(--grey-50);
+  --card-foreground: var(--grey-900);
+  --popover: var(--grey-150);
+  --popover-foreground: var(--grey-900);
+  --primary: var(--accent-600);
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--grey-150);
+  --secondary-foreground: var(--grey-900);
+  --muted: var(--grey-150);
+  --muted-foreground: var(--grey-600);
+  /* Note: `--accent` is shadcn's hover surface, which is neutral. It is NOT
+     the `--accent-*` ramp above; the collision is theirs, kept for compat.  */
+  --accent: var(--grey-200);
+  --accent-foreground: var(--grey-900);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-solid);
+  --border: oklch(0.9 0.01 60 / 11%);
+  --input: oklch(0.9 0.01 60 / 16%);
+  --ring: var(--accent-600);
+  --chart-1: var(--accent-500);
+  --chart-2: var(--info-solid);
+  --chart-3: var(--warning-solid);
+  --chart-4: var(--success-solid);
+  --chart-5: var(--danger-solid);
+  --sidebar: var(--grey-50);
+  --sidebar-foreground: var(--grey-900);
+  --sidebar-primary: var(--accent-600);
+  --sidebar-primary-foreground: var(--accent-ink);
+  --sidebar-accent: var(--grey-200);
+  --sidebar-accent-foreground: var(--grey-900);
+  --sidebar-border: oklch(0.9 0.01 60 / 11%);
+  --sidebar-ring: var(--grey-400);
+  --success-foreground: var(--success-solid);
+  --info-foreground: var(--info-solid);
+  --warning-foreground: var(--warning-solid);
+  --invert: var(--grey-300);
+  --invert-foreground: var(--grey-900);
+  --surface: var(--grey-50);
+  --surface-foreground: var(--grey-600);
   --code: var(--surface);
   --code-foreground: var(--surface-foreground);
-  --code-highlight: oklch(0.27 0 0);
-  --code-number: oklch(0.72 0 0);
-  --selection: oklch(0.922 0 0);
-  --selection-foreground: oklch(0.205 0 0);
+  --code-highlight: var(--grey-150);
+  --code-number: var(--grey-500);
+  --selection: var(--accent-600);
+  --selection-foreground: var(--accent-ink);
 
   /* --- One radius, theirs (0.625rem) -------------------------------------- */
   --radius: 0.625rem;
@@ -174,8 +226,8 @@
      Only surfaces that float over content use it, and only to say "your work
      is still underneath". The opacity floor keeps text legible; saturate
      stops the blur washing the colour out of what shows through.            */
-  --glass-bg: oklch(0.145 0 0 / 0.82);
-  --glass-bg-strong: oklch(0.145 0 0 / 0.9);
+  --glass-bg: oklch(0.155 0.004 60 / 0.82);
+  --glass-bg-strong: oklch(0.155 0.004 60 / 0.9);
   --glass-border: rgb(255 255 255 / 0.08);
   --glass-blur: saturate(160%) blur(20px);
 
@@ -256,6 +308,7 @@
   --color-accent-500: var(--accent-500);
   --color-accent-600: var(--accent-600);
   --color-accent-700: var(--accent-700);
+  --color-accent-ink: var(--accent-ink);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

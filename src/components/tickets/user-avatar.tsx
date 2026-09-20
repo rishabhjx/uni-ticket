@@ -4,17 +4,18 @@ import { cn } from "@/lib/utils";
 /**
  * Avatars carry a hue per person now. Eight people in one list are hard to
  * tell apart in greyscale, and an avatar is identity rather than status — so
- * this does not compete with the status and priority colours.
+ * this does not compete with the status and priority colours. The eight sit
+ * at 45° apart on one lightness pair, so no avatar is louder than another.
  */
 const paletteById: Record<string, string> = {
-  "u-1": "bg-[#2e2552] text-[#c3b1fb]",
-  "u-2": "bg-[#43222a] text-[#f6a3b2]",
-  "u-3": "bg-[#1b3527] text-[#8fd6ab]",
-  "u-4": "bg-[#3d2a17] text-[#f0b378]",
-  "u-5": "bg-[#16303f] text-[#8ecbec]",
-  "u-6": "bg-[#3a3016] text-[#e4c473]",
-  "u-7": "bg-[#272749] text-[#adadea]",
-  "u-8": "bg-[#3b1f35] text-[#eaa3d6]",
+  "u-1": "bg-[var(--avatar-1-bg)] text-[var(--avatar-1-fg)]",
+  "u-2": "bg-[var(--avatar-2-bg)] text-[var(--avatar-2-fg)]",
+  "u-3": "bg-[var(--avatar-3-bg)] text-[var(--avatar-3-fg)]",
+  "u-4": "bg-[var(--avatar-4-bg)] text-[var(--avatar-4-fg)]",
+  "u-5": "bg-[var(--avatar-5-bg)] text-[var(--avatar-5-fg)]",
+  "u-6": "bg-[var(--avatar-6-bg)] text-[var(--avatar-6-fg)]",
+  "u-7": "bg-[var(--avatar-7-bg)] text-[var(--avatar-7-fg)]",
+  "u-8": "bg-[var(--avatar-8-bg)] text-[var(--avatar-8-fg)]",
 };
 
 const fallback = "bg-grey-200 text-grey-700";

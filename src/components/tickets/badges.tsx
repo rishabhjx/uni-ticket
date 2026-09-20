@@ -70,6 +70,56 @@ const typeIcon: Record<TicketType, LucideIcon> = {
 const badgeBase =
   "inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-caption font-medium";
 
+/**
+ * The colour of a status or priority with none of the badge's chrome, for
+ * places that already print the name beside it - ReUI's filter chips draw the
+ * option's icon AND its label, so handing them a whole badge said "Backlog
+ * Backlog".
+ */
+export function StatusDot({ status }: { status: TicketStatus }) {
+  return (
+    <span
+      aria-hidden
+      className="size-2 shrink-0 rounded-full"
+      style={{ backgroundColor: `var(--status-${statusDotVar[status]}-fg)` }}
+    />
+  );
+}
+
+const statusDotVar: Record<TicketStatus, string> = {
+  backlog: "backlog",
+  todo: "todo",
+  in_progress: "progress",
+  in_review: "review",
+  resolved: "resolved",
+  done: "done",
+};
+
+export function PriorityDot({ priority }: { priority: TicketPriority }) {
+  const Icon = priorityIcon[priority];
+  return (
+    <Icon
+      className="size-3 shrink-0"
+      strokeWidth={2.25}
+      style={{ color: `var(--priority-${priority}-fg)` }}
+    />
+  );
+}
+
+export function SeverityDot({ severity }: { severity: TicketSeverity }) {
+  return (
+    <span
+      aria-hidden
+      className="tnum text-caption font-semibold"
+      style={{ color: severity === "s1" || severity === "s2"
+        ? "var(--priority-urgent-fg)"
+        : "var(--grey-500)" }}
+    >
+      {severity.toUpperCase()}
+    </span>
+  );
+}
+
 export function StatusBadge({
   status,
   className,

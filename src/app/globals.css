@@ -137,6 +137,19 @@
   --severity-s4-bg: var(--grey-100);
   --severity-s4-fg: var(--grey-500);
 
+  /* --- Disabled ------------------------------------------------------------
+     Its own pair. Disabled used to borrow the muted-text pair, which put
+     grey-400 text on a grey-200 fill: 1.9:1, unreadable.                    */
+  --disabled-bg: var(--grey-100);
+  --disabled-fg: var(--grey-500);
+
+  /* --- Selected ------------------------------------------------------------
+     A selected row and a hovered row used to be the same tint. Selection is
+     a state you leave behind, so it gets a fill AND a rule down the edge;
+     hover is transient and gets only the fill.                              */
+  --selected-bg: oklch(0.255 0.012 83);
+  --selected-edge: var(--accent-500);
+
   /* --- Avatars ------------------------------------------------------------
      Eight hues at 45° apart, one lightness pair, instead of sixteen loose
      hex values answering to nothing.                                        */
@@ -174,8 +187,11 @@
   --accent-foreground: var(--grey-900);
   --destructive: var(--danger);
   --destructive-foreground: var(--danger-solid);
-  --border: oklch(0.9 0.01 60 / 11%);
-  --input: oklch(0.9 0.01 60 / 16%);
+  /* Opaque, not a translucent white: a 10%-white hairline takes its colour
+     from whatever is behind it, so a border on the page and the same border
+     on a card were two different greys.                                     */
+  --border: oklch(0.275 0.008 60);
+  --input: oklch(0.335 0.009 60);
   --ring: var(--accent-600);
   --chart-1: var(--accent-500);
   --chart-2: var(--info-solid);
@@ -188,7 +204,7 @@
   --sidebar-primary-foreground: var(--accent-ink);
   --sidebar-accent: var(--grey-200);
   --sidebar-accent-foreground: var(--grey-900);
-  --sidebar-border: oklch(0.9 0.01 60 / 11%);
+  --sidebar-border: var(--border);
   --sidebar-ring: var(--grey-400);
   --success-foreground: var(--success-solid);
   --info-foreground: var(--info-solid);
@@ -236,6 +252,105 @@
     0 2px 8px -2px rgb(0 0 0 / 0.5);
   --shadow-drag: 0 16px 32px -10px rgb(0 0 0 / 0.75);
 }
+
+/* ============================================================================
+   Light theme
+   Not an inversion — a re-grade. The same warm hues, re-lit: the page becomes
+   warm paper rather than white, the greys keep hue 85 so nothing goes blue,
+   and the pigments go DARKER rather than lighter, because on paper a colour
+   earns attention by being deeper than its surroundings, not brighter.
+   The primary action flips with it: bone on ink in the dark, ink on bone
+   here. `bg-accent-600 text-grey-0` is correct in both, because both tokens
+   swap. Applied by `html.light`; dark is the default so an unset preference
+   never flashes.
+   ========================================================================= */
+html.light {
+  color-scheme: light;
+
+  --grey-0: oklch(0.985 0.005 85);   /* paper */
+  --grey-25: oklch(0.972 0.005 85);
+  --grey-50: oklch(0.955 0.006 85);  /* raised surface, muted fill */
+  --grey-100: oklch(0.935 0.007 85);
+  --grey-150: oklch(0.915 0.008 85);
+  --grey-200: oklch(0.885 0.009 85); /* chip, hover */
+  --grey-300: oklch(0.84 0.01 85);   /* hairline */
+  --grey-400: oklch(0.655 0.012 85); /* disabled floor — 3.05:1 */
+  --grey-500: oklch(0.535 0.014 85); /* 4.95:1 — tertiary */
+  --grey-600: oklch(0.5 0.014 85);   /* 7.2:1  — secondary */
+  --grey-700: oklch(0.4 0.014 85);   /* 10.6:1 — body */
+  --grey-800: oklch(0.29 0.012 85);
+  --grey-900: oklch(0.19 0.01 85);   /* 16.9:1 — headings */
+
+  /* Ink, the light-mode twin of bone: the filled action is still the
+     highest-contrast object on the screen, it is just the dark one now.     */
+  --accent-50: oklch(0.945 0.012 83);
+  --accent-100: oklch(0.9 0.018 83);
+  --accent-200: oklch(0.85 0.026 83);
+  --accent-500: oklch(0.42 0.022 60);
+  --accent-600: oklch(0.29 0.02 60);
+  --accent-700: oklch(0.22 0.018 60);
+  --accent-ink: oklch(0.975 0.008 85);
+
+  /* Pigments, re-lit. Same hues; depth carries the signal instead of glow. */
+  --danger: oklch(0.52 0.15 33);
+  --danger-bg: oklch(0.935 0.035 33);
+  --danger-solid: oklch(0.56 0.155 33);
+  --warning: oklch(0.52 0.105 70);
+  --warning-bg: oklch(0.945 0.045 82);
+  --warning-solid: oklch(0.72 0.13 80);
+  --success: oklch(0.47 0.09 148);
+  --success-bg: oklch(0.935 0.04 148);
+  --success-solid: oklch(0.55 0.1 148);
+  --info: oklch(0.48 0.09 245);
+  --info-bg: oklch(0.935 0.035 245);
+  --info-solid: oklch(0.55 0.1 245);
+
+  --discipline-intake-bg: var(--grey-150);
+  --discipline-intake-fg: var(--grey-600);
+  --discipline-design-bg: oklch(0.94 0.03 340);
+  --discipline-design-fg: oklch(0.5 0.1 340);
+  --discipline-product-bg: oklch(0.935 0.03 205);
+  --discipline-product-fg: oklch(0.47 0.075 205);
+
+  --priority-medium-bg: var(--grey-150);
+  --priority-medium-fg: var(--grey-600);
+  --priority-low-bg: var(--grey-100);
+  --priority-low-fg: var(--grey-500);
+
+  --severity-s2-bg: var(--grey-150);
+  --severity-s2-fg: var(--grey-700);
+  --severity-s3-bg: var(--grey-100);
+  --severity-s3-fg: var(--grey-600);
+  --severity-s4-bg: var(--grey-100);
+  --severity-s4-fg: var(--grey-500);
+
+  --disabled-bg: var(--grey-150);
+  --disabled-fg: var(--grey-500);
+  --selected-bg: oklch(0.945 0.022 83);
+  --selected-edge: var(--accent-500);
+
+  --avatar-1-bg: oklch(0.925 0.04 25);   --avatar-1-fg: oklch(0.45 0.1 25);
+  --avatar-2-bg: oklch(0.925 0.04 70);   --avatar-2-fg: oklch(0.45 0.1 70);
+  --avatar-3-bg: oklch(0.925 0.04 115);  --avatar-3-fg: oklch(0.45 0.1 115);
+  --avatar-4-bg: oklch(0.925 0.04 160);  --avatar-4-fg: oklch(0.45 0.1 160);
+  --avatar-5-bg: oklch(0.925 0.04 205);  --avatar-5-fg: oklch(0.45 0.1 205);
+  --avatar-6-bg: oklch(0.925 0.04 250);  --avatar-6-fg: oklch(0.45 0.1 250);
+  --avatar-7-bg: oklch(0.925 0.04 295);  --avatar-7-fg: oklch(0.45 0.1 295);
+  --avatar-8-bg: oklch(0.925 0.04 340);  --avatar-8-fg: oklch(0.45 0.1 340);
+
+  --border: oklch(0.885 0.008 85);
+  --input: oklch(0.83 0.009 85);
+
+  --glass-bg: oklch(0.985 0.005 85 / 0.82);
+  --glass-bg-strong: oklch(0.985 0.005 85 / 0.92);
+  --glass-border: oklch(0.19 0.01 85 / 0.08);
+
+  /* On paper a shadow is contact, not depth: shorter, tighter, far weaker. */
+  --shadow-overlay:
+    0 8px 24px -10px oklch(0.19 0.01 85 / 0.18),
+    0 2px 6px -2px oklch(0.19 0.01 85 / 0.1);
+}
+
 
 @theme inline {
   /* Type — one family, everywhere */

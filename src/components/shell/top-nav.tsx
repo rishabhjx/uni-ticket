@@ -28,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { useShell } from "@/hooks/use-shell";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
@@ -151,6 +152,8 @@ export function TopNav() {
       ) : null}
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
+        <ThemeToggle />
+
         <button
           type="button"
           onClick={openPalette}

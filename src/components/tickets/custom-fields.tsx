@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getProject, type CustomField, type Ticket } from "@/lib/mock";
+import { useProjectFields } from "@/lib/store/added-fields";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
@@ -133,7 +134,8 @@ export function CustomFields({
   canEdit: boolean;
 }) {
   const { updateTicket } = useTicketStore();
-  const fields = getProject(ticket.projectId)?.customFields ?? [];
+  const project = getProject(ticket.projectId);
+  const fields = useProjectFields(ticket.projectId);
 
   if (fields.length === 0) return null;
 
@@ -145,7 +147,7 @@ export function CustomFields({
   return (
     <div className="flex flex-col gap-1.5">
       <h3 className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
-        {getProject(ticket.projectId)?.name} fields
+        {project?.name} fields
       </h3>
 
       {fields.map((field) => {

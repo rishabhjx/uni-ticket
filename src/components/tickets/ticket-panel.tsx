@@ -313,8 +313,12 @@ export function TicketPanel() {
                     </p>
                   )}
                 </InlineEdit>
-              ) : (
+              ) : ticket.description ? (
                 <Description text={ticket.description} />
+              ) : (
+                <p className="text-small text-grey-500">
+                  No description. {project?.name} can add one.
+                </p>
               )}
             </div>
 
@@ -340,6 +344,18 @@ export function TicketPanel() {
                 <span className="tnum text-small text-grey-500">
                   {commentCount === 1 ? "1 comment" : `${commentCount} comments`}
                 </span>
+
+                {/*
+                  A call could be started from a project or a ticket header,
+                  but not from the thread -- which is the one place the words
+                  "let's just talk about this" actually get typed.
+                */}
+                <CallButton
+                  subject={`${ticket.key} · ${ticket.title}`}
+                  participantIds={[
+                    ...new Set([ticket.reporterId, ...ticket.assigneeIds]),
+                  ]}
+                />
 
                 <div className="ml-auto flex items-center gap-0.5 rounded-md bg-grey-100 p-0.5">
                   <button

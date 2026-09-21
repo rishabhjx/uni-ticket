@@ -9,6 +9,7 @@ import {
   workspaces as seedWorkspaces,
   tickets as seedTickets,
   getProject,
+  registerProject,
   getUser,
   STATUS_DISCIPLINE,
   CURRENT_USER_ID,
@@ -216,6 +217,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
     ...seedProjects,
     ...loadCreatedProjects(),
   ]);
+
   const [tickets, setTickets] = React.useState<Ticket[]>(seedTickets);
   const [comments, setComments] = React.useState<Comment[]>(seedComments);
   const [events, setEvents] = React.useState<TicketEvent[]>(seedEvents);
@@ -656,6 +658,8 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       ),
       startedOn: new Date().toISOString(),
     };
+
+    registerProject(project);
 
     setProjects((current) => {
       const next = [...current, project];

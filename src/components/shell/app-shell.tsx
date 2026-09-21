@@ -53,6 +53,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <TooltipProvider delayDuration={300}>
         <div className="group/shell relative flex h-full overflow-hidden">
           {/*
+            A keyboard user had to walk the entire rail and top bar on every
+            page before reaching the thing they came for. Visible only when
+            focused, which is the whole point of it.
+          */}
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:flex focus:h-8 focus:items-center focus:rounded-md focus:bg-accent-600 focus:px-3 focus:text-small focus:font-medium focus:text-grey-0"
+          >
+            Skip to content
+          </a>
+          {/*
             The rail stays: it is the unified workspace's own switcher between
             its apps, and this app is one of them. The section sidebar is gone
             — see TopNav for why a second permanent column was the wrong shape
@@ -61,7 +72,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <AppRail />
           <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
             <TopNav />
-            <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+            <main
+              id="main"
+              tabIndex={-1}
+              className="relative flex min-h-0 flex-1 flex-col overflow-hidden"
+            >
               {children}
               <TicketPanel />
               <MediaViewer />

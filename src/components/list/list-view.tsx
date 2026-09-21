@@ -8,6 +8,7 @@ import { FilterBar } from "@/components/list/filter-bar";
 import { ProjectActions } from "@/components/projects/project-actions";
 import { TicketTable, type ColumnId } from "@/components/list/ticket-table";
 import { FilterBarSkeleton, RowsSkeleton } from "@/components/shared/skeletons";
+import { useProjectFields } from "@/lib/store/added-fields";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { applyFilters, useViewState } from "@/lib/store/view-state";
@@ -39,6 +40,7 @@ export function ListView({
   const { tickets: allTickets, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
   const { filters, selection, setSelection, clearFilters } = useViewState();
+  const projectFields = useProjectFields(project?.id);
 
   const [visibleColumns, setVisibleColumns] = React.useState<Set<ColumnId>>(
     () =>
@@ -163,7 +165,7 @@ export function ListView({
       <TicketTable
         tickets={filtered}
         visibleColumns={visibleColumns}
-        customFields={project?.customFields}
+        customFields={projectFields}
         onOpenTicket={openTicket}
         empty={
           scoped.length === 0 ? (

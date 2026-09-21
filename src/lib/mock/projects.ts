@@ -151,6 +151,18 @@ export function canAdminister(project: Project | undefined, userId: string) {
 export const projectsById = new Map(projects.map((project) => [project.id, project]));
 export const projectsBySlug = new Map(projects.map((project) => [project.slug, project]));
 
+/**
+ * The lookup maps are module state, and the store's project list is React
+ * state, so anything the store changes -- a project created in the app, a
+ * field added to an existing one -- was invisible to every `getProject` call
+ * in the product. This keeps the two in step. A mock's maps are the database;
+ * writing to them is the prototype's version of a write.
+ */
+export function registerProject(project: Project) {
+  projectsById.set(project.id, project);
+  projectsBySlug.set(project.slug, project);
+}
+
 export function getProject(id: string) {
   return projectsById.get(id);
 }

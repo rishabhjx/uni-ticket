@@ -11,6 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCelebrate } from "@/components/shared/celebrate";
 import { useViewState } from "@/lib/store/view-state";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,8 @@ import { cn } from "@/lib/utils";
  */
 export function SavedViews() {
   const pathname = usePathname();
-  const { savedViews, removeSavedView } = useViewState();
+  const { savedViews, removeSavedView, restoreSavedView } = useViewState();
+  const celebrate = useCelebrate();
   const mine = savedViews.filter((view) => view.path === pathname);
 
   if (mine.length === 0) return null;
@@ -59,6 +61,12 @@ export function SavedViews() {
                   event.preventDefault();
                   event.stopPropagation();
                   removeSavedView(view.id);
+                  // Deleting a view was silent and final. It is a named thing
+                  // somebody built, so it gets the same undo everything else
+                  // that destroys work gets.
+                  celebrate("🗑", `Deleted "${view.name}"`, () =>
+                    restoreSavedView(view),
+                  );
                 }}
                 className="shrink-0 text-grey-400 transition-colors hover:text-[color:var(--danger)]"
               >

@@ -487,7 +487,19 @@ export function FilterBar({
           </TooltipContent>
         </Tooltip>
 
-        <span className="tnum text-small text-grey-500">
+        {/*
+          Filtering changed what was on screen with nothing announced: a
+          screen reader user set a condition and got silence. This is the one
+          element that already states the outcome, so it becomes the live
+          region rather than adding a second, invisible one that could drift
+          out of step with it.
+        */}
+        <span
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="tnum text-small text-grey-500"
+        >
           {resultCount === totalCount
             ? `${totalCount} tickets`
             : `${resultCount} of ${totalCount}`}

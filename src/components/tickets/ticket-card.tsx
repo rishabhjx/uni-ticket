@@ -26,6 +26,7 @@ import {
   type CustomField,
   type Ticket,
 } from "@/lib/mock";
+import { useProjectFields } from "@/lib/store/added-fields";
 import { cn } from "@/lib/utils";
 
 export function TicketCard({
@@ -38,8 +39,8 @@ export function TicketCard({
   onOpen?: (ticketId: string) => void;
   showStatus?: boolean;
 }) {
+  const fields = useProjectFields(ticket.projectId);
   const cardFields = React.useMemo(() => {
-    const fields = getProject(ticket.projectId)?.customFields ?? [];
     return fields
       .filter((field) => field.showOnCard)
       .map((field) => ({
@@ -49,7 +50,7 @@ export function TicketCard({
       .filter((entry): entry is { field: CustomField; text: string } =>
         Boolean(entry.text),
       );
-  }, [ticket.projectId, ticket.custom]);
+  }, [fields, ticket.custom]);
 
   const overdue = isOverdue(ticket);
   const breached = isSlaBreached(ticket);

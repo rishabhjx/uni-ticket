@@ -110,14 +110,21 @@ export function AvatarStack({
       ))}
       {rest.length > 0 ? (
         <span
+          // `title` alone is read inconsistently, and "+2" on its own tells a
+          // screen reader nothing. The names go in the accessible name; the
+          // "+2" glyph is then decoration.
           title={rest.map((id) => getUser(id)?.name ?? id).join(", ")}
+          role="img"
+          aria-label={`and ${rest.length} more: ${rest
+            .map((id) => getUser(id)?.name ?? id)
+            .join(", ")}`}
           className={cn(
             "inline-flex items-center justify-center rounded-full bg-grey-200 font-semibold text-grey-600 ring-1 ring-grey-0",
             sizeClass[size],
             size === "lg" ? "-ml-2" : "-ml-1.5",
           )}
         >
-          +{rest.length}
+          <span aria-hidden>+{rest.length}</span>
         </span>
       ) : null}
     </span>

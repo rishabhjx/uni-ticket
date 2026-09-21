@@ -28,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ShortcutHint } from "@/components/shell/shortcut-hint";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { useShell } from "@/hooks/use-shell";
 import { useTicketStore } from "@/lib/store/ticket-store";
@@ -152,6 +153,7 @@ export function TopNav() {
       ) : null}
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
+        <ShortcutHint />
         <ThemeToggle />
 
         <button

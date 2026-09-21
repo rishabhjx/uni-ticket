@@ -7,6 +7,7 @@ import { PriorityBadge, SeverityBadge, TypeIcon } from "@/components/tickets/bad
 import { AssigneePicker } from "@/components/tickets/assignee-picker";
 import { kindOf } from "@/components/tickets/comment-composer";
 import { CustomFieldControl } from "@/components/tickets/custom-fields";
+import { useProjectFields } from "@/lib/store/added-fields";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   Dialog,
@@ -155,6 +156,7 @@ export function CreateTicketDialog({
   }
 
   const project = getProject(projectId);
+  const projectFields = useProjectFields(projectId);
   const defect = isDefect(type);
   const service = project?.kind === "service";
 
@@ -561,7 +563,7 @@ export function CreateTicketDialog({
               </div>
             </Row>
 
-            {(project?.customFields ?? []).length > 0 ? (
+            {projectFields.length > 0 ? (
               <>
                 <p className="mt-1 text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
                   {project?.name} fields
@@ -570,7 +572,7 @@ export function CreateTicketDialog({
                     existed, which is the one moment you know least about it.
                     Same control as the panel, so the field behaves the same
                     in both places. */}
-                {(project?.customFields ?? []).map((field) => (
+                {projectFields.map((field) => (
                   <Row key={field.id} label={field.name}>
                     <CustomFieldControl
                       field={field}

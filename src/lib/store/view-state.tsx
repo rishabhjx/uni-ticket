@@ -88,11 +88,64 @@ const queryKey: Record<string, string> = {
  * encoding: a tree with groups and negation has no readable flat form, and a
  * shareable link matters more than a pretty one.
  */
+/**
+ * The short keys are how the rest of the product LINKS to a filtered view --
+ * "Overdue 5" on Overview is `/my-work?overdue=1`. They were declared and
+ * never read, so every one of those links landed on an unfiltered page: the
+ * alarm had no handle, and worse, it looked like it did. They are also what
+ * keeps links shared before the tree format existed working.
+ */
+function queryFromShortKeys(params: URLSearchParams): FilterQuery<unknown> {
+  const rules: FilterQuery<unknown>["rules"] = [];
+
+  const list: [string, string][] = [
+    ["status", "status"],
+    ["assignee", "assignee"],
+    ["priority", "priority"],
+    ["severity", "severity"],
+    ["type", "type"],
+    ["label", "label"],
+    ["env", "env"],
+    ["project", "project"],
+  ];
+
+  for (const [key, field] of list) {
+    const raw = params.get(key);
+    if (!raw) continue;
+    const values = raw.split(",").filter(Boolean);
+    if (values.length === 0) continue;
+    rules.push({
+      id: `short-${key}`,
+      type: "rule",
+      path: [field],
+      operator: values.length === 1 ? "is" : "is_any_of",
+      value: values.length === 1 ? values[0] : values,
+    });
+  }
+
+  for (const [key, field] of [
+    ["overdue", "overdue"],
+    ["stale", "stale"],
+    ["breached", "breached"],
+  ] as const) {
+    if (params.get(key) !== "1") continue;
+    rules.push({
+      id: `short-${key}`,
+      type: "rule",
+      path: [field],
+      operator: "is",
+      value: true,
+    });
+  }
+
+  return rules.length === 0 ? emptyQuery : { ...emptyQuery, rules };
+}
+
 export function filtersFromParams(params: URLSearchParams): TicketFilters {
   const search = params.get("q") ?? "";
   const raw = params.get("where");
 
-  if (!raw) return { search, query: emptyQuery };
+  if (!raw) return { search, query: queryFromShortKeys(params) };
 
   try {
     const parsed = JSON.parse(decodeURIComponent(raw)) as FilterQuery<unknown>;
@@ -103,7 +156,7 @@ export function filtersFromParams(params: URLSearchParams): TicketFilters {
   } catch {
     // Someone edited the URL by hand, or an old link predates this format.
   }
-  return { search, query: emptyQuery };
+  return { search, query: queryFromShortKeys(params) };
 }
 
 export function filtersToParams(filters: TicketFilters) {
@@ -151,6 +204,8 @@ type ViewStateValue = {
   savedViews: SavedView[];
   saveCurrentView: (name: string) => void;
   removeSavedView: (id: string) => void;
+  /** Puts a deleted view back exactly as it was, for undo. */
+  restoreSavedView: (view: SavedView) => void;
   selection: string[];
   toggleSelected: (ticketId: string) => void;
   setSelection: (ids: string[]) => void;
@@ -276,6 +331,16 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
     [savedViews, persistViews, pathname, params, groupBy, density],
   );
 
+  const restoreSavedView = React.useCallback(
+    (view: SavedView) =>
+      persistViews(
+        savedViews.some((item) => item.id === view.id)
+          ? savedViews
+          : [...savedViews, view],
+      ),
+    [savedViews, persistViews],
+  );
+
   const removeSavedView = React.useCallback(
     (id: string) => persistViews(savedViews.filter((view) => view.id !== id)),
     [savedViews, persistViews],
@@ -306,6 +371,7 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
       savedViews,
       saveCurrentView,
       removeSavedView,
+      restoreSavedView,
       selection,
       toggleSelected,
       setSelection,
@@ -322,6 +388,7 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
       savedViews,
       saveCurrentView,
       removeSavedView,
+      restoreSavedView,
       selection,
       toggleSelected,
       clearSelection,

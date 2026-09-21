@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { Download, Loader2 } from "lucide-react";
 
+import { AddFieldPopover } from "@/components/projects/add-field-popover";
 import { CallButton } from "@/components/shared/call-button";
 import { useCelebrate } from "@/components/shared/celebrate";
 import { downloadCsv, ticketsToCsv } from "@/lib/export-csv";
@@ -48,6 +49,7 @@ export function ProjectActions({
         subject={project.name}
         participantIds={project.memberIds}
       />
+      <AddFieldPopover project={project} />
       <button
         type="button"
         onClick={exportCsv}

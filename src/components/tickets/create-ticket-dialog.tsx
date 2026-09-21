@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 
 import { PriorityBadge, SeverityBadge, TypeIcon } from "@/components/tickets/badges";
 import { AssigneePicker } from "@/components/tickets/assignee-picker";
+import { kindOf } from "@/components/tickets/comment-composer";
+import { CustomFieldControl } from "@/components/tickets/custom-fields";
+import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   Dialog,
   DialogContent,
@@ -23,22 +26,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  CURRENT_USER_ID,
   DISCIPLINE_LABEL,
   DISCIPLINES,
   ENVIRONMENT_LABEL,
   ENVIRONMENTS,
+  canEdit as canEditProject,
   getProject,
   getProjectBySlug,
+  getUser,
   isDefect,
   labels,
   sprintsForProject,
   SEVERITY_LABEL,
+  STATUS_DISCIPLINE,
   STATUS_LABEL,
   statusesForDiscipline,
   TICKET_PRIORITIES,
   TICKET_SEVERITIES,
   TICKET_TYPES,
   TYPE_LABEL,
+  users,
+  type Attachment,
   type Environment,
   type TicketPriority,
   type TicketSeverity,
@@ -47,7 +56,10 @@ import {
 } from "@/lib/mock";
 import { TEMPLATES } from "@/lib/mock/templates";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
-import { useTicketStore } from "@/lib/store/ticket-store";
+import {
+  useTicketStore,
+  type NewTicketInput,
+} from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
 const LAST_TYPE_KEY = "uni.lastTicketType";
@@ -55,9 +67,20 @@ const LAST_TYPE_KEY = "uni.lastTicketType";
 const fieldClass =
   "h-8 w-full rounded-md border border-grey-200 px-2.5 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none";
 
+function Section({ title }: { title: string }) {
+  return (
+    <div className="mt-2 flex shrink-0 items-center gap-2 first:mt-0">
+      <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
+        {title}
+      </span>
+      <span aria-hidden className="h-px flex-1 bg-grey-150" />
+    </div>
+  );
+}
+
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="grid grid-cols-[92px_1fr] items-center gap-3">
+    <label className="grid shrink-0 grid-cols-[100px_1fr] items-center gap-3">
       <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
         {label}
       </span>
@@ -109,6 +132,17 @@ export function CreateTicketDialog({
   const [dueAt, setDueAt] = React.useState("");
   const [sprintId, setSprintId] = React.useState("none");
   const [parentId, setParentId] = React.useState("none");
+  const [estimate, setEstimate] = React.useState("");
+  const [requesterId, setRequesterId] = React.useState("none");
+  const [custom, setCustom] = React.useState<Record<string, unknown>>({});
+  const [files, setFiles] = React.useState<Omit<Attachment, "id">[]>([]);
+  /*
+   * Until someone picks a person themselves, the assignee follows the status:
+   * a ticket created straight into Ready for QA belongs to whoever owns QA on
+   * this project, which is the same rule routing applies once it exists. The
+   * flag is what stops that default overwriting a deliberate choice.
+   */
+  const [assigneeTouched, setAssigneeTouched] = React.useState(false);
   // Tracks whether the body is still an untouched template, so switching type
   // can swap it without destroying anything typed.
   const [templateType, setTemplateType] = React.useState<TicketType | null>(null);
@@ -122,6 +156,14 @@ export function CreateTicketDialog({
 
   const project = getProject(projectId);
   const defect = isDefect(type);
+  const service = project?.kind === "service";
+
+  const stageOwner = project?.team?.[STATUS_DISCIPLINE[status]] ?? null;
+  const [lastDefault, setLastDefault] = React.useState<string | null>(null);
+  if (!assigneeTouched && stageOwner !== lastDefault) {
+    setLastDefault(stageOwner);
+    setAssigneeIds(stageOwner ? [stageOwner] : []);
+  }
   const cycles = sprintsForProject(projectId);
   const epics = React.useMemo(
     () =>
@@ -152,6 +194,11 @@ export function CreateTicketDialog({
     setLabelIds([]);
     setDueAt("");
     setBuildVersion("");
+    setEstimate("");
+    setRequesterId("none");
+    setCustom({});
+    setFiles([]);
+    setAssigneeTouched(false);
   };
 
   const submit = (event: React.FormEvent) => {
@@ -168,12 +215,15 @@ export function CreateTicketDialog({
       status,
       assigneeIds,
       labelIds,
-      estimate: null,
+      estimate: estimate.trim() === "" ? null : Number(estimate),
       dueAt: dueAt ? new Date(`${dueAt}T17:00:00`).toISOString() : null,
       environment: defect ? environment : null,
       buildVersion: defect && buildVersion.trim() ? buildVersion.trim() : null,
       sprintId: sprintId === "none" ? null : sprintId,
       parentId: parentId === "none" ? null : parentId,
+      requesterId: service && requesterId !== "none" ? requesterId : null,
+      custom: custom as NewTicketInput["custom"],
+      attachments: files,
     });
 
     reset();
@@ -196,14 +246,15 @@ export function CreateTicketDialog({
         </DialogHeader>
 
         <form onSubmit={submit}>
-          <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto px-5 py-4">
+          <div className="flex max-h-[64vh] flex-col gap-3 overflow-y-auto px-5 py-4">
             <input
               autoFocus
+              data-form-title
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Short, specific summary"
               aria-label="Title"
-              className={cn(fieldClass, "h-9 text-heading font-medium")}
+              className={cn(fieldClass, "h-9 shrink-0 text-heading font-medium")}
             />
 
             <textarea
@@ -219,8 +270,10 @@ export function CreateTicketDialog({
                   : "Context, scope and anything the next person needs."
               }
               aria-label="Description"
-              className="w-full resize-none rounded-md border border-grey-200 px-2.5 py-2 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
+              className="w-full shrink-0 resize-none rounded-md border border-grey-200 px-2.5 py-2 text-small text-grey-900 transition-colors placeholder:text-grey-500 hover:border-grey-300 focus:border-accent-600 focus:outline-none"
             />
+
+            <Section title="Where it goes" />
 
             <Row label="Project">
               <Select value={projectId} onValueChange={setProjectId}>
@@ -236,6 +289,19 @@ export function CreateTicketDialog({
                 </SelectContent>
               </Select>
             </Row>
+
+            {project && !canEditProject(project, CURRENT_USER_ID) ? (
+              /*
+               * You can raise a request in a project you only have viewer
+               * access to -- that is what a service desk is for -- but the
+               * ticket arrives read-only, and finding that out AFTER filing
+               * it is the kind of surprise that makes people distrust a tool.
+               */
+              <p className="-mt-1 pl-[112px] text-caption text-grey-500">
+                You are a viewer in {project.name}: you can raise this, and the{" "}
+                {project.name} team will own it from there.
+              </p>
+            ) : null}
 
             <Row label="Type">
               <Select value={type} onValueChange={(value) => chooseType(value as TicketType)}>
@@ -254,6 +320,8 @@ export function CreateTicketDialog({
                 </SelectContent>
               </Select>
             </Row>
+
+            <Section title="Triage" />
 
             <Row label="Status">
               <Select
@@ -346,13 +414,74 @@ export function CreateTicketDialog({
               </>
             ) : null}
 
+            <Section title="Who has it" />
+
             <Row label="Assignees">
-              <AssigneePicker
-                value={assigneeIds}
-                memberIds={project?.memberIds ?? []}
-                onChange={setAssigneeIds}
-                className="h-8 rounded-md border border-grey-200"
-              />
+              <div className="flex flex-col gap-1">
+                <AssigneePicker
+                  value={assigneeIds}
+                  memberIds={project?.memberIds ?? []}
+                  team={project?.team}
+                  onChange={(next) => {
+                    setAssigneeTouched(true);
+                    setAssigneeIds(next);
+                  }}
+                  className="h-8 rounded-md border border-grey-200"
+                />
+                {!assigneeTouched && stageOwner ? (
+                  <span className="px-1 text-caption text-grey-500">
+                    Following {DISCIPLINE_LABEL[STATUS_DISCIPLINE[status]]} —
+                    change the status and this follows it.
+                  </span>
+                ) : null}
+              </div>
+            </Row>
+
+            {service ? (
+              <Row label="Requester">
+                <Select value={requesterId} onValueChange={setRequesterId}>
+                  <SelectTrigger className="h-8 text-small">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nobody outside the team</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name} · {user.role}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Row>
+            ) : null}
+
+            <Row label="Reporter">
+              {/* Not editable: you are the reporter of what you file, and a
+                  field that only ever holds one value should say so rather
+                  than pretend to be a choice. */}
+              <span className="flex h-8 items-center gap-2 px-1 text-small text-grey-700">
+                <UserAvatar userId={CURRENT_USER_ID} />
+                {getUser(CURRENT_USER_ID)?.name} · you
+              </span>
+            </Row>
+
+            <Section title="Planning" />
+
+            <Row label="Estimate">
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  max={99}
+                  step={1}
+                  value={estimate}
+                  onChange={(event) => setEstimate(event.target.value)}
+                  placeholder="—"
+                  aria-label="Estimate in points"
+                  className={cn(fieldClass, "w-24")}
+                />
+                <span className="text-caption text-grey-500">points</span>
+              </div>
             </Row>
 
             {cycles.length > 0 ? (
@@ -401,6 +530,8 @@ export function CreateTicketDialog({
               />
             </Row>
 
+            <Section title="Everything else" />
+
             <Row label="Labels">
               <div className="flex flex-wrap gap-1">
                 {labels.map((label) => {
@@ -427,6 +558,80 @@ export function CreateTicketDialog({
                     </button>
                   );
                 })}
+              </div>
+            </Row>
+
+            {(project?.customFields ?? []).length > 0 ? (
+              <>
+                <p className="mt-1 text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
+                  {project?.name} fields
+                </p>
+                {/* A project's own fields were only settable AFTER the ticket
+                    existed, which is the one moment you know least about it.
+                    Same control as the panel, so the field behaves the same
+                    in both places. */}
+                {(project?.customFields ?? []).map((field) => (
+                  <Row key={field.id} label={field.name}>
+                    <CustomFieldControl
+                      field={field}
+                      value={custom[field.id] ?? null}
+                      onChange={(next) =>
+                        setCustom((current) => ({ ...current, [field.id]: next }))
+                      }
+                      className="h-8 border border-grey-200 px-2.5 hover:bg-transparent"
+                    />
+                  </Row>
+                ))}
+              </>
+            ) : null}
+
+            <Row label="Attachments">
+              <div className="flex flex-col gap-1.5">
+                <input
+                  type="file"
+                  multiple
+                  aria-label="Attach files"
+                  onChange={(event) => {
+                    const picked = Array.from(event.target.files ?? []).map(
+                      (file) => ({
+                        name: file.name,
+                        size: file.size,
+                        kind: kindOf(file),
+                        url: file.type.startsWith("image/")
+                          ? URL.createObjectURL(file)
+                          : undefined,
+                      }),
+                    );
+                    setFiles((current) => [...current, ...picked]);
+                    event.target.value = "";
+                  }}
+                  className="text-caption text-grey-600 file:mr-2 file:h-7 file:rounded-md file:border file:border-grey-200 file:bg-transparent file:px-2 file:text-caption file:text-grey-700 hover:file:border-grey-300"
+                />
+                {files.length > 0 ? (
+                  <ul className="flex flex-wrap gap-1">
+                    {files.map((file, index) => (
+                      <li key={`${file.name}-${index}`}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFiles((current) =>
+                              current.filter((_, i) => i !== index),
+                            )
+                          }
+                          title={`Remove ${file.name}`}
+                          className="tap flex items-center gap-1 rounded-md bg-grey-100 px-1.5 py-0.5 text-caption text-grey-700 transition-colors hover:bg-grey-200"
+                        >
+                          <span className="max-w-[160px] truncate">
+                            {file.name}
+                          </span>
+                          <span aria-hidden className="text-grey-500">
+                            ×
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             </Row>
           </div>

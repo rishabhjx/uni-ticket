@@ -160,6 +160,7 @@ export function TicketFields({
           <AssigneePicker
             value={ticket.assigneeIds}
             memberIds={project?.memberIds ?? []}
+            team={project?.team}
             onChange={(next) => updateTicket(ticket.id, { assigneeIds: next })}
           />
         )}

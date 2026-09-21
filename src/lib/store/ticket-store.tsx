@@ -16,6 +16,7 @@ import {
   type Ticket,
   type TicketEvent,
   type Attachment,
+  type CustomFieldValue,
   type LinkType,
   type Project,
   type Workspace,
@@ -40,6 +41,11 @@ export type NewTicketInput = {
   buildVersion: string | null;
   parentId: string | null;
   sprintId: string | null;
+  /** Service desk only -- the person who asked, who is not on the team. */
+  requesterId: string | null;
+  /** Values for the project's own fields, keyed by field id. */
+  custom: Record<string, CustomFieldValue>;
+  attachments: Omit<Attachment, "id">[];
 };
 
 /**
@@ -585,9 +591,26 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
         severity: input.severity,
         environment: input.environment,
         buildVersion: input.buildVersion,
-        requesterId: null,
-        slaDueAt: null,
-        attachments: [],
+        requesterId: input.requesterId,
+        /*
+         * A service-desk ticket without a clock is not a service-desk ticket:
+         * the whole Helpdesk view is built on SLA, and one created through the
+         * form used to arrive with slaDueAt null and quietly sit outside every
+         * breach count. Same 4/24/72h ladder the seed data uses.
+         */
+        slaDueAt:
+          project?.kind === "service"
+            ? new Date(
+                Date.parse(at) +
+                  (input.severity === "s1" ? 4 : input.severity === "s2" ? 24 : 72) *
+                    36e5,
+              ).toISOString()
+            : null,
+        attachments: input.attachments.map((file, index) => ({
+          ...file,
+          id: `a-new-${createdCount.current}-${index}`,
+        })),
+        custom: input.custom,
         createdAt: at,
         updatedAt: at,
         statusChangedAt: at,

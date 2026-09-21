@@ -36,6 +36,9 @@ export function AttachmentsBlock({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = React.useState(false);
 
+  // A heading over nothing, on a ticket you have no way to add to.
+  if (attachments.length === 0 && !canEdit) return null;
+
   // Counts dragenter/dragleave pairs; see the drop zone below.
   const dragDepth = React.useRef(0);
 

@@ -84,7 +84,12 @@ export function TicketPanel() {
   const editable = canEditProject(project, CURRENT_USER_ID);
   const blockers = ticket ? blockersOf(tickets, ticket) : [];
   const sprint = ticket ? getSprint(ticket.sprintId) : undefined;
-  const open = Boolean(ticket);
+  /*
+   * Keyed off the URL, not the resolved ticket. Deriving it from `ticket`
+   * meant a panel opened for a key the store has not resolved yet was already
+   * translated off screen, so the loading state below could never render.
+   */
+  const open = Boolean(openTicketKey);
   const commentCount = ticket ? commentsForTicket(comments, ticket.id).length : 0;
 
   const tabClass = (active: boolean) =>

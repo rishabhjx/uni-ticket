@@ -23,7 +23,100 @@ export function formatCustomValue(
 ): string | null {
   if (value === null || value === undefined || value === "") return null;
   if (field.type === "checkbox") return value ? "Yes" : null;
+  if (field.type === "date" && typeof value === "string") {
+    // The input stores 2026-09-30; everything else in the product writes
+    // "30 Sept 2026", and a field should not read differently because a
+    // project happened to define it.
+    const parsed = new Date(`${value}T12:00:00`);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    }
+  }
   return String(value);
+}
+
+
+/**
+ * One field's control, independent of any ticket. The panel edits a ticket
+ * that exists; the create form edits one that does not yet, and both need the
+ * same three shapes (select, checkbox, typed input) to behave identically --
+ * otherwise a project's own field means one thing at creation and another
+ * afterwards.
+ */
+export function CustomFieldControl({
+  field,
+  value,
+  onChange,
+  className,
+}: {
+  field: CustomField;
+  value: unknown;
+  onChange: (next: unknown) => void;
+  className?: string;
+}) {
+  if (field.type === "select") {
+    return (
+      <Select
+        value={typeof value === "string" && value ? value : "none"}
+        onValueChange={(next) => onChange(next === "none" ? null : next)}
+      >
+        <SelectTrigger
+          className={cn(fieldClass, "justify-between", className)}
+          aria-label={field.name}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">
+            <span className="text-grey-500">Not set</span>
+          </SelectItem>
+          {(field.options ?? []).map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  if (field.type === "checkbox") {
+    return (
+      <span className="flex h-7 items-center px-1.5">
+        <Checkbox
+          checked={value === true}
+          onCheckedChange={(next) => onChange(next === true)}
+          aria-label={field.name}
+        />
+      </span>
+    );
+  }
+
+  return (
+    <input
+      type={
+        field.type === "number"
+          ? "number"
+          : field.type === "date"
+            ? "date"
+            : "text"
+      }
+      value={value === null || value === undefined ? "" : String(value)}
+      onChange={(event) => {
+        const raw = event.target.value;
+        onChange(
+          raw === "" ? null : field.type === "number" ? Number(raw) : raw,
+        );
+      }}
+      aria-label={field.name}
+      placeholder="—"
+      className={cn(fieldClass, className)}
+    />
+  );
 }
 
 /**
@@ -69,62 +162,11 @@ export function CustomFields({
               <span className="px-1.5 text-small text-grey-700">
                 {formatCustomValue(field, value) ?? "—"}
               </span>
-            ) : field.type === "select" ? (
-              <Select
-                value={typeof value === "string" && value ? value : "none"}
-                onValueChange={(next) =>
-                  set(field.id, next === "none" ? null : next)
-                }
-              >
-                <SelectTrigger
-                  className={cn(fieldClass, "justify-between")}
-                  aria-label={field.name}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">
-                    <span className="text-grey-500">Not set</span>
-                  </SelectItem>
-                  {(field.options ?? []).map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : field.type === "checkbox" ? (
-              <span className="flex h-7 items-center px-1.5">
-                <Checkbox
-                  checked={value === true}
-                  onCheckedChange={(next) => set(field.id, next === true)}
-                  aria-label={field.name}
-                />
-              </span>
             ) : (
-              <input
-                type={
-                  field.type === "number"
-                    ? "number"
-                    : field.type === "date"
-                      ? "date"
-                      : "text"
-                }
-                value={value === null ? "" : String(value)}
-                onChange={(event) => {
-                  const raw = event.target.value;
-                  set(
-                    field.id,
-                    raw === ""
-                      ? null
-                      : field.type === "number"
-                        ? Number(raw)
-                        : raw,
-                  );
-                }}
-                aria-label={field.name}
-                placeholder="—"
-                className={fieldClass}
+              <CustomFieldControl
+                field={field}
+                value={value}
+                onChange={(next) => set(field.id, next)}
               />
             )}
           </div>

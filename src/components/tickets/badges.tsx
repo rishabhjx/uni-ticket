@@ -104,12 +104,20 @@ export function StatusDot({ status }: { status: TicketStatus }) {
 
 
 
+/**
+ * The chevron is shape AND colour, which is two channels -- but on its own it
+ * was decorative, marked aria-hidden by Lucide's default, so priority reached
+ * a screen reader as nothing at all wherever the label was not beside it.
+ */
 export function PriorityDot({ priority }: { priority: TicketPriority }) {
   const Icon = priorityIcon[priority];
   return (
     <Icon
       className="size-3 shrink-0"
       strokeWidth={2.25}
+      role="img"
+      aria-hidden={false}
+      aria-label={`${PRIORITY_LABEL[priority]} priority`}
       style={{ color: `var(--priority-${priority}-fg)` }}
     />
   );

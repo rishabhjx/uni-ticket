@@ -404,7 +404,21 @@ export function BoardView({ project }: { project: Project }) {
             getItemValue={getItemValue}
             className="h-full"
           >
-            <KanbanBoard className="flex h-full gap-3 overflow-x-auto overflow-y-hidden sm:grid-cols-none">
+            {/*
+              The board has keyboard sensors wired and nothing on screen said
+              so, which makes a whole interaction undiscoverable. Read out on
+              focus rather than drawn: it is instruction for exactly the
+              people who cannot see the drag.
+            */}
+            <p id="board-dnd-help" className="sr-only">
+              To move a ticket with the keyboard, focus a card and press Space
+              to pick it up, the arrow keys to move it between columns, Space
+              to drop it and Escape to cancel.
+            </p>
+            <KanbanBoard
+              aria-describedby="board-dnd-help"
+              className="flex h-full gap-3 overflow-x-auto overflow-y-hidden sm:grid-cols-none"
+            >
               {columns.map((column) => (
                 <KanbanColumn
                   key={column.id}

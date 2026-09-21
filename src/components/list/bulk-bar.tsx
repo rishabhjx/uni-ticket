@@ -51,7 +51,16 @@ export function BulkBar() {
 
   return (
     <div className="absolute inset-x-0 bottom-4 z-30 flex justify-center px-6">
-      <div className="glass-strong flex items-center gap-2 rounded-md border border-grey-200 px-3 py-2 shadow-overlay">
+      {/*
+        The bar appearing IS the announcement -- a bulk action changes a lot
+        of rows at once and used to do it silently. role="status" on the count
+        means ticking a box says how many are now selected.
+      */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="glass-strong flex items-center gap-2 rounded-md border border-grey-200 px-3 py-2 shadow-overlay"
+      >
         <span className="tnum text-small font-medium text-grey-900">
           {selection.length} selected
         </span>

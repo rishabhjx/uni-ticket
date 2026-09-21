@@ -351,7 +351,7 @@ export function BoardView({ project }: { project: Project }) {
             <section key={lane.id}>
               <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
                 {lane.name}
-                <span className="tnum font-normal text-grey-400">
+                <span className="tnum font-normal text-grey-500">
                   {lane.items.length}
                 </span>
               </h3>
@@ -367,7 +367,7 @@ export function BoardView({ project }: { project: Project }) {
                     >
                       <span className="px-1 text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
                         {column.name}
-                        <span className="tnum ml-1.5 font-normal text-grey-400">
+                        <span className="tnum ml-1.5 font-normal text-grey-500">
                           {items.length}
                         </span>
                       </span>
@@ -384,7 +384,7 @@ export function BoardView({ project }: { project: Project }) {
                         </div>
                       ))}
                       {items.length === 0 ? (
-                        <p className="px-1 pb-1 text-caption text-grey-400">—</p>
+                        <p className="px-1 pb-1 text-caption text-grey-500">—</p>
                       ) : null}
                     </div>
                   );
@@ -449,7 +449,7 @@ export function BoardView({ project }: { project: Project }) {
                     ))}
 
                     {(value[column.id]?.length ?? 0) === 0 ? (
-                      <p className="px-1 text-caption text-grey-400">
+                      <p className="px-1 text-caption text-grey-500">
                         {groupBy === "status" ? "Drag a ticket here." : "Nothing here."}
                       </p>
                     ) : null}

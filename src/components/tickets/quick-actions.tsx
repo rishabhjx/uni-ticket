@@ -46,7 +46,7 @@ export function QuickAssign({
           type="button"
           aria-label="Change assignee"
           onClick={(event) => event.stopPropagation()}
-          className="rounded-full transition-opacity hover:opacity-80"
+          className="tap rounded-full transition-opacity hover:opacity-80"
         >
           {children}
         </button>

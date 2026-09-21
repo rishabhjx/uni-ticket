@@ -157,7 +157,7 @@ export function TicketPanel() {
               >
                 <ChevronLeft className="size-3.5 shrink-0" strokeWidth={2} />
                 <span className="tnum shrink-0">{parent.key}</span>
-                <span aria-hidden className="text-grey-400">
+                <span aria-hidden className="text-grey-500">
                   /
                 </span>
               </button>
@@ -166,7 +166,7 @@ export function TicketPanel() {
             <span className="tnum text-small font-medium text-grey-600">
               {ticket.key}
             </span>
-            <span className="text-caption text-grey-400">
+            <span className="text-caption text-grey-500">
               {TYPE_LABEL[ticket.type]}
             </span>
 
@@ -303,7 +303,7 @@ export function TicketPanel() {
                   {ticket.description ? (
                     <Description text={ticket.description} />
                   ) : (
-                    <p className="text-small text-grey-400">
+                    <p className="text-small text-grey-500">
                       Add a description. Use ``` fences for logs.
                     </p>
                   )}

@@ -236,7 +236,7 @@ export function LinksBlock({ ticket, canEdit }: { ticket: Ticket; canEdit: boole
       ))}
 
       {!parent && children.length === 0 && grouped.size === 0 ? (
-        <p className="flex items-center gap-1.5 text-small text-grey-400">
+        <p className="flex items-center gap-1.5 text-small text-grey-500">
           <Link2 className="size-3.5" strokeWidth={1.75} />
           Nothing linked yet.
         </p>

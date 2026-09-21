@@ -52,7 +52,7 @@ export function LabelPicker({
           )}
         >
           {value.length === 0 ? (
-            <span className="text-grey-400">Add a label</span>
+            <span className="text-grey-500">Add a label</span>
           ) : (
             value.map((id) => {
               const label = labels.find((item) => item.id === id);

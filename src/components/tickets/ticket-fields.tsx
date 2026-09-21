@@ -250,7 +250,7 @@ export function TicketFields({
               })}
             </div>
           ) : (
-            <span className="px-1.5 py-1.5 text-small text-grey-400">None</span>
+            <span className="px-1.5 py-1.5 text-small text-grey-500">None</span>
           )
         ) : (
           <LabelPicker

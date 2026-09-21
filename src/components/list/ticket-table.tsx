@@ -257,7 +257,7 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
         row.original.severity ? (
           <SeverityBadge severity={row.original.severity} short />
         ) : (
-          <span aria-hidden className="text-small text-grey-400">—</span>
+          <span aria-hidden className="text-small text-grey-500">—</span>
         ),
     },
     assignee: {
@@ -320,7 +320,7 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
       cell: ({ row }) => {
         const ticket = row.original;
         if (isSlaBreached(ticket)) return <AlertChip tone="breached">SLA breached</AlertChip>;
-        if (!ticket.dueAt) return <span aria-hidden className="text-small text-grey-400">—</span>;
+        if (!ticket.dueAt) return <span aria-hidden className="text-small text-grey-500">—</span>;
         return isOverdue(ticket) ? (
           <AlertChip>{formatDueDate(ticket.dueAt)}</AlertChip>
         ) : (
@@ -419,7 +419,7 @@ function customColumns(fields: CustomField[]): Column[] {
             {text}
           </span>
         ) : (
-          <span aria-hidden className="text-small text-grey-400">—</span>
+          <span aria-hidden className="text-small text-grey-500">—</span>
         );
       },
     })) as Column[];

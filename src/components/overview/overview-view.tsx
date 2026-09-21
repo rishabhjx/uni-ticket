@@ -188,7 +188,7 @@ export function OverviewView() {
             </span>
             <Link
               href="/my-work?scope=team"
-              className="ml-auto text-small text-grey-500 transition-colors hover:text-grey-900"
+              className="tap ml-auto text-small text-grey-500 transition-colors hover:text-grey-900"
             >
               View all
             </Link>

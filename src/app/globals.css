@@ -135,7 +135,7 @@
   --severity-s3-bg: var(--grey-100);
   --severity-s3-fg: var(--grey-600);
   --severity-s4-bg: var(--grey-100);
-  --severity-s4-fg: var(--grey-500);
+  --severity-s4-fg: var(--grey-600);
 
   /* --- Disabled ------------------------------------------------------------
      Its own pair. Disabled used to borrow the muted-text pair, which put
@@ -337,7 +337,7 @@ html.light {
   --severity-s3-bg: var(--grey-100);
   --severity-s3-fg: var(--grey-600);
   --severity-s4-bg: var(--grey-100);
-  --severity-s4-fg: var(--grey-500);
+  --severity-s4-fg: var(--grey-600);
 
   --disabled-bg: var(--grey-150);
   --disabled-fg: var(--grey-500);

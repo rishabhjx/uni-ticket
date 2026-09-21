@@ -21,7 +21,7 @@ const paletteById: Record<string, string> = {
 const fallback = "bg-grey-200 text-grey-700";
 
 const sizeClass = {
-  sm: "size-5 text-[10px]",
+  sm: "size-5 text-micro tracking-[-0.02em]",
   md: "size-6 text-micro",
   lg: "size-8 text-caption",
 } as const;
@@ -42,7 +42,7 @@ export function UserAvatar({
       <span
         title="Unassigned"
         className={cn(
-          "inline-flex items-center justify-center rounded-full border border-dashed border-grey-300 text-grey-400",
+          "inline-flex items-center justify-center rounded-full border border-dashed border-grey-300 text-grey-500",
           sizeClass[size],
           className,
         )}

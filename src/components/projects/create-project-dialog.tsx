@@ -424,7 +424,7 @@ export function CreateProjectDialog({
             <button
               type="submit"
               disabled={!canSubmit}
-              className="h-8 rounded-md bg-accent-600 px-3 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700 disabled:bg-grey-100 disabled:text-grey-500"
+              className="h-8 rounded-md bg-accent-600 px-3 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700 disabled:bg-grey-100 disabled:text-grey-600"
             >
               Create project
             </button>

@@ -242,7 +242,7 @@ export function CommentComposer({ ticketId }: { ticketId: string }) {
               type="button"
               onClick={submit}
               disabled={!body.trim() && drafts.length === 0}
-              className="h-7 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700 disabled:bg-grey-100 disabled:text-grey-500"
+              className="h-7 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700 disabled:bg-grey-100 disabled:text-grey-600"
             >
               Comment
             </button>
@@ -256,7 +256,7 @@ export function CommentComposer({ ticketId }: { ticketId: string }) {
               <Paperclip className="size-4" strokeWidth={1.75} />
             </button>
 
-            <span className="flex items-center gap-1.5 text-caption text-grey-400">
+            <span className="flex items-center gap-1.5 text-caption text-grey-500">
               <KbdGroup>
                 <Kbd>⌘</Kbd>
                 <Kbd>↵</Kbd>

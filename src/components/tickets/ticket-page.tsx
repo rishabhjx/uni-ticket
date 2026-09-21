@@ -80,18 +80,18 @@ export function TicketPage({ ticketKey }: { ticketKey: string }) {
             <Link
               href={`/tickets/${parent.key.toLowerCase()}`}
               title={`${parent.key} · ${parent.title}`}
-              className="flex items-center gap-1 rounded-md px-1 text-caption text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+              className="tap flex items-center gap-1 rounded-md px-1 py-1 text-caption text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
               <ChevronLeft className="size-3.5" strokeWidth={2} />
               <span className="tnum">{parent.key}</span>
-              <span aria-hidden className="text-grey-400">
+              <span aria-hidden className="text-grey-500">
                 /
               </span>
             </Link>
           ) : project ? (
             <Link
               href={`/projects/${project.slug}/list`}
-              className="flex items-center gap-1 rounded-md px-1 text-caption text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+              className="tap flex items-center gap-1 rounded-md px-1 py-1 text-caption text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
               <ChevronLeft className="size-3.5" strokeWidth={2} />
               {project.name}
@@ -102,7 +102,7 @@ export function TicketPage({ ticketKey }: { ticketKey: string }) {
           <span className="tnum text-small font-medium text-grey-600">
             {ticket.key}
           </span>
-          <span className="text-caption text-grey-400">
+          <span className="text-caption text-grey-500">
             {TYPE_LABEL[ticket.type]}
           </span>
           {isSlaBreached(ticket) ? <AlertChip tone="breached">SLA breached</AlertChip> : null}

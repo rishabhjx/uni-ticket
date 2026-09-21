@@ -184,7 +184,7 @@ export function ActivityFeed({
                   {getUser(entry.event.actorId)?.name}
                 </span>{" "}
                 {describe(entry.event)}
-                <span className="ml-1.5 text-caption text-grey-400">
+                <span className="ml-1.5 text-caption text-grey-500">
                   {formatRelative(entry.event.createdAt)}
                 </span>
               </TimelineContent>

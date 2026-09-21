@@ -53,7 +53,7 @@ export function DueDatePicker({
           aria-label="Due date"
           className={cn(
             "flex h-7 w-full items-center rounded-md px-1.5 text-left text-small transition-colors hover:bg-grey-100 data-[state=open]:bg-grey-100",
-            value ? "text-grey-700" : "text-grey-400",
+            value ? "text-grey-700" : "text-grey-500",
             className,
           )}
           style={

@@ -109,7 +109,7 @@ export function TicketCard({
           return label ? <LabelChip key={id} name={label.name} /> : null;
         })}
         {ticket.labelIds.length > 2 ? (
-          <span className="tnum text-caption text-grey-400">
+          <span className="tnum text-caption text-grey-500">
             +{ticket.labelIds.length - 2}
           </span>
         ) : null}

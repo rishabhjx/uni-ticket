@@ -48,7 +48,7 @@ export function Reactions({ comment }: { comment: Comment }) {
             type="button"
             aria-label="Add reaction"
             className={cn(
-              "flex size-6 items-center justify-center rounded-md border border-grey-200 text-grey-400 transition-colors hover:border-grey-300 hover:text-grey-700",
+              "flex size-6 items-center justify-center rounded-md border border-grey-200 text-grey-500 transition-colors hover:border-grey-300 hover:text-grey-900",
               entries.length === 0 &&
                 "opacity-0 group-hover/comment:opacity-100 focus-visible:opacity-100",
             )}

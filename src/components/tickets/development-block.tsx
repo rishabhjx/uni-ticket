@@ -122,7 +122,7 @@ export function AttachmentsBlock({
                 <button
                   type="button"
                   onClick={() => openAsset(file.id)}
-                  className="max-w-full truncate text-left hover:text-accent-700"
+                  className="tap max-w-full truncate text-left hover:text-accent-700"
                 >
                   {file.name}
                 </button>
@@ -187,7 +187,7 @@ export function AttachmentsBlock({
             "w-full rounded-md border border-dashed px-2.5 py-3 text-center text-caption transition-colors",
             dragging
               ? "border-accent-600 bg-accent-50 text-accent-700"
-              : "border-grey-200 text-grey-400 hover:border-grey-300 hover:text-grey-600",
+              : "border-grey-200 text-grey-500 hover:border-grey-300 hover:text-grey-700",
           )}
         >
           {dragging ? "Drop to attach" : "Drop a screenshot or log here, or click to browse"}

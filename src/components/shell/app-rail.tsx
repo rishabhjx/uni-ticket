@@ -77,7 +77,7 @@ function RailItem({ app }: { app: WorkspaceApp }) {
       <TooltipContent side="right" sideOffset={8}>
         {app.name}
         {!active ? (
-          <span className="ml-1.5 text-grey-400">· not in prototype</span>
+          <span className="ml-1.5 text-grey-500">· not in prototype</span>
         ) : null}
       </TooltipContent>
     </Tooltip>

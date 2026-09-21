@@ -42,7 +42,7 @@ export function SavedViews() {
         >
           <Bookmark className="size-3.5" strokeWidth={1.75} />
           Views
-          <span className="tnum text-caption text-grey-400">{mine.length}</span>
+          <span className="tnum text-caption text-grey-500">{mine.length}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">

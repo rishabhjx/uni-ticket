@@ -137,7 +137,7 @@ export function OverviewView() {
   const projects = myProjects(tickets, undefined, allProjects);
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
+    <div className="settle min-h-0 flex-1 overflow-y-auto">
       {reportees.length > 0 ? (
         <section className="px-6 py-5">
           <div className="mb-3 flex items-center gap-2">

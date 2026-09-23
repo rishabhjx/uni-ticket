@@ -47,13 +47,13 @@ export function FileRow({
   }, [tickets, query, file.ticketRefs]);
 
   return (
-    <div className="group/file hairline-b flex items-center gap-3 px-4 py-2 hover:bg-grey-50">
+    <div className="group/file hairline-b flex items-center gap-3 px-4 py-2 transition-colors hover:bg-grey-50">
       <button
         type="button"
         onClick={() => toggleStar(file.id)}
         aria-label={file.starred ? "Unstar" : "Star"}
         className={cn(
-          "shrink-0 text-grey-400 opacity-0 hover:text-grey-700 group-hover/file:opacity-100",
+          "shrink-0 text-grey-400 opacity-0 transition-opacity hover:text-grey-700 group-hover/file:opacity-100",
           file.starred && "opacity-100",
         )}
       >
@@ -98,7 +98,7 @@ export function FileRow({
               <button
                 type="button"
                 title="Link to a ticket"
-                className="flex size-6 items-center justify-center rounded-md text-grey-400 opacity-0 hover:bg-grey-150 hover:text-grey-700 group-hover/file:opacity-100"
+                className="flex size-6 items-center justify-center rounded-md text-grey-400 opacity-0 transition-[opacity,background-color,color] hover:bg-grey-150 hover:text-grey-700 group-hover/file:opacity-100"
               >
                 <Link2 className="size-3.5" strokeWidth={1.75} />
               </button>
@@ -147,7 +147,7 @@ export function FileRow({
         type="button"
         onClick={() => deleteFile(file.id)}
         aria-label={`Delete ${file.name}`}
-        className="flex size-6 shrink-0 items-center justify-center rounded-md text-grey-400 opacity-0 hover:bg-grey-150 hover:text-grey-700 group-hover/file:opacity-100"
+        className="flex size-6 shrink-0 items-center justify-center rounded-md text-grey-400 opacity-0 transition-[opacity,background-color,color] hover:bg-grey-150 hover:text-grey-700 group-hover/file:opacity-100"
       >
         <Trash2 className="size-3.5" strokeWidth={1.75} />
       </button>

@@ -113,7 +113,7 @@ export function KpiStrip({ kpis }: { kpis: PersonalKpis }) {
             aria-pressed={active}
             onClick={() => toggle(tile)}
             className={cn(
-              "flex flex-col items-start rounded-md border px-3 py-2 text-left transition-colors",
+              "glass-soft shadow-card flex flex-col items-start rounded-xl border px-3 py-2 text-left transition-[border-color,background-color,transform] duration-[--duration-fast] active:scale-[0.98]",
               active
                 ? "border-accent-200 bg-accent-50"
                 : "border-grey-200 hover:border-grey-300",

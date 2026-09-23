@@ -12,6 +12,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TicketStoreProvider, useTicketStore } from "@/lib/store/ticket-store";
+import { WorkspaceProviders } from "@/lib/store/workspace-providers";
 
 /**
  * A project created at runtime has no prerendered route, so the request falls
@@ -68,9 +69,11 @@ export function ResolvedRoute() {
 export function NotFoundRouter() {
   return (
     <TicketStoreProvider>
-      <AppShell>
-        <ResolvedRoute />
-      </AppShell>
+      <WorkspaceProviders>
+        <AppShell>
+          <ResolvedRoute />
+        </AppShell>
+      </WorkspaceProviders>
     </TicketStoreProvider>
   );
 }

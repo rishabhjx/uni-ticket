@@ -99,7 +99,7 @@ export function FilesView() {
       />
 
       <div className="flex min-h-0 flex-1">
-        <div className="hairline-r flex w-[220px] shrink-0 flex-col gap-0.5 bg-grey-50 px-2 py-3">
+        <div className="glass-soft hairline-r flex w-[220px] shrink-0 flex-col gap-0.5 px-2 py-3">
           <button
             type="button"
             onClick={() => navigate({ drive: "mine", folder: null })}

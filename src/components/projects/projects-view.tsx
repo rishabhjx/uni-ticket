@@ -132,7 +132,7 @@ export function ProjectsView({ workspaceId }: { workspaceId?: string } = {}) {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
+    <div className="settle min-h-0 flex-1 overflow-y-auto">
       {/* Six projects fit on a screen; sixty do not, and this is the level
           that grows fastest once workspaces exist. */}
       <div className="hairline-b flex items-center gap-2 px-6 py-2.5">

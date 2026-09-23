@@ -269,6 +269,12 @@
   --glass-blur: saturate(160%) blur(20px);
   --glass-blur-soft: saturate(140%) blur(28px);
 
+  /* The scrim behind a dialog or sheet. Ink-tinted rather than flat black —
+     black/50 reads fine on a dark page (it already is one) but turns muddy
+     and harsh over the light theme's warm paper, which is otherwise never
+     asked to sit under pure black. */
+  --overlay: oklch(0.1 0.004 60 / 0.55);
+
   /* The colour a glass surface samples. Two soft radial washes, fixed to the
      viewport, so every frosted panel in the product is tinting the same
      light rather than a flat page colour. */
@@ -388,6 +394,9 @@ html.light {
   --glass-bg-soft: oklch(0.96 0.006 85 / 0.62);
   --glass-border: oklch(0.19 0.01 85 / 0.1);
   --glass-highlight: rgb(255 255 255 / 0.5);
+
+  /* Ink, not black — a black scrim on paper looks like a stain, not a dim. */
+  --overlay: oklch(0.19 0.01 85 / 0.32);
 
   /* A cooler, richer wash than the dark theme's — on paper it reads as light
      falling across the page rather than a hue printed on it. */
@@ -551,6 +560,7 @@ html.light {
   --color-warning-foreground: var(--warning-foreground);
   --color-invert: var(--invert);
   --color-invert-foreground: var(--invert-foreground);
+  --color-overlay: var(--overlay);
 
   --animate-collapsible-down: collapsible-down 0.2s ease-out;
   --animate-collapsible-up: collapsible-up 0.2s ease-out;

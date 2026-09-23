@@ -58,7 +58,7 @@ function Metric({
   hint: string;
 }) {
   return (
-    <div className="flex flex-col rounded-md border border-grey-200 p-4">
+    <div className="glass-soft shadow-card flex flex-col rounded-xl border border-grey-200 p-4 transition-colors hover:border-grey-300">
       <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
         {label}
       </span>
@@ -127,7 +127,7 @@ export function InsightsView() {
   if (isLoading) return <CardsSkeleton count={6} />;
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
+    <div className="settle min-h-0 flex-1 overflow-y-auto">
       <div className="hairline-b flex items-center gap-2 px-6 py-2.5">
         <span className="text-caption tracking-[0.07em] text-grey-500 uppercase">
           Project
@@ -178,7 +178,7 @@ export function InsightsView() {
         <h2 className="mb-3 text-heading font-semibold text-grey-900">
           Opened against verified
         </h2>
-        <div className="rounded-md border border-grey-200 p-4">
+        <div className="glass-soft shadow-card rounded-xl border border-grey-200 p-4">
           <ChartContainer
             config={flowChartConfig}
             className="aspect-auto h-56 w-full"
@@ -256,7 +256,7 @@ export function InsightsView() {
         <h2 className="mb-3 text-heading font-semibold text-grey-900">
           Where work sits
         </h2>
-        <div className="flex flex-col gap-2 rounded-md border border-grey-200 p-4">
+        <div className="glass-soft shadow-card flex flex-col gap-2 rounded-xl border border-grey-200 p-4">
           {TICKET_STATUSES.map((status) => {
             const median = metrics.medianInStatus[status];
             const limit = STALE_AFTER_DAYS[status];
@@ -298,7 +298,7 @@ export function InsightsView() {
           <h2 className="mb-3 text-heading font-semibold text-grey-900">
             Sitting too long
           </h2>
-          <div className="flex flex-col gap-1 rounded-md border border-grey-200 p-3">
+          <div className="glass-soft shadow-card flex flex-col gap-1 rounded-xl border border-grey-200 p-3">
             {oldest.length === 0 ? (
               <p className="py-4 text-center text-small text-grey-500">
                 🌤️ Nothing is stuck.
@@ -321,7 +321,7 @@ export function InsightsView() {
           <h2 className="mb-3 text-heading font-semibold text-grey-900">
             Took the longest
           </h2>
-          <div className="flex flex-col gap-1 rounded-md border border-grey-200 p-3">
+          <div className="glass-soft shadow-card flex flex-col gap-1 rounded-xl border border-grey-200 p-3">
             {slowest.length === 0 ? (
               <p className="py-4 text-center text-small text-grey-500">
                 Nothing verified yet.

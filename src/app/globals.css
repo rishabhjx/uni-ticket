@@ -13,6 +13,14 @@
 @custom-variant style-nova (&:where(.style-nova *));
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * transitions.dev, vendored: see the file's own header for what it carries
+ * and why. Its custom properties resolve against --duration-* and
+ * --ease-standard below at compute time, so import order here doesn't
+ * matter — CSS variables aren't Sass.
+ */
+@import "./transitions-dev.css" layer(base);
+
 /* The utilities ReUI's stylesheet @applies, copied from their styles/globals.css. */
 @utility no-scrollbar {
   -ms-overflow-style: none;

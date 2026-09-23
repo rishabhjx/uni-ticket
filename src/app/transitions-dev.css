@@ -1,0 +1,99 @@
+/*
+ * Two transitions vendored from transitions.dev
+ * (github.com/Jakubantalik/transitions.dev): the calendar's month-to-month
+ * slide ("page-side-by-side") and its day-agenda dialog ("modal"). Kept
+ * close to the source recipe, but the tunable custom properties point at
+ * the app's own motion tokens instead of the library's defaults, so this
+ * reads as the same motion as everywhere else in the product rather than a
+ * second, competing feel.
+ *
+ * The modal is re-expressed as @keyframes rather than the source's plain
+ * `transition`: Radix's Dialog only defers unmounting a closed panel for an
+ * animationend, not a transitionend, so a transition-only version would
+ * skip the close animation under Radix entirely.
+ */
+
+:root {
+  /* Page side-by-side */
+  --page-slide-dur: var(--duration-slow);
+  --page-fade-dur: var(--duration-slow);
+  --page-slide-distance: 12px;
+  --page-blur: 2px;
+  --page-stagger: 0ms;
+  --page-exit-enabled: 1;
+  --page-slide-ease: var(--ease-standard);
+  --page-fade-ease: var(--ease-standard);
+
+  /* Modal open / close */
+  --modal-open-dur: var(--duration-slow);
+  --modal-close-dur: var(--duration-fast);
+  --modal-scale: 0.97;
+  --modal-scale-close: 0.98;
+  --modal-ease: var(--ease-standard);
+}
+
+.t-page-slide {
+  position: relative;
+}
+.t-page-slide .t-page[data-page-id="1"] {
+  --t-page-from-x: calc(var(--page-slide-distance) * -1);
+}
+.t-page-slide .t-page[data-page-id="2"] {
+  --t-page-from-x: var(--page-slide-distance);
+}
+.t-page-slide .t-page {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(calc(var(--t-page-from-x, 0px) * var(--page-exit-enabled)));
+  filter: blur(calc(var(--page-blur) * var(--page-exit-enabled)));
+  transition:
+    opacity var(--page-fade-dur) var(--page-fade-ease),
+    transform var(--page-slide-dur) var(--page-slide-ease),
+    filter var(--page-slide-dur) var(--page-slide-ease);
+  will-change: opacity, transform, filter;
+}
+.t-page-slide[data-page="1"] .t-page[data-page-id="1"],
+.t-page-slide[data-page="2"] .t-page[data-page-id="2"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+  filter: blur(0);
+  transition-delay: var(--page-stagger);
+}
+
+@keyframes t-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--modal-scale));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes t-modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(var(--modal-scale-close));
+  }
+}
+.t-modal[data-state="open"] {
+  animation: t-modal-in var(--modal-open-dur) var(--modal-ease) both;
+}
+.t-modal[data-state="closed"] {
+  animation: t-modal-out var(--modal-close-dur) var(--modal-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-page-slide .t-page,
+  .t-modal[data-state] {
+    transition: none !important;
+    animation: none !important;
+  }
+}

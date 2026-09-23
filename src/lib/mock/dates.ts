@@ -36,3 +36,36 @@ export function startOfWeek(reference: Date = TODAY) {
   date.setDate(date.getDate() - weekday);
   return date;
 }
+
+export function startOfMonth(reference: Date) {
+  return new Date(reference.getFullYear(), reference.getMonth(), 1);
+}
+
+export function addMonths(reference: Date, delta: number) {
+  return new Date(reference.getFullYear(), reference.getMonth() + delta, 1);
+}
+
+/**
+ * Six Monday-first weeks, the way every month-grid calendar draws itself:
+ * a fixed 42 cells so switching months never changes the grid's height.
+ */
+export function monthGridDays(monthAnchor: Date) {
+  const gridStart = startOfWeek(startOfMonth(monthAnchor));
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(gridStart);
+    date.setDate(date.getDate() + index);
+    return date;
+  });
+}
+
+export function isSameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+export function dayKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}

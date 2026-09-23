@@ -154,6 +154,33 @@ export function CardsSkeleton({ count = 5 }: { count?: number }) {
 }
 
 /**
+ * Matched to the real grid: a seven-column week header over six weeks of
+ * cells, so the month doesn't reflow taller or shorter once tickets land.
+ */
+export function CalendarSkeleton() {
+  return (
+    <>
+      <FilterBarSkeleton extra={2} />
+      <div className="flex min-h-0 flex-1 flex-col px-4 py-3 sm:px-6">
+        <div className="grid grid-cols-7 gap-px pb-2">
+          {Array.from({ length: 7 }, (_, index) => (
+            <Bar key={index} className="h-3 w-8 justify-self-center" />
+          ))}
+        </div>
+        <div className="grid flex-1 grid-cols-7 grid-rows-6 gap-px overflow-hidden rounded-md border border-grey-200 bg-grey-200">
+          {Array.from({ length: 42 }, (_, index) => (
+            <div key={index} className="flex flex-col gap-1.5 bg-grey-0 p-1.5">
+              <Bar className="h-3 w-4" />
+              {index % 5 === 0 ? <Bar className="h-4 w-full" /> : null}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/**
  * The whole shell as a skeleton. ViewStateProvider reads the URL, so the
  * prerendered HTML for every route is this, and the real UI renders on the
  * client — which is the same loading model the store already uses.

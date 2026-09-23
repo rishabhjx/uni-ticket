@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CalendarDays,
   ChartLine,
   ChevronDown,
   ChevronRight,
@@ -131,6 +132,7 @@ export function TopNav() {
                 { segment: "board", label: "Board", icon: Columns3 },
                 { segment: "list", label: "List", icon: Rows3 },
                 { segment: "roadmap", label: "Roadmap", icon: Layers },
+                { segment: "calendar", label: "Calendar", icon: CalendarDays },
               ] as const
             ).map(({ segment, label, icon: Icon }) => (
               <Link

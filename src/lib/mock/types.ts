@@ -414,3 +414,121 @@ export const ENVIRONMENT_LABEL: Record<Environment, string> = {
 export function isDefect(type: TicketType) {
   return type === "bug" || type === "incident";
 }
+
+/**
+ * The unified workspace's other apps. Tickets is one tenant of the rail; these
+ * are the rest of it — modelled the same way tickets are (a seeded dataset,
+ * mutated locally), so the workspace reads as one product rather than a
+ * ticketing tool with three empty icons beside it.
+ */
+
+/** A project channel is generated per project; the rest are hand-placed. */
+export type ChatConversationKind = "project" | "team" | "topic" | "dm";
+
+export type ChatConversation = {
+  id: string;
+  /** Ignored for a dm, which is named after its other member. */
+  name: string;
+  topic: string;
+  kind: ChatConversationKind;
+  projectId: string | null;
+  memberIds: string[];
+};
+
+export type ChatMessage = {
+  id: string;
+  conversationId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  editedAt: string | null;
+  /** A reply's thread root. Null for a top-level message. */
+  parentId: string | null;
+  reactions: Record<string, string[]>;
+  attachments: Attachment[];
+  /** Ticket keys mentioned in the body, e.g. "APO-142". */
+  ticketRefs: string[];
+};
+
+export const MAIL_FOLDERS = ["inbox", "sent", "drafts", "archive"] as const;
+export type MailFolder = (typeof MAIL_FOLDERS)[number];
+
+export type MailThread = {
+  id: string;
+  subject: string;
+  /** Internal recipients/participants, current user included. */
+  participantIds: string[];
+  externalParticipant: { name: string; email: string } | null;
+  folder: MailFolder;
+  read: boolean;
+  starred: boolean;
+  ticketRefs: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MailMessage = {
+  id: string;
+  threadId: string;
+  /** Null when the sender is the external participant. */
+  fromId: string | null;
+  toIds: string[];
+  body: string;
+  createdAt: string;
+  attachments: Attachment[];
+};
+
+export const MEETING_KINDS = [
+  "standup",
+  "review",
+  "planning",
+  "one_on_one",
+  "sync",
+  "interview",
+] as const;
+export type MeetingKind = (typeof MEETING_KINDS)[number];
+
+export type Meeting = {
+  id: string;
+  title: string;
+  kind: MeetingKind;
+  organizerId: string;
+  attendeeIds: string[];
+  projectId: string | null;
+  sprintId: string | null;
+  ticketRefs: string[];
+  startsAt: string;
+  endsAt: string;
+  recurring: "none" | "daily" | "weekly";
+  notes: string;
+  cancelled: boolean;
+};
+
+export const DRIVE_FILE_KINDS = [
+  "folder",
+  "doc",
+  "sheet",
+  "slide",
+  "pdf",
+  "image",
+  "video",
+  "other",
+] as const;
+export type DriveFileKind = (typeof DRIVE_FILE_KINDS)[number];
+
+export type DriveFile = {
+  id: string;
+  name: string;
+  kind: DriveFileKind;
+  /** Null at the root of its drive. */
+  parentId: string | null;
+  /** Which shared drive this lives in — null is "My files". */
+  projectId: string | null;
+  ownerId: string;
+  /** Null for a folder. */
+  sizeBytes: number | null;
+  updatedAt: string;
+  starred: boolean;
+  ticketRefs: string[];
+  sharedWithIds: string[];
+};

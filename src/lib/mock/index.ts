@@ -1,4 +1,4 @@
-import { generateDataset } from "./generate";
+import { dataset } from "./dataset";
 import { startOfWeek, TODAY } from "./dates";
 import { projects } from "./projects";
 import {
@@ -11,8 +11,6 @@ import {
 } from "./types";
 import { CURRENT_USER_ID, reporteeIds } from "./users";
 
-const dataset = generateDataset();
-
 export const tickets: Ticket[] = dataset.tickets;
 export const comments: Comment[] = dataset.comments;
 export const events: TicketEvent[] = dataset.events;
@@ -24,6 +22,10 @@ export * from "./projects";
 export * from "./workspaces";
 export * from "./dates";
 export * from "./sprints";
+export * from "./chat";
+export * from "./mail";
+export * from "./meetings";
+export * from "./files";
 
 /** Projects inside a workspace, in the order the workspace lists them. */
 export function projectsForWorkspace(all: Project[], workspaceId: string) {
@@ -252,6 +254,11 @@ export function blockersOf(all: Ticket[], ticket: Ticket) {
 
 export function childrenOf(all: Ticket[], ticketId: string) {
   return all.filter((ticket) => ticket.parentId === ticketId);
+}
+
+/** Touched within the last `hours` — what a notification feed cares about. */
+export function isRecentlyUpdated(ticket: Ticket, hours = 24, now: Date = new Date()) {
+  return now.getTime() - new Date(ticket.updatedAt).getTime() < hours * 3_600_000;
 }
 
 export function isSlaBreached(ticket: Ticket, now: Date = new Date()) {

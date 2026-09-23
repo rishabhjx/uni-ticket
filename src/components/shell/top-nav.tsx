@@ -28,6 +28,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AiAssistant } from "@/components/ai/ai-assistant";
+import { NotificationsMenu } from "@/components/shell/notifications";
 import { ShortcutHint } from "@/components/shell/shortcut-hint";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { useShell } from "@/hooks/use-shell";
@@ -154,6 +156,8 @@ export function TopNav() {
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <ShortcutHint />
+        <AiAssistant />
+        <NotificationsMenu />
         <ThemeToggle />
 
         <button

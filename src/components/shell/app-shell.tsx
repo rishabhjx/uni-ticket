@@ -8,6 +8,7 @@ import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
 import { ShortcutsDialog } from "@/components/shell/shortcuts-dialog";
 import { TopNav } from "@/components/shell/top-nav";
 import { CreateWorkspaceDialog } from "@/components/workspaces/create-workspace-dialog";
+import { InCallOverlay } from "@/components/meetings/in-call-overlay";
 import { MediaViewer } from "@/components/tickets/media-viewer";
 import { TicketPanel } from "@/components/tickets/ticket-panel";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -81,6 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <TicketPanel />
               <MediaViewer />
               <CreateDialogHost />
+              <InCallOverlay />
             </main>
           </div>
         </div>

@@ -7,33 +7,55 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import { getUser } from "@/lib/mock";
+import { useMeetingsStore } from "@/lib/store/meetings-store";
 import { cn } from "@/lib/utils";
 
 /**
  * Start a call about this project or ticket, Slack-style.
  *
- * In a real unified workspace the call itself belongs to the platform and this
- * button would deep-link into it with the ticket as context — which is why the
- * dialog names the room after the ticket rather than pretending to dial. There
- * is no backend here to place a call with, so what it demonstrates is the
- * handoff: who gets pulled in, and what the call is about.
+ * Meetings is a real app in this workspace now, so the handoff this used to
+ * only describe actually happens: pressing Join schedules a short ad-hoc
+ * meeting — same title, same invite list, the ticket carried along as a
+ * ticketRef — and drops you straight into it. Still no real audio or video
+ * (there is no signalling server here to place a call with); that boundary is
+ * now InCallOverlay's to describe, not this button's.
  */
 export function CallButton({
   subject,
   participantIds,
+  ticketRefs,
   className,
 }: {
   subject: string;
   participantIds: string[];
+  ticketRefs?: string[];
   className?: string;
 }) {
   const [open, setOpen] = React.useState(false);
-  const room = subject.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 48);
+  const { scheduleMeeting, joinMeeting } = useMeetingsStore();
+
+  const startCall = () => {
+    const now = new Date();
+    const meeting = scheduleMeeting({
+      title: subject,
+      kind: "sync",
+      attendeeIds: participantIds,
+      projectId: null,
+      sprintId: null,
+      ticketRefs: ticketRefs ?? [],
+      startsAt: now.toISOString(),
+      endsAt: new Date(now.getTime() + 30 * 60_000).toISOString(),
+      notes: "",
+    });
+    setOpen(false);
+    joinMeeting(meeting.id);
+  };
 
   return (
     <>
@@ -65,15 +87,6 @@ export function CallButton({
           <div className="flex flex-col gap-3">
             <div>
               <p className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
-                Room
-              </p>
-              <p className="mt-1 font-mono text-small text-grey-700">
-                uni.call/{room}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
                 Invites {participantIds.length}
               </p>
               <ul className="mt-1.5 flex flex-wrap gap-1.5">
@@ -90,10 +103,22 @@ export function CallButton({
             </div>
 
             <p className="rounded-md bg-grey-50 px-2.5 py-2 text-caption text-grey-500">
-              Calling belongs to the workspace, not to Tickets. This is the
-              handoff: the room and the context travel, the call happens there.
+              This schedules a 30-minute meeting in Meetings and joins it now —
+              the same handoff you&apos;d get pulling a thread into a call anywhere
+              else in the workspace.
             </p>
           </div>
+
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={startCall}
+              className="flex h-8 items-center gap-1.5 rounded-md bg-accent-600 px-3 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"
+            >
+              <Video className="size-3.5" strokeWidth={1.75} />
+              Join now
+            </button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

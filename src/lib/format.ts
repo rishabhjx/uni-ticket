@@ -57,6 +57,21 @@ export function formatDate(iso: string) {
   return longDate.format(new Date(iso));
 }
 
+const timeOfDay = new Intl.DateTimeFormat("en-GB", {
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+/** "9:30 AM" — for a message timestamp or a meeting's schedule. */
+export function formatTime(iso: string) {
+  return timeOfDay.format(new Date(iso));
+}
+
+/** "Today at 9:30 AM", "3 Oct at 2:00 PM" — a meeting card's full stamp. */
+export function formatDateTime(iso: string) {
+  return `${formatDueDate(iso)} at ${formatTime(iso)}`;
+}
+
 export function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   const kb = bytes / 1024;

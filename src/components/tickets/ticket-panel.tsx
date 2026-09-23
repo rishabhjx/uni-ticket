@@ -20,6 +20,7 @@ import { AlertChip, TypeIcon } from "@/components/tickets/badges";
 import { CommentComposer } from "@/components/tickets/comment-composer";
 import { Description } from "@/components/tickets/description";
 import { AttachmentsBlock } from "@/components/tickets/development-block";
+import { ConnectionsBlock } from "@/components/tickets/connections-block";
 import { InlineEdit } from "@/components/tickets/inline-edit";
 import {
   PanelResizer,
@@ -207,6 +208,7 @@ export function TicketPanel() {
                   ? ticket.assigneeIds
                   : (project?.memberIds ?? [])
               }
+              ticketRefs={[ticket.key]}
               className="ml-auto"
             />
 
@@ -329,6 +331,7 @@ export function TicketPanel() {
                 attachments={ticket.attachments}
                 canEdit={editable}
               />
+              <ConnectionsBlock ticket={ticket} />
             </div>
 
             <div className="hairline-t px-5 py-4">
@@ -355,6 +358,7 @@ export function TicketPanel() {
                   participantIds={[
                     ...new Set([ticket.reporterId, ...ticket.assigneeIds]),
                   ]}
+                  ticketRefs={[ticket.key]}
                 />
 
                 <div className="ml-auto flex items-center gap-0.5 rounded-md bg-grey-100 p-0.5">

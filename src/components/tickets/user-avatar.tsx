@@ -1,3 +1,7 @@
+"use client";
+
+import * as React from "react";
+
 import { getUser } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +40,9 @@ export function UserAvatar({
   className?: string;
 }) {
   const user = getUser(userId);
+  // A photo that 404s (an ad blocker, offline, a dead seed URL) falls back to
+  // the same initials tile rather than a broken-image glyph.
+  const [photoFailed, setPhotoFailed] = React.useState(false);
 
   if (!user) {
     return (
@@ -49,6 +56,30 @@ export function UserAvatar({
       >
         <span aria-hidden>·</span>
         <span className="sr-only">Unassigned</span>
+      </span>
+    );
+  }
+
+  if (user.avatarUrl && !photoFailed) {
+    return (
+      <span
+        title={user.name}
+        className={cn(
+          "inline-flex items-center justify-center overflow-hidden rounded-full",
+          sizeClass[size],
+          className,
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- a plain
+            <img> sidesteps next/image's remote-domain allowlist for a
+            prototype avatar source, and needs no intrinsic size. */}
+        <img
+          src={user.avatarUrl}
+          alt={user.name}
+          className="size-full object-cover"
+          loading="lazy"
+          onError={() => setPhotoFailed(true)}
+        />
       </span>
     );
   }

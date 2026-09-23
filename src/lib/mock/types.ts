@@ -129,6 +129,8 @@ export type User = {
   tone: 0 | 1 | 2 | 3;
   /** Who this person reports to, which is what drives the team view. */
   managerId: string | null;
+  /** A photo for the avatar. Falls back to initials when it fails to load. */
+  avatarUrl?: string;
 };
 
 export type Project = {
@@ -248,6 +250,13 @@ export type Ticket = {
   order: number;
   /** Values for the project's custom fields, keyed by field id. */
   custom?: Record<string, CustomFieldValue>;
+  /**
+   * Who picks this ticket up at each stage, overriding the project's own
+   * `team` for this ticket only. Undefined (the common case) means "inherit
+   * from the project" — routing and the pickers fall back to `project.team`
+   * wherever this is unset for a given discipline.
+   */
+  stageAssignees?: Partial<Record<Discipline, string>>;
 };
 
 export const LINK_TYPES = [

@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { EmojiPicker } from "@/components/shared/emoji-picker";
-import { UserAvatar } from "@/components/tickets/user-avatar";
+import { MemberPicker } from "@/components/shared/member-picker";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CURRENT_USER_ID, getUser, users } from "@/lib/mock";
+import { CURRENT_USER_ID } from "@/lib/mock";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
@@ -80,13 +80,6 @@ export function CreateWorkspaceDialog({
     router.push(`/workspaces/${workspace.slug}`);
   };
 
-  const toggleMember = (id: string) =>
-    setMemberIds((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg gap-0 p-0">
@@ -137,28 +130,12 @@ export function CreateWorkspaceDialog({
             </Row>
 
             <Row label="People">
-              <div className="flex flex-wrap gap-1">
-                {users.map((user) => {
-                  const on = memberIds.includes(user.id);
-                  return (
-                    <button
-                      key={user.id}
-                      type="button"
-                      onClick={() => toggleMember(user.id)}
-                      aria-pressed={on}
-                      className={cn(
-                        "flex h-7 items-center gap-1.5 rounded-md border px-1.5 text-small transition-colors",
-                        on
-                          ? "border-accent-600 bg-accent-50 text-accent-700"
-                          : "border-grey-200 text-grey-600 hover:border-grey-300",
-                      )}
-                    >
-                      <UserAvatar userId={user.id} />
-                      {getUser(user.id)?.name.split(" ")[0]}
-                    </button>
-                  );
-                })}
-              </div>
+              <MemberPicker
+                value={memberIds}
+                onChange={setMemberIds}
+                lockedIds={[CURRENT_USER_ID]}
+                placeholder="Add people"
+              />
             </Row>
           </div>
 

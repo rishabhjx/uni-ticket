@@ -7,6 +7,8 @@ import { PriorityBadge, SeverityBadge, TypeIcon } from "@/components/tickets/bad
 import { AssigneePicker } from "@/components/tickets/assignee-picker";
 import { kindOf } from "@/components/tickets/comment-composer";
 import { CustomFieldControl } from "@/components/tickets/custom-fields";
+import { StageAssigneesEditor } from "@/components/tickets/stage-assignees";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useProjectFields } from "@/lib/store/added-fields";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
@@ -49,6 +51,7 @@ import {
   TYPE_LABEL,
   users,
   type Attachment,
+  type Discipline,
   type Environment,
   type TicketPriority,
   type TicketSeverity,
@@ -125,15 +128,19 @@ export function CreateTicketDialog({
   const [priority, setPriority] = React.useState<TicketPriority>("medium");
   const [severity, setSeverity] = React.useState<TicketSeverity>("s3");
   const [environment, setEnvironment] = React.useState<Environment>("production");
-  const [buildVersion, setBuildVersion] = React.useState("");
   const [assigneeIds, setAssigneeIds] = React.useState<string[]>([]);
+  // Off by default: a ticket follows whatever the project already routes to
+  // per stage, and only needs its own roster when this one has to differ.
+  const [inheritStages, setInheritStages] = React.useState(true);
+  const [stageAssignees, setStageAssignees] = React.useState<
+    Partial<Record<Discipline, string>>
+  >({});
   const [labelIds, setLabelIds] = React.useState<string[]>([]);
   // Filing straight into a stage: a bug found in QA does not start in Backlog.
   const [status, setStatus] = React.useState<TicketStatus>("backlog");
   const [dueAt, setDueAt] = React.useState("");
   const [sprintId, setSprintId] = React.useState("none");
   const [parentId, setParentId] = React.useState("none");
-  const [estimate, setEstimate] = React.useState("");
   const [requesterId, setRequesterId] = React.useState("none");
   const [custom, setCustom] = React.useState<Record<string, unknown>>({});
   const [files, setFiles] = React.useState<Omit<Attachment, "id">[]>([]);
@@ -195,12 +202,12 @@ export function CreateTicketDialog({
     setDescription("");
     setLabelIds([]);
     setDueAt("");
-    setBuildVersion("");
-    setEstimate("");
     setRequesterId("none");
     setCustom({});
     setFiles([]);
     setAssigneeTouched(false);
+    setInheritStages(true);
+    setStageAssignees({});
   };
 
   const submit = (event: React.FormEvent) => {
@@ -217,13 +224,14 @@ export function CreateTicketDialog({
       status,
       assigneeIds,
       labelIds,
-      estimate: estimate.trim() === "" ? null : Number(estimate),
+      estimate: null,
       dueAt: dueAt ? new Date(`${dueAt}T17:00:00`).toISOString() : null,
       environment: defect ? environment : null,
-      buildVersion: defect && buildVersion.trim() ? buildVersion.trim() : null,
+      buildVersion: null,
       sprintId: sprintId === "none" ? null : sprintId,
       parentId: parentId === "none" ? null : parentId,
       requesterId: service && requesterId !== "none" ? requesterId : null,
+      stageAssignees: inheritStages ? undefined : stageAssignees,
       custom: custom as NewTicketInput["custom"],
       attachments: files,
     });
@@ -404,15 +412,6 @@ export function CreateTicketDialog({
                     </SelectContent>
                   </Select>
                 </Row>
-
-                <Row label="Build">
-                  <input
-                    value={buildVersion}
-                    onChange={(event) => setBuildVersion(event.target.value)}
-                    placeholder="4.2.1"
-                    className={fieldClass}
-                  />
-                </Row>
               </>
             ) : null}
 
@@ -436,6 +435,31 @@ export function CreateTicketDialog({
                     change the status and this follows it.
                   </span>
                 ) : null}
+              </div>
+            </Row>
+
+            <Row label="Per stage">
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-small text-grey-700">
+                  <Checkbox
+                    checked={inheritStages}
+                    onCheckedChange={(next) => setInheritStages(next === true)}
+                  />
+                  Inherit assignees from project
+                </label>
+                {!inheritStages ? (
+                  <StageAssigneesEditor
+                    value={stageAssignees}
+                    onChange={setStageAssignees}
+                    memberIds={project?.memberIds ?? []}
+                    projectTeam={project?.team}
+                  />
+                ) : (
+                  <p className="text-caption text-grey-500">
+                    Each stage goes to whoever {project?.name ?? "the project"}{" "}
+                    already has assigned to it.
+                  </p>
+                )}
               </div>
             </Row>
 
@@ -468,23 +492,6 @@ export function CreateTicketDialog({
             </Row>
 
             <Section title="Planning" />
-
-            <Row label="Estimate">
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  max={99}
-                  step={1}
-                  value={estimate}
-                  onChange={(event) => setEstimate(event.target.value)}
-                  placeholder="—"
-                  aria-label="Estimate in points"
-                  className={cn(fieldClass, "w-24")}
-                />
-                <span className="text-caption text-grey-500">points</span>
-              </div>
-            </Row>
 
             {cycles.length > 0 ? (
               <Row label="Sprint">

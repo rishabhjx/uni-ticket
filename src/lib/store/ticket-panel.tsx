@@ -13,9 +13,6 @@ type TicketPanelValue = {
   openTicketKey: string | null;
   openTicket: (ticketKey: string) => void;
   closeTicket: () => void;
-  /** Widened, for reading a long description or a long thread. */
-  expanded: boolean;
-  toggleExpanded: () => void;
 };
 
 const TicketPanelContext = React.createContext<TicketPanelValue | null>(null);
@@ -44,15 +41,9 @@ export function TicketPanelProvider({ children }: { children: React.ReactNode })
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [router, pathname, params]);
 
-  const [expanded, setExpanded] = React.useState(false);
-  const toggleExpanded = React.useCallback(
-    () => setExpanded((current) => !current),
-    [],
-  );
-
   const value = React.useMemo(
-    () => ({ openTicketKey, openTicket, closeTicket, expanded, toggleExpanded }),
-    [openTicketKey, openTicket, closeTicket, expanded, toggleExpanded],
+    () => ({ openTicketKey, openTicket, closeTicket }),
+    [openTicketKey, openTicket, closeTicket],
   );
 
   return <TicketPanelContext value={value}>{children}</TicketPanelContext>;

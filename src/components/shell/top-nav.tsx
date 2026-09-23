@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronRight,
   Columns3,
+  FolderOpen,
   FolderPlus,
   LayoutDashboard,
   Layers,
@@ -20,6 +21,7 @@ import {
 
 import { Kbd, KbdGroup } from "@/components/reui/kbd";
 import { useCommandPalette } from "@/components/shell/command-palette";
+import { ProjectIcon, WorkspaceIcon } from "@/components/shared/entity-icon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +31,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AiAssistant } from "@/components/ai/ai-assistant";
-import { NotificationsMenu } from "@/components/shell/notifications";
 import { ShortcutHint } from "@/components/shell/shortcut-hint";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { useShell } from "@/hooks/use-shell";
@@ -81,7 +82,7 @@ export function TopNav() {
   const is = (href: string) => pathname === href;
 
   return (
-    <header className="hairline-b flex h-topbar shrink-0 items-center gap-1 bg-grey-0 px-3 sm:px-4">
+    <header className="glass hairline-b relative z-10 flex h-topbar shrink-0 items-center gap-1 px-3 sm:px-4">
       {/* Top-level destinations. Three, because there were only ever three. */}
       <nav className="flex items-center gap-0.5">
         <Link href="/" className={cn(link, is("/") ? linkActive : linkIdle)}>
@@ -157,7 +158,6 @@ export function TopNav() {
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <ShortcutHint />
         <AiAssistant />
-        <NotificationsMenu />
         <ThemeToggle />
 
         <button
@@ -216,7 +216,11 @@ function WorkspacePicker({ current }: { current: string | null }) {
           type="button"
           className={cn(link, active ? linkActive : linkIdle, "max-w-[220px]")}
         >
-          <span aria-hidden>{active?.emoji ?? "🗂️"}</span>
+          {active ? (
+            <WorkspaceIcon workspace={active} size="xs" />
+          ) : (
+            <Layers className="size-3.5 shrink-0 text-grey-400" strokeWidth={1.75} />
+          )}
           <span className="min-w-0 truncate">
             {active?.name ?? "All workspaces"}
           </span>
@@ -228,7 +232,7 @@ function WorkspacePicker({ current }: { current: string | null }) {
         {workspaces.map((workspace) => (
           <DropdownMenuItem key={workspace.id} asChild>
             <Link href={`/workspaces/${workspace.slug}`} className="gap-2">
-              <span aria-hidden>{workspace.emoji}</span>
+              <WorkspaceIcon workspace={workspace} size="xs" />
               <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
               {workspace.id === current ? (
                 <span aria-hidden className="text-accent-600">
@@ -273,7 +277,11 @@ function ProjectPicker({
           type="button"
           className={cn(link, active ? linkActive : linkIdle, "max-w-[220px]")}
         >
-          <span aria-hidden>{active?.emoji ?? "📁"}</span>
+          {active ? (
+            <ProjectIcon project={active} size="xs" />
+          ) : (
+            <FolderOpen className="size-3.5 shrink-0 text-grey-400" strokeWidth={1.75} />
+          )}
           <span className="min-w-0 truncate">
             {active?.name ?? "Pick a project"}
           </span>
@@ -290,7 +298,7 @@ function ProjectPicker({
           scoped.map((project) => (
             <DropdownMenuItem key={project.id} asChild>
               <Link href={`/projects/${project.slug}/board`} className="gap-2">
-                <span aria-hidden>{project.emoji}</span>
+                <ProjectIcon project={project} size="xs" />
                 <span className="min-w-0 flex-1 truncate">{project.name}</span>
                 {project.id === current ? (
                   <span aria-hidden className="text-accent-600">

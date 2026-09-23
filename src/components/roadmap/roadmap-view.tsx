@@ -14,7 +14,10 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { BoardSkeleton } from "@/components/shared/skeletons";
 import { cn } from "@/lib/utils";
 import {
+  DISCIPLINE_LABEL,
+  DISCIPLINES,
   sprintsForProject,
+  STATUS_DISCIPLINE,
   type Project,
   type Ticket,
 } from "@/lib/mock";
@@ -47,14 +50,18 @@ function windowFor(ticket: Ticket): { start: Date; end: Date } {
   };
 }
 
-const BAR_COLOUR: Record<string, string> = {
-  backlog: "var(--status-backlog-fg)",
-  todo: "var(--status-todo-fg)",
-  in_progress: "var(--status-progress-fg)",
-  in_review: "var(--status-review-fg)",
-  resolved: "var(--status-resolved-fg)",
-  done: "var(--status-done-fg)",
-};
+/**
+ * A bar is coloured by the discipline that owns its status — the same six
+ * hues the board and its badges already use — rather than by the thirteen
+ * individual statuses, which would be thirteen things to tell apart in a bar
+ * a few pixels tall. `STATUS_DISCIPLINE[status]` always resolves, so every
+ * bar gets a colour; the previous version keyed off statuses this workflow
+ * has never had ("in_review", "resolved"), so every bar fell through to no
+ * colour at all.
+ */
+function barColour(status: Ticket["status"]) {
+  return `var(--discipline-${STATUS_DISCIPLINE[status]}-fg)`;
+}
 
 export function RoadmapView({ project }: { project: Project }) {
   const { tickets, isLoading } = useTicketStore();
@@ -73,7 +80,7 @@ export function RoadmapView({ project }: { project: Project }) {
     const rows: GanttResource[] = epics.map((epic) => ({
       id: epic.id,
       title: `${epic.key} · ${epic.title}`,
-      color: BAR_COLOUR[epic.status],
+      color: barColour(epic.status),
     }));
 
     const children = scoped.filter((ticket) => ticket.type !== "epic");
@@ -92,7 +99,7 @@ export function RoadmapView({ project }: { project: Project }) {
         start,
         end,
         allDay: true,
-        color: BAR_COLOUR[ticket.status],
+        color: barColour(ticket.status),
         resourceId:
           ticket.parentId && epicIds.has(ticket.parentId)
             ? ticket.parentId
@@ -210,6 +217,29 @@ export function RoadmapView({ project }: { project: Project }) {
           the title; adding those again beside it printed the date range and
           the scale menu twice. */}
       <GanttNav className="px-4 py-2.5 sm:px-6" />
+      {/*
+        A bar's colour was never explained anywhere on the page — six hues
+        with no key is a puzzle, not information. Same six disciplines the
+        board's own columns use, so the legend teaches one vocabulary rather
+        than a roadmap-only one.
+      */}
+      <div className="hairline-b flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-2 sm:px-6">
+        {DISCIPLINES.filter((discipline) => discipline !== "closed").map(
+          (discipline) => (
+            <span
+              key={discipline}
+              className="flex items-center gap-1.5 text-caption text-grey-600"
+            >
+              <span
+                aria-hidden
+                className="size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: `var(--discipline-${discipline}-fg)` }}
+              />
+              {DISCIPLINE_LABEL[discipline]}
+            </span>
+          ),
+        )}
+      </div>
       <GanttView
         className={cn(
           "min-h-0 flex-1 transition-opacity duration-[--duration-slow]",

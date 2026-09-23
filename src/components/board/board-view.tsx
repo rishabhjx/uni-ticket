@@ -363,9 +363,9 @@ export function BoardView({ project }: { project: Project }) {
                   return (
                     <div
                       key={column.id}
-                      className="flex min-w-[288px] flex-1 shrink-0 basis-0 flex-col gap-2 rounded-md border border-grey-200 bg-grey-50 p-3 xl:max-w-[400px]"
+                      className="glass-soft shadow-card flex min-w-[288px] flex-1 shrink-0 basis-0 flex-col gap-2 rounded-xl border border-grey-200 p-3 xl:max-w-[400px]"
                     >
-                      <span className="px-1 text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
+                      <span className="text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
                         {column.name}
                         <span className="tnum ml-1.5 font-normal text-grey-500">
                           {items.length}
@@ -374,7 +374,7 @@ export function BoardView({ project }: { project: Project }) {
                       {items.map((ticket) => (
                         <div
                           key={ticket.id}
-                          className="rounded-md border border-grey-200 bg-grey-0"
+                          className="glass-soft shadow-card rounded-lg border border-grey-200"
                         >
                           <TicketCard
                             ticket={ticket}
@@ -384,7 +384,7 @@ export function BoardView({ project }: { project: Project }) {
                         </div>
                       ))}
                       {items.length === 0 ? (
-                        <p className="px-1 pb-1 text-caption text-grey-500">—</p>
+                        <p className="pb-1 text-caption text-grey-500">—</p>
                       ) : null}
                     </div>
                   );
@@ -424,7 +424,7 @@ export function BoardView({ project }: { project: Project }) {
                   key={column.id}
                   value={column.id}
                   className={cn(
-                    "flex h-full min-w-[288px] flex-1 shrink-0 basis-0 flex-col overflow-hidden rounded-md border border-grey-200 bg-grey-50 p-0 xl:max-w-[400px]",
+                    "glass-soft shadow-card flex h-full min-w-[288px] flex-1 shrink-0 basis-0 flex-col overflow-hidden rounded-xl border border-grey-200 p-0 xl:max-w-[400px]",
                     // Committing the move on drop means no live slot-in
                     // preview, so the column says "here" instead: the card
                     // no longer has to guess where it is about to land.
@@ -449,7 +449,7 @@ export function BoardView({ project }: { project: Project }) {
                         */}
                         <KanbanItemHandle
                           asChild
-                          className="rounded-md border border-grey-200 bg-grey-0 transition-[border-color,transform] duration-[--duration-instant] hover:border-grey-300 active:scale-[0.995]"
+                          className="glass-soft shadow-card rounded-lg border border-grey-200 transition-[border-color,transform] duration-[--duration-instant] hover:border-grey-300 active:scale-[0.995]"
                         >
                           <div>
                             <TicketCard
@@ -463,7 +463,7 @@ export function BoardView({ project }: { project: Project }) {
                     ))}
 
                     {(value[column.id]?.length ?? 0) === 0 ? (
-                      <p className="px-1 text-caption text-grey-500">
+                      <p className="text-caption text-grey-500">
                         {groupBy === "status" ? "Drag a ticket here." : "Nothing here."}
                       </p>
                     ) : null}
@@ -477,7 +477,7 @@ export function BoardView({ project }: { project: Project }) {
                 const ticket = filtered.find((item) => item.id === activeId);
                 if (!ticket) return null;
                 return (
-                  <div className="w-[284px] rotate-[1.5deg] scale-[1.02] rounded-md border border-grey-300 bg-grey-0 shadow-drag">
+                  <div className="glass-strong w-[284px] rotate-[1.5deg] scale-[1.02] rounded-lg border border-grey-300 shadow-drag">
                     <TicketCard ticket={ticket} showStatus={groupBy !== "status"} />
                   </div>
                 );

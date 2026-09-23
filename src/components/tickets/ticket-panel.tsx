@@ -6,9 +6,7 @@ import {
   ChevronLeft,
   ExternalLink,
   History,
-  Maximize2,
   MessageSquare,
-  Minimize2,
   RotateCcw,
   ShieldAlert,
   X,
@@ -47,8 +45,7 @@ import { useTicketStore } from "@/lib/store/ticket-store";
 import { cn } from "@/lib/utils";
 
 export function TicketPanel() {
-  const { openTicketKey, openTicket, closeTicket, expanded, toggleExpanded } =
-    useTicketPanel();
+  const { openTicketKey, openTicket, closeTicket } = useTicketPanel();
   const { tickets, comments, updateTicket, reopenTicket } = useTicketStore();
   const headingRef = React.useRef<HTMLDivElement>(null);
   const [showHistory, setShowHistory] = React.useState(true);
@@ -108,7 +105,7 @@ export function TicketPanel() {
         // While dragging, the width is a live number rather than a class, so
         // the transition is dropped: animating every pointermove lags the edge
         // behind the cursor.
-        expanded ? undefined : { width }
+        { width }
       }
       className={cn(
         /*
@@ -122,12 +119,11 @@ export function TicketPanel() {
          * read a paragraph in.
          */
         "absolute inset-y-0 right-0 z-50 flex max-w-full flex-col border-l border-grey-200 bg-grey-0 max-md:w-full",
-        expanded && "w-[min(1200px,100%)]",
         open ? "translate-x-0 shadow-overlay" : "translate-x-full",
         "transition-[transform] duration-[--duration-panel]",
       )}
     >
-      {open && !expanded ? (
+      {open ? (
         <PanelResizer width={width} onWidth={writePanelWidth} disabled={!open} />
       ) : null}
       {!ticket && open ? (
@@ -152,7 +148,7 @@ export function TicketPanel() {
               open a different one. */}
           <header
             key={`head-${ticket.id}`}
-            className="settle-1 hairline-b flex h-topbar shrink-0 items-center gap-2 px-5"
+            className="glass-strong settle-1 hairline-b relative z-10 flex h-topbar shrink-0 items-center gap-2 px-5"
           >
             {parent ? (
               <button
@@ -213,34 +209,21 @@ export function TicketPanel() {
             />
 
             {/*
-              Expand now opens the ticket as a PAGE rather than just widening
-              the panel. A panel is right while you are working a list — the
-              list stays behind it and you keep your place — and wrong when the
-              ticket IS the work.
+              Opens in a new tab: the list (or board) stays exactly where it
+              was in this one, and the ticket becomes its own page in another
+              — right when the ticket IS the work, without losing your place
+              in what you were browsing.
             */}
             <Link
               href={`/tickets/${ticket.key.toLowerCase()}`}
-              onClick={closeTicket}
-              aria-label="Open as a full page"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open as a full page (opens in a new tab)"
               title="Open as a full page"
               className="flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
               <ExternalLink className="size-4" strokeWidth={1.75} />
             </Link>
-
-            <button
-              type="button"
-              onClick={toggleExpanded}
-              aria-label={expanded ? "Narrow the panel" : "Widen the panel"}
-              title={expanded ? "Narrow" : "Widen"}
-              className="flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
-            >
-              {expanded ? (
-                <Minimize2 className="size-4" strokeWidth={1.75} />
-              ) : (
-                <Maximize2 className="size-4" strokeWidth={1.75} />
-              )}
-            </button>
 
             <button
               type="button"
@@ -254,10 +237,7 @@ export function TicketPanel() {
 
           <div
             key={`body-${ticket.id}`}
-            className={cn(
-              "settle-2 min-h-0 flex-1 overflow-y-auto",
-              expanded && "px-2",
-            )}
+            className="settle-2 min-h-0 flex-1 overflow-y-auto"
           >
             {blockers.length > 0 ? (
               <div className="hairline-b flex items-start gap-2 bg-[var(--priority-urgent-bg)] px-5 py-2.5">

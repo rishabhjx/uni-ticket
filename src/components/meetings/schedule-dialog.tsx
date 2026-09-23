@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ProjectIcon } from "@/components/shared/entity-icon";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   CURRENT_USER_ID,
@@ -148,7 +149,10 @@ export function ScheduleDialog({
                 <SelectItem value="none">No project</SelectItem>
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
-                    {project.emoji} {project.name}
+                    <span className="flex items-center gap-2">
+                      <ProjectIcon project={project} size="xs" />
+                      {project.name}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

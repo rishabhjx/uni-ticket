@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 
 import { EmojiPicker } from "@/components/shared/emoji-picker";
+import { WorkspaceIcon } from "@/components/shared/entity-icon";
+import { MemberPicker } from "@/components/shared/member-picker";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,6 @@ import {
   DISCIPLINE_LABEL,
   DISCIPLINES,
   getUser,
-  users,
   type CustomField,
   type CustomFieldType,
   type Discipline,
@@ -51,16 +51,10 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-/** Derives a ticket prefix from the name, e.g. "Orbit Data" -> "ORB". */
+/** The first three letters of the name, e.g. "Orbit Data" -> "ORB". */
 function suggestKey(name: string) {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "";
-  if (words.length === 1) return words[0].slice(0, 3).toUpperCase();
-  return words
-    .slice(0, 3)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
+  const letters = name.replace(/[^a-zA-Z]/g, "");
+  return letters.slice(0, 3).toUpperCase();
 }
 
 export function CreateProjectDialog({
@@ -146,12 +140,10 @@ export function CreateProjectDialog({
         <form onSubmit={submit}>
           <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto px-5 py-4">
             <div className="flex gap-2">
-              <span
-                aria-hidden
-                className="flex size-9 shrink-0 items-center justify-center rounded-md border border-grey-200 text-lg"
-              >
-                {emoji}
-              </span>
+              {/* One place to set the icon, not two: the swatch IS the
+                  picker's trigger, rather than a preview beside a separate
+                  "Icon" field that opened the same popover a second way. */}
+              <EmojiPicker value={emoji} onChange={setEmoji} className="size-9" />
               <input
                 autoFocus
                 value={name}
@@ -161,10 +153,6 @@ export function CreateProjectDialog({
                 className={cn(fieldClass, "h-9 text-heading font-medium")}
               />
             </div>
-
-            <Row label="Icon">
-              <EmojiPicker value={emoji} onChange={setEmoji} />
-            </Row>
 
             <Row label="Fields">
               <div className="flex flex-col gap-1.5">
@@ -318,7 +306,10 @@ export function CreateProjectDialog({
                 <SelectContent>
                   {workspaces.map((workspace) => (
                     <SelectItem key={workspace.id} value={workspace.id}>
-                      {workspace.emoji} {workspace.name}
+                      <span className="flex items-center gap-2">
+                        <WorkspaceIcon workspace={workspace} size="xs" />
+                        {workspace.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -379,37 +370,12 @@ export function CreateProjectDialog({
             </Row>
 
             <Row label="Members">
-              <div className="flex flex-wrap gap-1">
-                {users.map((user) => {
-                  const active = memberIds.includes(user.id);
-                  const isMe = user.id === CURRENT_USER_ID;
-                  return (
-                    <button
-                      key={user.id}
-                      type="button"
-                      disabled={isMe}
-                      onClick={() =>
-                        setMemberIds((current) =>
-                          active
-                            ? current.filter((id) => id !== user.id)
-                            : [...current, user.id],
-                        )
-                      }
-                      className={cn(
-                        "flex h-7 items-center gap-1.5 rounded-md border px-1.5 text-caption transition-colors",
-                        active
-                          ? "border-accent-200 bg-accent-50 text-accent-700"
-                          : "border-grey-200 text-grey-600 hover:border-grey-300",
-                        isMe && "cursor-default",
-                      )}
-                    >
-                      <UserAvatar userId={user.id} />
-                      {getUser(user.id)?.name.split(" ")[0]}
-                      {isMe ? " (you)" : ""}
-                    </button>
-                  );
-                })}
-              </div>
+              <MemberPicker
+                value={memberIds}
+                onChange={setMemberIds}
+                lockedIds={[CURRENT_USER_ID]}
+                placeholder="Add members"
+              />
             </Row>
           </div>
 

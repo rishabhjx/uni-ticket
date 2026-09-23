@@ -9,6 +9,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/reui/chart";
+import { ProjectIcon } from "@/components/shared/entity-icon";
 import { CardsSkeleton } from "@/components/shared/skeletons";
 import { StatusBadge } from "@/components/tickets/badges";
 import { AvatarStack } from "@/components/tickets/user-avatar";
@@ -139,7 +140,10 @@ export function InsightsView() {
             <SelectItem value="all">All projects</SelectItem>
             {projects.map((project) => (
               <SelectItem key={project.id} value={project.id}>
-                {project.emoji} {project.name}
+                <span className="flex items-center gap-2">
+                  <ProjectIcon project={project} size="xs" />
+                  {project.name}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>

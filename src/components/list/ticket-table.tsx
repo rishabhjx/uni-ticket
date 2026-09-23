@@ -458,7 +458,16 @@ export function TicketTable({
     columns,
     data: tickets,
     getRowId: (ticket) => ticket.id,
-    initialState: { sorting: [{ id: "updatedAt", desc: true }] },
+    initialState: {
+      sorting: [{ id: "updatedAt", desc: true }],
+      /*
+       * Select and Key pinned to the start: scrolling a wide row of columns
+       * (or the grid overflowing a narrow window) used to carry the ticket's
+       * own identity off screen with everything else, so a person lost track
+       * of which row they were even looking at three columns in.
+       */
+      columnPinning: { start: ["select", "key"], end: [] },
+    },
     // dataGridFeatures registers rowPaginationFeature, which defaults to a
     // 10-row page — so the grid silently truncated a 150-ticket project to
     // ten. This list virtualises instead of paging, so the page is every row.

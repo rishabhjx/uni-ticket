@@ -47,6 +47,8 @@ export type NewTicketInput = {
   /** Values for the project's own fields, keyed by field id. */
   custom: Record<string, CustomFieldValue>;
   attachments: Omit<Attachment, "id">[];
+  /** Undefined/omitted inherits the project's own team. */
+  stageAssignees?: Ticket["stageAssignees"];
 };
 
 /**
@@ -344,7 +346,8 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
       const to = STATUS_DISCIPLINE[patch.status];
       if (from === to) return patch;
 
-      const owner = getProject(ticket.projectId)?.team?.[to];
+      const owner =
+        ticket.stageAssignees?.[to] ?? getProject(ticket.projectId)?.team?.[to];
       // No owner for that discipline means the project has not said who picks
       // it up, and inventing one would be worse than leaving it alone.
       if (!owner) return patch;
@@ -662,6 +665,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
           id: `a-new-${createdCount.current}-${index}`,
         })),
         custom: input.custom,
+        stageAssignees: input.stageAssignees,
         createdAt: at,
         updatedAt: at,
         statusChangedAt: at,

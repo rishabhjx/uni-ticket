@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { NotificationsMenu } from "@/components/shell/notifications";
+import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   chatConversationsForUser,
   getUser,
@@ -116,7 +118,7 @@ export function AppRail() {
     { name: "Mail", icon: Inbox, href: "/mail", badge: mailUnread },
     { name: "Docs", icon: FileText },
     { name: "Chat", icon: MessagesSquare, href: "/chat", badge: chatUnread },
-    { name: "Meetings", icon: CalendarDays, href: "/meetings", badge: meetingsSoon },
+    { name: "Calendar", icon: CalendarDays, href: "/meetings", badge: meetingsSoon },
     { name: "Files", icon: FolderOpen, href: "/files" },
     { name: "People", icon: Users },
     { name: "Insights", icon: BarChart3 },
@@ -131,7 +133,7 @@ export function AppRail() {
   return (
     <nav
       aria-label="Workspace apps"
-      className="hairline-r flex w-rail shrink-0 flex-col items-center gap-1 bg-grey-100 py-3"
+      className="glass hairline-r relative z-10 flex w-rail shrink-0 flex-col items-center gap-1 py-3"
     >
       <Tooltip>
         <TooltipTrigger asChild>
@@ -157,6 +159,8 @@ export function AppRail() {
       ))}
 
       <div className="mt-auto flex flex-col items-center gap-1 pt-3">
+        <NotificationsMenu />
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -177,9 +181,9 @@ export function AppRail() {
             <button
               type="button"
               aria-label={currentUser?.name ?? "Account"}
-              className="flex size-8 items-center justify-center rounded-full bg-grey-300 text-caption font-medium text-grey-800"
+              className="tap flex items-center justify-center rounded-full ring-1 ring-grey-300 ring-offset-2 ring-offset-transparent transition-[box-shadow] hover:ring-accent-500"
             >
-              {currentUser?.initials}
+              <UserAvatar userId={currentUser?.id ?? null} size="lg" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>

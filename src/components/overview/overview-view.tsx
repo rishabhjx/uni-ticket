@@ -3,12 +3,12 @@
 import Link from "next/link";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { ProjectIcon } from "@/components/shared/entity-icon";
 import { CardsSkeleton, KpiSkeleton } from "@/components/shared/skeletons";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
   kpisFor,
   myProjects,
-  personalKpis,
   reporteesOf,
   ticketsForTeam,
   type ProjectStats,
@@ -32,7 +32,7 @@ function KpiCard({
   return (
     <Link
       href={href}
-      className="flex flex-col rounded-md border border-grey-200 p-4 transition-colors hover:border-grey-300"
+      className="glass-soft shadow-card flex flex-col rounded-xl border border-grey-200 p-4 transition-colors hover:border-grey-300"
     >
       <span className="text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
         {label}
@@ -73,25 +73,25 @@ function Stat({ label, value, alert }: { label: string; value: string | number; 
 }
 
 function ProjectSummary({
+  id,
   name,
   slug,
-  monogram,
+  projectKey,
   stats,
 }: {
+  id: string;
   name: string;
   slug: string;
-  monogram: string;
+  projectKey: string;
   stats: ProjectStats;
 }) {
   return (
     <Link
       href={`/projects/${slug}/board`}
-      className="flex flex-col gap-3 rounded-md border border-grey-200 p-4 transition-colors hover:border-grey-300"
+      className="glass-soft shadow-card flex flex-col gap-3 rounded-xl border border-grey-200 p-4 transition-colors hover:border-grey-300"
     >
       <div className="flex items-center gap-2">
-        <span aria-hidden className="text-base leading-5">
-          {monogram}
-        </span>
+        <ProjectIcon project={{ id, key: projectKey }} size="sm" />
         <span className="truncate text-heading font-medium text-grey-900">
           {name}
         </span>
@@ -132,53 +132,14 @@ export function OverviewView() {
     );
   }
 
-  const kpis = personalKpis(tickets);
   const team = kpisFor(ticketsForTeam(tickets));
   const reportees = reporteesOf();
   const projects = myProjects(tickets, undefined, allProjects);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <section className="px-6 py-5">
-        <h2 className="mb-3 text-heading font-semibold text-grey-900">My work</h2>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-          <KpiCard
-            label="Pending"
-            value={kpis.pending}
-            hint="Backlog and To Do"
-            href="/my-work?status=backlog,todo"
-          />
-          <KpiCard
-            label="In progress"
-            value={kpis.inProgress}
-            hint="Being worked on or reviewed"
-            href="/my-work?status=in_progress,in_review"
-          />
-          <KpiCard
-            label="Overdue"
-            value={kpis.overdue}
-            hint="Past their due date"
-            href="/my-work?overdue=1"
-            alert
-          />
-          <KpiCard
-            label="Stale"
-            value={kpis.stale}
-            hint="A week or more in one column"
-            href="/my-work?stale=1"
-            alert
-          />
-          <KpiCard
-            label="Updated this week"
-            value={kpis.assignedThisWeek}
-            hint="Touched since Monday"
-            href="/my-work"
-          />
-        </div>
-      </section>
-
       {reportees.length > 0 ? (
-        <section className="px-6 pb-5">
+        <section className="px-6 py-5">
           <div className="mb-3 flex items-center gap-2">
             <h2 className="text-heading font-semibold text-grey-900">My team</h2>
             <span className="flex gap-1">
@@ -230,7 +191,7 @@ export function OverviewView() {
         </section>
       ) : null}
 
-      <section className="px-6 pb-8">
+      <section className={cn("px-6 pb-8", reportees.length === 0 && "pt-5")}>
         <h2 className="mb-3 text-heading font-semibold text-grey-900">
           My projects
         </h2>
@@ -248,9 +209,10 @@ export function OverviewView() {
             {projects.map(({ project, stats }) => (
               <ProjectSummary
                 key={project.id}
+                id={project.id}
                 name={project.name}
                 slug={project.slug}
-                monogram={project.emoji}
+                projectKey={project.key}
                 stats={stats}
               />
             ))}

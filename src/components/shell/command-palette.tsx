@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { PriorityBadge, StatusBadge, TypeIcon } from "@/components/tickets/badges";
+import { ProjectIcon } from "@/components/shared/entity-icon";
 import {
   CommandDialog,
   CommandEmpty,
@@ -336,9 +337,7 @@ export function CommandPaletteProvider({
                   }
                   className="gap-2"
                 >
-                  <span aria-hidden className="w-4 shrink-0 text-center">
-                    {project.emoji}
-                  </span>
+                  <ProjectIcon project={project} size="xs" />
                   <Columns3 className="size-3.5 text-grey-400" strokeWidth={1.75} />
                   {project.name} board
                 </CommandItem>
@@ -349,9 +348,7 @@ export function CommandPaletteProvider({
                   }
                   className="gap-2"
                 >
-                  <span aria-hidden className="w-4 shrink-0 text-center">
-                    {project.emoji}
-                  </span>
+                  <ProjectIcon project={project} size="xs" />
                   <Rows3 className="size-3.5 text-grey-400" strokeWidth={1.75} />
                   {project.name} list
                 </CommandItem>

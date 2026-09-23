@@ -12,6 +12,7 @@ export const users: User[] = [
     role: "Engineering Lead",
     tone: 3,
     managerId: "u-3",
+    avatarUrl: "https://i.pravatar.cc/128?img=13",
   },
   {
     id: "u-2",
@@ -21,6 +22,7 @@ export const users: User[] = [
     role: "Staff Engineer",
     tone: 0,
     managerId: "u-3",
+    avatarUrl: "https://i.pravatar.cc/128?img=47",
   },
   {
     id: "u-3",
@@ -30,6 +32,7 @@ export const users: User[] = [
     role: "Engineering Manager",
     tone: 1,
     managerId: null,
+    avatarUrl: "https://i.pravatar.cc/128?img=51",
   },
   {
     id: "u-4",
@@ -39,6 +42,7 @@ export const users: User[] = [
     role: "Design Lead",
     tone: 2,
     managerId: "u-3",
+    avatarUrl: "https://i.pravatar.cc/128?img=32",
   },
   {
     id: "u-5",
@@ -48,6 +52,7 @@ export const users: User[] = [
     role: "Backend Engineer",
     tone: 0,
     managerId: "u-1",
+    avatarUrl: "https://i.pravatar.cc/128?img=14",
   },
   {
     id: "u-6",
@@ -57,6 +62,7 @@ export const users: User[] = [
     role: "Mobile Engineer",
     tone: 1,
     managerId: "u-1",
+    avatarUrl: "https://i.pravatar.cc/128?img=41",
   },
   {
     id: "u-7",
@@ -66,6 +72,7 @@ export const users: User[] = [
     role: "Data Engineer",
     tone: 2,
     managerId: "u-1",
+    avatarUrl: "https://i.pravatar.cc/128?img=44",
   },
   {
     id: "u-8",
@@ -75,6 +82,7 @@ export const users: User[] = [
     role: "QA Engineer",
     tone: 3,
     managerId: "u-1",
+    avatarUrl: "https://i.pravatar.cc/128?img=12",
   },
 ];
 

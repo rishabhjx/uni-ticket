@@ -3,6 +3,7 @@
 import { FolderPlus } from "lucide-react";
 
 import { ProjectsView } from "@/components/projects/projects-view";
+import { WorkspaceIcon } from "@/components/shared/entity-icon";
 import { PageHeader } from "@/components/shell/page-header";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import { useShell } from "@/hooks/use-shell";
@@ -23,7 +24,8 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   return (
     <>
       <PageHeader
-        title={`${workspace.emoji} ${workspace.name}`}
+        icon={<WorkspaceIcon workspace={workspace} size="md" />}
+        title={workspace.name}
         meta={
           <span className="min-w-0 truncate text-small text-grey-500">
             {workspace.description}

@@ -11,15 +11,19 @@
  */
 export function PageHeader({
   title,
+  icon,
   meta,
   actions,
 }: {
   title: string;
+  /** An entity tile or icon shown before the title, e.g. a workspace's. */
+  icon?: React.ReactNode;
   meta?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
   return (
-    <header className="hairline-b flex h-topbar shrink-0 items-center gap-3 px-4 sm:px-6">
+    <header className="glass hairline-b relative z-10 flex h-topbar shrink-0 items-center gap-3 px-4 sm:px-6">
+      {icon}
       <h1 className="text-title font-semibold text-grey-900">{title}</h1>
       {meta}
       {actions ? (

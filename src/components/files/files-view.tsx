@@ -6,6 +6,7 @@ import { ChevronRight, FolderPlus, HardDrive, Star, Upload } from "lucide-react"
 
 import { FileRow } from "@/components/files/file-row";
 import { Empty, EmptyDescription, EmptyMedia, EmptyTitle } from "@/components/reui/empty";
+import { ProjectIcon } from "@/components/shared/entity-icon";
 import { PageHeader } from "@/components/shell/page-header";
 import { projects } from "@/lib/mock";
 import { useFilesStore } from "@/lib/store/files-store";
@@ -135,7 +136,7 @@ export function FilesView() {
                 drive === project.id ? "bg-grey-150 font-medium text-grey-900" : "text-grey-600 hover:bg-grey-100 hover:text-grey-900",
               )}
             >
-              <span aria-hidden className="shrink-0">{project.emoji}</span>
+              <ProjectIcon project={project} size="xs" />
               <span className="min-w-0 flex-1 truncate text-left">{project.name}</span>
             </button>
           ))}

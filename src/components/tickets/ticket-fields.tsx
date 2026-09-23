@@ -10,6 +10,7 @@ import {
 import { AssigneePicker } from "@/components/tickets/assignee-picker";
 import { DueDatePicker } from "@/components/tickets/due-date-picker";
 import { LabelPicker } from "@/components/tickets/label-picker";
+import { StageAssigneesEditor } from "@/components/tickets/stage-assignees";
 import {
   AvatarStack,
   assigneeNames,
@@ -166,6 +167,18 @@ export function TicketFields({
         )}
       </Field>
 
+      {canEdit ? (
+        <Field label="Per stage" className="items-start">
+          <StageAssigneesEditor
+            value={ticket.stageAssignees ?? {}}
+            onChange={(next) => updateTicket(ticket.id, { stageAssignees: next })}
+            memberIds={project?.memberIds ?? []}
+            projectTeam={project?.team}
+            className="flex flex-col gap-1 py-0.5"
+          />
+        </Field>
+      ) : null}
+
       {isDefect(ticket.type) ? (
         <>
           <Field label="Severity">
@@ -208,12 +221,6 @@ export function TicketFields({
                 ))}
               </SelectContent>
             </Select>
-          </Field>
-
-          <Field label="Build">
-            <span className="px-1.5 font-mono text-[12px] text-grey-700">
-              {ticket.buildVersion ?? "—"}
-            </span>
           </Field>
         </>
       ) : null}
@@ -289,12 +296,6 @@ export function TicketFields({
           )}
         >
           {daysInColumn(ticket)}d in {STATUS_LABEL[ticket.status].toLowerCase()}
-        </span>
-      </Field>
-
-      <Field label="Estimate">
-        <span className="tnum px-1.5 text-small text-grey-700">
-          {ticket.estimate !== null ? `${ticket.estimate} points` : "—"}
         </span>
       </Field>
 

@@ -11,8 +11,6 @@ import {
   Hourglass,
   Layers,
   Paperclip,
-  Rows2,
-  Rows3,
   Search,
   Server,
   Shapes,
@@ -27,6 +25,7 @@ import {
 
 import { Filters } from "@/components/reui/filters/filters";
 import { SavedViews } from "@/components/list/saved-views";
+import { ProjectIcon } from "@/components/shared/entity-icon";
 import type {
   FilterField,
   FilterQuery,
@@ -38,11 +37,6 @@ import {
   TypeIcon,
 } from "@/components/tickets/badges";
 import { UserAvatar } from "@/components/tickets/user-avatar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   DISCIPLINE_LABEL,
   DISCIPLINES,
@@ -238,7 +232,8 @@ function buildFields(project: Project | undefined, projects: Project[]) {
         icon(<FolderOpen className="size-3.5" strokeWidth={1.75} />),
         projects.map((item) => ({
           value: item.id,
-          label: `${item.emoji} ${item.name}`,
+          label: item.name,
+          icon: icon(<ProjectIcon project={item} size="xs" />),
         })),
         true,
       ),
@@ -463,29 +458,34 @@ export function FilterBar({
         <SavedViews />
         {extra}
 
-        <Tooltip>
-          <TooltipTrigger asChild>
+        {/*
+          Two text labels rather than a single icon that swapped meaning on
+          click — the icon it used to show for "comfortable" read as
+          decoration nobody could place, and a segmented control states both
+          options and the current one at a glance, with no icon to parse.
+        */}
+        <div
+          role="group"
+          aria-label="Row density"
+          className="flex items-center gap-0.5 rounded-md bg-grey-100 p-0.5"
+        >
+          {(["compact", "comfortable"] as const).map((option) => (
             <button
+              key={option}
               type="button"
-              aria-label={
-                density === "compact" ? "Comfortable rows" : "Compact rows"
-              }
-              onClick={() =>
-                setDensity(density === "compact" ? "comfortable" : "compact")
-              }
-              className="flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
-            >
-              {density === "compact" ? (
-                <Rows3 className="size-4" strokeWidth={1.75} />
-              ) : (
-                <Rows2 className="size-4" strokeWidth={1.75} />
+              aria-pressed={density === option}
+              onClick={() => setDensity(option)}
+              className={cn(
+                "flex h-6 items-center rounded-md px-2 text-caption font-medium capitalize transition-colors",
+                density === option
+                  ? "bg-grey-0 text-grey-900"
+                  : "text-grey-600 hover:text-grey-900",
               )}
+            >
+              {option}
             </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" sideOffset={8}>
-            {density === "compact" ? "Comfortable rows" : "Compact rows"}
-          </TooltipContent>
-        </Tooltip>
+          ))}
+        </div>
 
         {/*
           Filtering changed what was on screen with nothing announced: a

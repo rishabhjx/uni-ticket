@@ -3,6 +3,7 @@
 import { Ticket as TicketIcon, Video, X } from "lucide-react";
 
 import { MEETING_KIND_ICON, MEETING_KIND_LABEL } from "@/components/meetings/meeting-icon";
+import { ProjectIcon } from "@/components/shared/entity-icon";
 import {
   Dialog,
   DialogContent,
@@ -54,8 +55,9 @@ export function MeetingDetailDialog({
               {MEETING_KIND_LABEL[meeting.kind]}
             </span>
             {project ? (
-              <span className="rounded-md bg-grey-100 px-1.5 py-0.5">
-                {project.emoji} {project.name}
+              <span className="flex items-center gap-1.5 rounded-md bg-grey-100 px-1.5 py-0.5">
+                <ProjectIcon project={project} size="xs" />
+                {project.name}
               </span>
             ) : null}
             {sprint ? (

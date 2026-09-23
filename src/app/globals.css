@@ -221,14 +221,15 @@
   --selection-foreground: var(--accent-ink);
 
   /* --- Radius -------------------------------------------------------------
-     ReUI's 0.625rem (10px) is the surface radius: cards, popovers, dialogs,
-     board columns. Controls and chips sit one step in at 8px (`rounded-md`),
-     and anything nested inside a surface takes one step less than the thing
-     containing it -- a menu item at 6px inside a popover at 10px. That
-     nesting rule is why more than one radius renders at a time, and it is
-     deliberate: matching radii on nested boxes makes the inner one look
+     12px is the surface radius: cards, popovers, dialogs, board columns —
+     softer than the old 10px, which is what reads as "premium" rather than
+     "utility software" at this corner size. Controls and chips sit one step
+     in (`rounded-md`), and anything nested inside a surface takes one step
+     less than the thing containing it -- a menu item inside a popover.
+     That nesting rule is why more than one radius renders at a time, and it
+     is deliberate: matching radii on nested boxes makes the inner one look
      wrong. Pills (`rounded-full`) are for avatars and counts only.         */
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
   /* --- Layout metrics ----------------------------------------------------- */
   --rail-w: 56px;
@@ -254,15 +255,38 @@
   --duration-panel: 340ms;    /* the ticket panel: 460px of travel */
 
   /* --- Glass -------------------------------------------------------------
-     Only surfaces that float over content use it, and only to say "your work
-     is still underneath". The opacity floor keeps text legible; saturate
-     stops the blur washing the colour out of what shows through.            */
+     The rail, the top bar, page headers, cards, panels and menus all float a
+     frosted surface over the page now — a wash of colour behind everything
+     (below) is what a blur has to sample to read as "glass" rather than as
+     plain translucency. The opacity floor keeps text legible; saturate stops
+     the blur washing the colour out of what shows through.                  */
   --glass-bg: oklch(0.155 0.004 60 / 0.82);
   --glass-bg-strong: oklch(0.155 0.004 60 / 0.9);
+  /* Lighter touch, for surfaces read all day — cards, rows, KPI tiles. */
+  --glass-bg-soft: oklch(0.208 0.006 60 / 0.6);
   --glass-border: rgb(255 255 255 / 0.08);
+  --glass-highlight: rgb(255 255 255 / 0.06);
   --glass-blur: saturate(160%) blur(20px);
+  --glass-blur-soft: saturate(140%) blur(28px);
 
-  /* --- The only elevation in the system (overlays / dragged cards) -------- */
+  /* The colour a glass surface samples. Two soft radial washes, fixed to the
+     viewport, so every frosted panel in the product is tinting the same
+     light rather than a flat page colour. */
+  --wash: radial-gradient(
+      1100px 620px at 14% -8%,
+      oklch(0.32 0.05 83 / 0.16),
+      transparent 60%
+    ),
+    radial-gradient(900px 700px at 100% 0%, oklch(0.32 0.06 250 / 0.1), transparent 55%),
+    radial-gradient(1000px 800px at 50% 120%, oklch(0.3 0.045 30 / 0.08), transparent 60%);
+
+  /* --- Elevation ------------------------------------------------------------
+     A soft, close shadow under every raised surface — cards, the rail, the
+     panel — plus the deeper one for things that truly float (overlays, a
+     dragged card). Both layers rather than one: a tight line for contact and
+     a broad, faint spread for the surface lifting off the page, which is
+     what makes glass read as glass instead of a flat tint.                  */
+  --shadow-card: 0 1px 1px -1px rgb(0 0 0 / 0.3), 0 6px 20px -8px rgb(0 0 0 / 0.45);
   --shadow-overlay: 0 12px 32px -8px rgb(0 0 0 / 0.66),
     0 2px 8px -2px rgb(0 0 0 / 0.5);
   --shadow-drag: 0 16px 32px -10px rgb(0 0 0 / 0.75);
@@ -353,17 +377,39 @@ html.light {
   --avatar-7-bg: oklch(0.925 0.04 295);  --avatar-7-fg: oklch(0.45 0.1 295);
   --avatar-8-bg: oklch(0.925 0.04 340);  --avatar-8-fg: oklch(0.45 0.1 340);
 
-  --border: oklch(0.885 0.008 85);
-  --input: oklch(0.83 0.009 85);
+  /* Both a step darker than the old values: at 0.885/0.83 a card's edge was
+     nearly invisible next to the page, which is a good part of why the
+     light theme read as flat rather than layered. */
+  --border: oklch(0.84 0.01 85);
+  --input: oklch(0.78 0.011 85);
 
-  --glass-bg: oklch(0.985 0.005 85 / 0.82);
-  --glass-bg-strong: oklch(0.985 0.005 85 / 0.92);
-  --glass-border: oklch(0.19 0.01 85 / 0.08);
+  --glass-bg: oklch(0.985 0.005 85 / 0.78);
+  --glass-bg-strong: oklch(0.985 0.005 85 / 0.9);
+  --glass-bg-soft: oklch(0.96 0.006 85 / 0.62);
+  --glass-border: oklch(0.19 0.01 85 / 0.1);
+  --glass-highlight: rgb(255 255 255 / 0.5);
 
-  /* On paper a shadow is contact, not depth: shorter, tighter, far weaker. */
+  /* A cooler, richer wash than the dark theme's — on paper it reads as light
+     falling across the page rather than a hue printed on it. */
+  --wash: radial-gradient(
+      1100px 620px at 14% -8%,
+      oklch(0.86 0.05 83 / 0.35),
+      transparent 60%
+    ),
+    radial-gradient(900px 700px at 100% 0%, oklch(0.82 0.06 250 / 0.22), transparent 55%),
+    radial-gradient(1000px 800px at 50% 120%, oklch(0.85 0.05 30 / 0.18), transparent 60%);
+
+  /* On paper a shadow is contact, not depth — but it still has to be strong
+     enough to lift a card off the page, which the old values (0.18/0.1
+     alpha, blurred wide) were not: at that strength a card and the page sat
+     at the same visual depth. Tighter and a shade darker reads as an actual
+     edge. */
+  --shadow-card:
+    0 1px 1px -1px oklch(0.19 0.01 85 / 0.14),
+    0 6px 16px -10px oklch(0.19 0.01 85 / 0.28);
   --shadow-overlay:
-    0 8px 24px -10px oklch(0.19 0.01 85 / 0.18),
-    0 2px 6px -2px oklch(0.19 0.01 85 / 0.1);
+    0 10px 28px -10px oklch(0.19 0.01 85 / 0.22),
+    0 2px 8px -2px oklch(0.19 0.01 85 / 0.14);
 }
 
 
@@ -426,6 +472,7 @@ html.light {
   --shadow: none;
   --shadow-md: none;
   --shadow-lg: none;
+  --shadow-card: var(--shadow-card);
   --shadow-overlay: var(--shadow-overlay);
   --shadow-drag: var(--shadow-drag);
 
@@ -529,6 +576,10 @@ html.light {
 
   body {
     background-color: var(--background);
+    /* The wash glass surfaces sample: fixed to the viewport so it reads as
+       light in the room rather than a texture printed on one page. */
+    background-image: var(--wash);
+    background-attachment: fixed;
     color: var(--foreground);
     font-family: var(--font-sans);
     font-size: var(--text-body);
@@ -715,10 +766,28 @@ html.light {
     backdrop-filter: var(--glass-blur);
   }
 
+  /*
+     For surfaces read all day — cards, rows, KPI tiles — a lighter frost
+     than the floating layers above: enough to feel like glass over the
+     page's wash, not so much that dense text loses contrast.
+  */
+  .glass-soft {
+    background-color: var(--glass-bg-soft);
+    -webkit-backdrop-filter: var(--glass-blur-soft);
+    backdrop-filter: var(--glass-blur-soft);
+  }
+
+  /* The hairline top edge a piece of glass catches the light on. Paired with
+     glass-soft/glass/glass-strong, never alone. */
+  .glass-edge {
+    box-shadow: inset 0 1px 0 0 var(--glass-highlight);
+  }
+
   /* Where the effect is unsupported, fall back to an opaque surface. */
   @supports not (backdrop-filter: blur(1px)) {
     .glass,
-    .glass-strong {
+    .glass-strong,
+    .glass-soft {
       background-color: var(--grey-50);
     }
   }

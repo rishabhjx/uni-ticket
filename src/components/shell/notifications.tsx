@@ -109,23 +109,28 @@ export function NotificationsMenu() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
+        {/*
+          Lives in the app rail now, not the top bar — the same icon-button
+          shape every other app in the rail uses, so it reads as one more
+          thing the rail switches you to rather than a bolted-on control.
+        */}
         <button
           type="button"
           aria-label={`Notifications${items.length > 0 ? `, ${items.length} unread` : ""}`}
-          className="relative flex size-7 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900"
+          className="relative flex size-9 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-200 hover:text-grey-800"
         >
-          <Bell className="size-4" strokeWidth={1.75} />
+          <Bell className="size-[18px]" strokeWidth={1.75} />
           {items.length > 0 ? (
             <span
               aria-hidden
-              className="tnum absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-accent-600 px-0.5 text-[9px] font-semibold text-grey-0"
+              className="tnum absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-600 px-1 text-[10px] font-semibold text-grey-0"
             >
               {items.length > 9 ? "9+" : items.length}
             </span>
           ) : null}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent side="right" align="start" sideOffset={8} className="w-80 p-0">
         <div className="hairline-b px-3 py-2 text-small font-semibold text-grey-900">
           Notifications
         </div>

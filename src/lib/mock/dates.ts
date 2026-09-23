@@ -37,6 +37,26 @@ export function startOfWeek(reference: Date = TODAY) {
   return date;
 }
 
+export function addDays(reference: Date, delta: number) {
+  const date = new Date(reference);
+  date.setDate(date.getDate() + delta);
+  return date;
+}
+
+export function startOfDay(reference: Date) {
+  return new Date(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate(),
+  );
+}
+
+/** The Monday-first week `anchor` falls in, as seven dates. */
+export function weekDays(anchor: Date) {
+  const start = startOfWeek(anchor);
+  return Array.from({ length: 7 }, (_, index) => addDays(start, index));
+}
+
 export function startOfMonth(reference: Date) {
   return new Date(reference.getFullYear(), reference.getMonth(), 1);
 }

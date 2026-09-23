@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * this does not compete with the status and priority colours. The eight sit
  * at 45° apart on one lightness pair, so no avatar is louder than another.
  */
-const paletteById: Record<string, string> = {
+export const paletteById: Record<string, string> = {
   "u-1": "bg-[var(--avatar-1-bg)] text-[var(--avatar-1-fg)]",
   "u-2": "bg-[var(--avatar-2-bg)] text-[var(--avatar-2-fg)]",
   "u-3": "bg-[var(--avatar-3-bg)] text-[var(--avatar-3-fg)]",
@@ -19,6 +19,11 @@ const paletteById: Record<string, string> = {
 };
 
 const fallback = "bg-grey-200 text-grey-700";
+
+/** The same per-person hue as the avatar, for anything else that needs to say "this is theirs" — an event chip, a calendar row. */
+export function personToneClass(userId: string | null | undefined) {
+  return (userId && paletteById[userId]) || fallback;
+}
 
 const sizeClass = {
   sm: "size-5 text-micro tracking-[-0.02em]",

@@ -3,8 +3,8 @@
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { XIcon } from "lucide-react";
 
-import { StatusDot, TicketKey, TypeIcon } from "@/components/tickets/badges";
-import { isOverdue, type Ticket } from "@/lib/mock";
+import { personToneClass, UserAvatar } from "@/components/tickets/user-avatar";
+import type { CalendarEvent } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 
 const DAY_LABEL = new Intl.DateTimeFormat("en-GB", {
@@ -12,23 +12,23 @@ const DAY_LABEL = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
   month: "long",
 });
+const timeLabel = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit" });
 
 /**
- * Bypasses the shared DialogContent on purpose: that one's entrance/exit is
- * tw-animate-css's generic zoom, and this dialog is where transitions.dev's
- * "Modal open/close" recipe (`.t-modal`, in transitions-dev.css) actually
- * gets used, so it wires the Radix primitives directly instead.
+ * Bypasses the shared DialogContent on purpose, same as the ticketing
+ * calendar's day dialog before it: this is where transitions.dev's
+ * "Modal open/close" recipe (`.t-modal`, in transitions-dev.css) is used.
  */
 export function CalendarDayDialog({
   day,
-  tickets,
+  events,
   onOpenChange,
-  onOpenTicket,
+  onEventClick,
 }: {
   day: Date | null;
-  tickets: Ticket[];
+  events: CalendarEvent[];
   onOpenChange: (open: boolean) => void;
-  onOpenTicket: (ticketKey: string) => void;
+  onEventClick: (event: CalendarEvent) => void;
 }) {
   return (
     <DialogPrimitive.Root open={day !== null} onOpenChange={onOpenChange}>
@@ -37,7 +37,7 @@ export function CalendarDayDialog({
         <DialogPrimitive.Content className="t-modal fixed top-1/2 left-1/2 z-50 flex max-h-[70vh] w-full max-w-sm -translate-x-1/2 -translate-y-1/2 flex-col gap-1 rounded-lg border border-grey-200 bg-grey-0 p-2 shadow-[var(--shadow-overlay)] outline-none">
           <div className="flex items-center justify-between gap-2 px-2 py-1.5">
             <DialogPrimitive.Title className="text-small font-semibold text-grey-900">
-              {day ? DAY_LABEL.format(day) : "Tickets"}
+              {day ? DAY_LABEL.format(day) : "Events"}
             </DialogPrimitive.Title>
             <DialogPrimitive.Close className="flex size-6 shrink-0 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-100 hover:text-grey-900">
               <XIcon className="size-3.5" strokeWidth={1.75} />
@@ -45,32 +45,28 @@ export function CalendarDayDialog({
             </DialogPrimitive.Close>
           </div>
           <DialogPrimitive.Description className="sr-only">
-            {tickets.length} ticket{tickets.length === 1 ? "" : "s"} due{" "}
-            {day ? DAY_LABEL.format(day) : ""}
+            {events.length} event{events.length === 1 ? "" : "s"} on {day ? DAY_LABEL.format(day) : ""}
           </DialogPrimitive.Description>
 
           <div className="flex flex-col gap-0.5 overflow-y-auto px-1 pb-1">
-            {tickets.map((ticket) => (
+            {events.map((event) => (
               <button
-                key={ticket.id}
+                key={event.id}
                 type="button"
-                onClick={() => {
-                  onOpenTicket(ticket.key);
-                  onOpenChange(false);
-                }}
+                onClick={() => onEventClick(event)}
                 className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-small transition-colors hover:bg-grey-100"
               >
-                <StatusDot status={ticket.status} />
-                <TypeIcon type={ticket.type} className="size-3.5 shrink-0" />
-                <TicketKey value={ticket.key} className="shrink-0" />
                 <span
-                  className={cn(
-                    "min-w-0 flex-1 truncate text-grey-700",
-                    isOverdue(ticket) && "text-[var(--priority-urgent-fg)]",
-                  )}
-                >
-                  {ticket.title}
-                </span>
+                  aria-hidden
+                  className={cn("size-2 shrink-0 rounded-full", personToneClass(event.organizerId))}
+                />
+                {!event.allDay ? (
+                  <span className="tnum shrink-0 text-caption text-grey-500">
+                    {timeLabel.format(new Date(event.start))}
+                  </span>
+                ) : null}
+                <span className="min-w-0 flex-1 truncate text-grey-700">{event.title}</span>
+                <UserAvatar userId={event.organizerId} size="sm" />
               </button>
             ))}
           </div>

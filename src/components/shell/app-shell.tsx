@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+
 import { CelebrateProvider } from "@/components/shared/celebrate";
 import { AppRail } from "@/components/shell/app-rail";
 import { CommandPaletteProvider } from "@/components/shell/command-palette";
@@ -44,6 +46,15 @@ function CreateDialogHost() {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  /*
+   * Calendar is a different app in the rail's suite, with its own header and
+   * sidebar — Tickets' top bar (its own top-level tabs, the workspace/project
+   * breadcrumb, a "New ticket" menu) doesn't describe anything on that page,
+   * so it would just be a second, irrelevant toolbar stacked above the first.
+   */
+  const pathname = usePathname();
+  const showTopNav = !pathname.startsWith("/calendar");
+
   return (
     <ShellProvider>
       <CelebrateProvider>
@@ -71,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           */}
           <AppRail />
           <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
-            <TopNav />
+            {showTopNav ? <TopNav /> : null}
             <main
               id="main"
               tabIndex={-1}

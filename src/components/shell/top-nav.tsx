@@ -101,6 +101,13 @@ export function TopNav() {
           <ChartLine className="size-3.5" strokeWidth={1.75} />
           Insights
         </Link>
+        <Link
+          href="/calendar"
+          className={cn(link, is("/calendar") ? linkActive : linkIdle)}
+        >
+          <CalendarDays className="size-3.5" strokeWidth={1.75} />
+          Calendar
+        </Link>
       </nav>
 
       <span aria-hidden className="mx-1 h-4 w-px bg-grey-200" />
@@ -132,7 +139,6 @@ export function TopNav() {
                 { segment: "board", label: "Board", icon: Columns3 },
                 { segment: "list", label: "List", icon: Rows3 },
                 { segment: "roadmap", label: "Roadmap", icon: Layers },
-                { segment: "calendar", label: "Calendar", icon: CalendarDays },
               ] as const
             ).map(({ segment, label, icon: Icon }) => (
               <Link

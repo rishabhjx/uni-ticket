@@ -7,7 +7,7 @@ import { CalendarDayDialog } from "@/components/calendar/calendar-day-dialog";
 import { FilterBar } from "@/components/list/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CalendarSkeleton } from "@/components/shared/skeletons";
-import { StatusDot, TypeIcon } from "@/components/tickets/badges";
+import { StatusDot, TicketKey, TypeIcon } from "@/components/tickets/badges";
 import {
   addMonths,
   dayKey,
@@ -33,14 +33,23 @@ const MAX_VISIBLE_PER_DAY = 3;
 
 type PaneKey = "a" | "b";
 
-export function CalendarView({ project }: { project: Project }) {
+/**
+ * Unscoped by default: one calendar across every workspace and project, the
+ * way Google Calendar doesn't ask which calendar you're looking at. Passing
+ * a project narrows it, the same optional-project shape FilterBar and
+ * ListView already use.
+ */
+export function CalendarView({ project }: { project?: Project } = {}) {
   const { tickets, isLoading } = useTicketStore();
   const { openTicket } = useTicketPanel();
   const { filters, clearFilters } = useViewState();
 
   const scoped = React.useMemo(
-    () => tickets.filter((ticket) => ticket.projectId === project.id),
-    [tickets, project.id],
+    () =>
+      project
+        ? tickets.filter((ticket) => ticket.projectId === project.id)
+        : tickets,
+    [tickets, project],
   );
   const filtered = React.useMemo(
     () => applyFilters(scoped, filters),
@@ -164,13 +173,17 @@ export function CalendarView({ project }: { project: Project }) {
         <EmptyState
           emoji="🗓️"
           title="This calendar is empty"
-          description={`Nothing in ${project.name} yet. The first ticket you add can carry a due date.`}
+          description={
+            project
+              ? `Nothing in ${project.name} yet. The first ticket you add can carry a due date.`
+              : "No tickets anywhere yet. The first one you add can carry a due date."
+          }
         />
       ) : filtered.length === 0 ? (
         <EmptyState
           emoji="🔍"
           title="No tickets match these filters"
-          description={`All ${scoped.length} tickets in ${project.name} are hidden by the conditions you have set.`}
+          description={`All ${scoped.length} ticket${scoped.length === 1 ? "" : "s"}${project ? ` in ${project.name}` : ""} are hidden by the conditions you have set.`}
           action={{ label: "Clear filters", onClick: clearFilters }}
         />
       ) : dated.length === 0 ? (
@@ -301,6 +314,7 @@ function DayCell({
           >
             <StatusDot status={ticket.status} />
             <TypeIcon type={ticket.type} className="size-3 shrink-0" />
+            <TicketKey value={ticket.key} className="shrink-0" />
             <span
               className={cn(
                 "min-w-0 flex-1 truncate text-caption",

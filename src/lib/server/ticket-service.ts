@@ -147,6 +147,13 @@ export async function updateTicket(idOrKey: string, input: unknown) {
       include: ticketInclude,
     });
 
+    if (patch.assigneeIds !== undefined) {
+      await database.ticketAssignee.deleteMany({ where: { ticketId: existing.id } });
+      await database.ticketAssignee.createMany({
+        data: patch.assigneeIds.map((userId) => ({ ticketId: existing.id, userId })),
+      });
+    }
+
     if (changedStatus) {
       await database.ticketEvent.create({
         data: {

@@ -187,6 +187,22 @@ function sameFieldValue(a: unknown, b: unknown) {
   return a === b;
 }
 
+async function fetchAllTickets(signal: AbortSignal) {
+  const all: Ticket[] = [];
+  let cursor: string | null = null;
+  do {
+    const url = new URL("/api/tickets", window.location.origin);
+    url.searchParams.set("limit", "100");
+    if (cursor) url.searchParams.set("cursor", cursor);
+    const response = await fetch(url, { signal });
+    if (!response.ok) throw new Error("Could not load tickets");
+    const page = (await response.json()) as { data: Ticket[]; nextCursor: string | null };
+    all.push(...page.data);
+    cursor = page.nextCursor;
+  } while (cursor);
+  return all;
+}
+
 function persistTicketPatch(ticketId: string, patch: Partial<Ticket>) {
   void fetch(`/api/tickets/${ticketId}`, {
     method: "PATCH",
@@ -245,12 +261,9 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
         if (!response.ok) throw new Error("Could not load projects");
         return response.json() as Promise<Project[]>;
       }),
-      fetch("/api/tickets", { signal: controller.signal }).then((response) => {
-        if (!response.ok) throw new Error("Could not load tickets");
-        return response.json() as Promise<{ data: Ticket[] }>;
-      }),
+      fetchAllTickets(controller.signal),
     ])
-      .then(([remoteWorkspaces, remoteProjects, remoteTicketsPage]) => {
+      .then(([remoteWorkspaces, remoteProjects, remoteTickets]) => {
         setWorkspaces((current) => [
           ...remoteWorkspaces,
           ...current.filter((workspace) => !seedWorkspaces.some((seed) => seed.id === workspace.id)),
@@ -259,7 +272,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
           ...remoteProjects,
           ...current.filter((project) => !seedProjects.some((seed) => seed.id === project.id)),
         ]);
-        setTickets(remoteTicketsPage.data);
+        setTickets(remoteTickets);
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;

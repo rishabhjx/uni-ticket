@@ -187,6 +187,16 @@ function sameFieldValue(a: unknown, b: unknown) {
   return a === b;
 }
 
+function persistTicketPatch(ticketId: string, patch: Partial<Ticket>) {
+  void fetch(`/api/tickets/${ticketId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  }).catch((error: unknown) => {
+    console.error("Unable to persist ticket change", error);
+  });
+}
+
 function reorderColumn(
   all: Ticket[],
   moved: Ticket,
@@ -223,16 +233,41 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
   const [events, setEvents] = React.useState<TicketEvent[]>(seedEvents);
   const [isLoading, setIsLoading] = React.useState(true);
 
-  /*
-   * The data is in the bundle, so this is theatre -- but a prototype that
-   * paints fully formed hides the loading states, and those are half of how a
-   * product feels. 260ms rather than the 450 it was: long enough to see the
-   * skeleton, short enough not to be a wait. It runs once, at the root, so
-   * client navigation between views never re-skeletons.
-   */
   React.useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 260);
-    return () => window.clearTimeout(timer);
+    const controller = new AbortController();
+
+    void Promise.all([
+      fetch("/api/workspaces", { signal: controller.signal }).then((response) => {
+        if (!response.ok) throw new Error("Could not load workspaces");
+        return response.json() as Promise<Workspace[]>;
+      }),
+      fetch("/api/projects", { signal: controller.signal }).then((response) => {
+        if (!response.ok) throw new Error("Could not load projects");
+        return response.json() as Promise<Project[]>;
+      }),
+      fetch("/api/tickets", { signal: controller.signal }).then((response) => {
+        if (!response.ok) throw new Error("Could not load tickets");
+        return response.json() as Promise<{ data: Ticket[] }>;
+      }),
+    ])
+      .then(([remoteWorkspaces, remoteProjects, remoteTicketsPage]) => {
+        setWorkspaces((current) => [
+          ...remoteWorkspaces,
+          ...current.filter((workspace) => !seedWorkspaces.some((seed) => seed.id === workspace.id)),
+        ]);
+        setProjects((current) => [
+          ...remoteProjects,
+          ...current.filter((project) => !seedProjects.some((seed) => seed.id === project.id)),
+        ]);
+        setTickets(remoteTicketsPage.data);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.error("Unable to hydrate the ticket store", error);
+      })
+      .finally(() => setIsLoading(false));
+
+    return () => controller.abort();
   }, []);
 
   const eventSeq = React.useRef(0);
@@ -321,6 +356,7 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
           if (!ids.has(ticket.id)) return ticket;
           const routed = routeOnStatusChange(ticket, patch);
           pending.push(...diffToEvents(ticket, routed));
+          queueMicrotask(() => persistTicketPatch(ticket.id, routed));
           return {
             ...ticket,
             ...routed,
@@ -625,6 +661,13 @@ export function TicketStoreProvider({ children }: { children: React.ReactNode })
 
       // order -1 puts it at the top of its column, where a new ticket belongs.
       setTickets((current) => [ticket, ...current]);
+      void fetch("/api/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      }).catch((error: unknown) => {
+        console.error("Unable to persist new ticket", error);
+      });
       queueMicrotask(() =>
         recordEvents([{ ticketId: id, kind: "created", from: null, to: null }], at),
       );

@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectKind {
+  software
+  service
+}
+
+enum TicketStatus {
+  backlog
+  triage
+  design_todo
+  in_design
+  design_review
+  todo
+  in_progress
+  code_review
+  ready_for_qa
+  in_qa
+  qa_failed
+  product_review
+  done
+}
+
+enum TicketPriority {
+  urgent
+  high
+  medium
+  low
+}
+
+enum TicketType {
+  bug
+  feature
+  task
+  chore
+  request
+  incident
+  epic
+}
+
+enum TicketSeverity {
+  s1
+  s2
+  s3
+  s4
+}
+
+enum Environment {
+  production
+  staging
+  local
+  unknown
+}
+
+model User {
+  id         String  @id
+  name       String
+  initials   String
+  email      String  @unique
+  role       String
+  tone       Int
+  managerId  String?
+  manager    User?   @relation("UserManager", fields: [managerId], references: [id])
+  reports    User[]  @relation("UserManager")
+  memberships WorkspaceMember[]
+  comments   Comment[]
+  events     TicketEvent[]
+  assignedTickets TicketAssignee[]
+
+  @@index([managerId])
+}
+
+model Workspace {
+  id          String  @id
+  slug        String  @unique
+  name        String
+  description String
+  emoji       String
+  memberships WorkspaceMember[]
+  projects    Project[]
+}
+
+model WorkspaceMember {
+  workspaceId String
+  userId      String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  @@index([userId])
+}
+
+model Project {
+  id          String      @id
+  key         String      @unique
+  slug        String      @unique
+  name        String
+  description String
+  leadId      String
+  workspaceId String
+  kind        ProjectKind
+  emoji       String
+  startedOn   DateTime
+  memberIds   String[]
+  roles       Json
+  team        Json
+  wipLimits   Json?
+  customFields Json?
+  ticketSequence Int @default(0)
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  tickets     Ticket[]
+
+  @@index([workspaceId])
+}
+
+model Ticket {
+  id            String          @id
+  key           String          @unique
+  projectId     String
+  title         String
+  description   String
+  status        TicketStatus
+  priority      TicketPriority
+  type          TicketType
+  assigneeIds   String[]
+  reporterId    String
+  labelIds      String[]
+  estimate      Int?
+  severity      TicketSeverity?
+  environment   Environment?
+  buildVersion  String?
+  requesterId   String?
+  slaDueAt      DateTime?
+  attachments   Json
+  statusChangedAt DateTime
+  parentId      String?
+  links         Json
+  sprintId      String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  dueAt         DateTime?
+  boardOrder    Int
+  custom        Json?
+  project       Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignees     TicketAssignee[]
+  comments      Comment[]
+  events        TicketEvent[]
+
+  @@index([projectId, status, boardOrder])
+  @@index([projectId, updatedAt])
+  @@index([status, updatedAt])
+}
+
+model TicketAssignee {
+  ticketId String
+  userId   String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([ticketId, userId])
+  @@index([userId, ticketId])
+}
+
+model Comment {
+  id          String   @id
+  ticketId    String
+  authorId    String
+  body        String
+  createdAt   DateTime
+  reactions   Json
+  attachments Json
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, createdAt])
+}
+
+model TicketEvent {
+  id        String   @id
+  ticketId  String
+  actorId   String
+  kind      String
+  fromValue String?
+  toValue   String?
+  createdAt DateTime
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, createdAt])
+}

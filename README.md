@@ -34,6 +34,31 @@ Then open http://localhost:3000. Node 18.18+ required.
 
 The ticket detail panel opens over any of them.
 
+## Backend API
+
+The development server exposes a small persistence-backed API. On first
+request it seeds `.data/uni-ticket.json` from the deterministic prototype
+dataset; subsequent writes survive server restarts. The data file is ignored
+by git.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Service health check |
+| `GET` | `/api/workspaces` | List workspaces |
+| `GET` | `/api/projects` | List projects |
+| `GET` | `/api/tickets` | List tickets; supports `projectId`, `status` and `assigneeId` |
+| `POST` | `/api/tickets` | Create a ticket with validated input |
+| `GET` | `/api/tickets/:id` | Fetch a ticket by ID or human key |
+| `PATCH` | `/api/tickets/:id` | Update mutable ticket fields |
+
+The backend uses PostgreSQL through Prisma. Copy `.env.example` to `.env`,
+start PostgreSQL, then run `npm install`, `npm run db:generate`,
+`npm run db:migrate -- --name init`, and `npm run db:seed`.
+
+Authentication, authorization, file storage, and rate limiting are intentionally
+separate production milestones; the service layer is the boundary where those
+policies should be added before exposing the API publicly.
+
 **Filters and the open ticket live in the URL**, so any view — and any single
 ticket, `?ticket=APO-142` — is a link you can paste to someone. Browser back
 closes the panel. Saved views pin a whole view, including scope, grouping and

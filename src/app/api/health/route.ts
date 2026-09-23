@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/server/prisma";
 
+export const dynamic = "force-static";
+
 export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;

@@ -1,7 +1,13 @@
 import { apiError } from "@/lib/server/api-error";
 import { getTicket, updateTicket } from "@/lib/server/ticket-service";
 
+export const dynamic = "force-static";
+
 type RouteContext = { params: Promise<{ id: string }> };
+
+export function generateStaticParams() {
+  return [{ id: "_" }];
+}
 
 export async function GET(_request: Request, context: RouteContext) {
   const { id } = await context.params;

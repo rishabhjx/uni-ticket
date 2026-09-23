@@ -3,6 +3,7 @@ name: Deploy prototype to GitHub Pages
 on:
   push:
     branches:
+      - main
       - claude/ticketing-app-ui-prototype-2w0xai
   workflow_dispatch:
 

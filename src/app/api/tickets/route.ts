@@ -1,6 +1,8 @@
 import { apiError } from "@/lib/server/api-error";
 import { createTicket, listTickets } from "@/lib/server/ticket-service";
 
+export const dynamic = "force-static";
+
 export async function GET(request: Request) {
   try {
     return Response.json(await listTickets(new URL(request.url).searchParams));

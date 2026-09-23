@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  CalendarDays,
   ChartLine,
   ChevronDown,
   ChevronRight,
@@ -100,13 +99,6 @@ export function TopNav() {
         >
           <ChartLine className="size-3.5" strokeWidth={1.75} />
           Insights
-        </Link>
-        <Link
-          href="/calendar"
-          className={cn(link, is("/calendar") ? linkActive : linkIdle)}
-        >
-          <CalendarDays className="size-3.5" strokeWidth={1.75} />
-          Calendar
         </Link>
       </nav>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BarChart3,
   CalendarDays,
@@ -24,16 +25,29 @@ import { cn } from "@/lib/utils";
 type WorkspaceApp = {
   name: string;
   icon: LucideIcon;
-  /** Only the ticketing app is built in this prototype. */
+  /** Unset for an app that isn't built in this prototype yet. */
   href?: string;
 };
+
+/** Whether `pathname` is inside the app rooted at `href` ("/" owns whatever no other app's href claims). */
+function ownsPath(href: string, pathname: string) {
+  if (href === "/") {
+    return !apps.some(
+      (other) =>
+        other.href &&
+        other.href !== "/" &&
+        (pathname === other.href || pathname.startsWith(`${other.href}/`)),
+    );
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 const apps: WorkspaceApp[] = [
   { name: "Tickets", icon: Ticket, href: "/" },
   { name: "Inbox", icon: Inbox },
   { name: "Docs", icon: FileText },
   { name: "Chat", icon: MessagesSquare },
-  { name: "Calendar", icon: CalendarDays },
+  { name: "Calendar", icon: CalendarDays, href: "/calendar" },
   { name: "Files", icon: FolderOpen },
   { name: "People", icon: Users },
   { name: "Insights", icon: BarChart3 },
@@ -47,9 +61,10 @@ const railButton =
 const railIdle = "text-grey-500 hover:bg-grey-200 hover:text-grey-800";
 const railActive = "bg-grey-0 text-accent-600 ring-1 ring-grey-200";
 
-function RailItem({ app }: { app: WorkspaceApp }) {
+function RailItem({ app, pathname }: { app: WorkspaceApp; pathname: string }) {
   const Icon = app.icon;
-  const active = Boolean(app.href);
+  const built = Boolean(app.href);
+  const current = app.href ? ownsPath(app.href, pathname) : false;
   const icon = <Icon className="size-[18px]" strokeWidth={1.75} />;
 
   return (
@@ -59,8 +74,8 @@ function RailItem({ app }: { app: WorkspaceApp }) {
           <Link
             href={app.href}
             aria-label={app.name}
-            aria-current="page"
-            className={cn(railButton, railActive)}
+            aria-current={current ? "page" : undefined}
+            className={cn(railButton, current ? railActive : railIdle)}
           >
             {icon}
           </Link>
@@ -76,7 +91,7 @@ function RailItem({ app }: { app: WorkspaceApp }) {
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={8}>
         {app.name}
-        {!active ? (
+        {!built ? (
           <span className="ml-1.5 text-grey-500">· not in prototype</span>
         ) : null}
       </TooltipContent>
@@ -86,6 +101,7 @@ function RailItem({ app }: { app: WorkspaceApp }) {
 
 export function AppRail() {
   const currentUser = getUser(CURRENT_USER_ID);
+  const pathname = usePathname();
 
   return (
     <nav
@@ -108,7 +124,7 @@ export function AppRail() {
       </Tooltip>
 
       {apps.map((app) => (
-        <RailItem key={app.name} app={app} />
+        <RailItem key={app.name} app={app} pathname={pathname} />
       ))}
 
       <div className="mt-auto flex flex-col items-center gap-1 pt-3">

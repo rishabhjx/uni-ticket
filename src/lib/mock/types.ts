@@ -486,6 +486,13 @@ export type MailMessage = {
   /** Null when the sender is the external participant. */
   fromId: string | null;
   toIds: string[];
+  /** Visible to every recipient, same as toIds. */
+  ccIds: string[];
+  /**
+   * Only ever shown back to the sender — the whole point of bcc is that no
+   * other recipient (and no reply-all) ever learns who was on it.
+   */
+  bccIds: string[];
   body: string;
   createdAt: string;
   attachments: Attachment[];

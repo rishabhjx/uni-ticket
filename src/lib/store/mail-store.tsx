@@ -16,6 +16,8 @@ export type NewMailInput = {
   subject: string;
   body: string;
   toIds: string[];
+  ccIds?: string[];
+  bccIds?: string[];
   externalEmail?: string;
   ticketRefs?: string[];
   attachments?: Omit<Attachment, "id">[];
@@ -23,18 +25,33 @@ export type NewMailInput = {
   asDraft?: boolean;
 };
 
+export type ReplyInput = {
+  toIds?: string[];
+  ccIds?: string[];
+  attachments?: Omit<Attachment, "id">[];
+};
+
 type MailStoreValue = {
   threads: MailThread[];
   messages: MailMessage[];
-  sendReply: (
-    threadId: string,
-    body: string,
-    attachments?: Omit<Attachment, "id">[],
-  ) => void;
+  sendReply: (threadId: string, body: string, opts?: ReplyInput) => void;
   markRead: (threadId: string, read?: boolean) => void;
   toggleStar: (threadId: string) => void;
   moveToFolder: (threadId: string, folder: MailFolder) => void;
   deleteThread: (threadId: string) => void;
+  /** Removes the thread and its messages outright. */
+  permanentlyDelete: (threadId: string) => void;
+  /** Permanently deletes every thread currently in Trash. */
+  emptyTrash: () => void;
+  /** Undoes a permanentlyDelete/emptyTrash — the caller snapshots what it
+   *  removed and hands it back here, same "one level back" every other
+   *  destructive action in this app gets. */
+  restoreThreads: (threads: MailThread[], messages: MailMessage[]) => void;
+  /** One state update for a whole selection — mark read, archive, trash, star. */
+  bulkApply: (
+    threadIds: string[],
+    patch: Partial<Pick<MailThread, "folder" | "read" | "starred">>,
+  ) => void;
   compose: (input: NewMailInput) => MailThread;
 };
 
@@ -46,8 +63,9 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
   const seq = React.useRef(0);
 
   const sendReply = React.useCallback(
-    (threadId: string, body: string, attachments: Omit<Attachment, "id">[] = []) => {
+    (threadId: string, body: string, opts: ReplyInput = {}) => {
       const trimmed = body.trim();
+      const attachments = opts.attachments ?? [];
       if (!trimmed && attachments.length === 0) return;
       seq.current += 1;
       const at = new Date().toISOString();
@@ -58,7 +76,9 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
           id: `mail-local-${seq.current}`,
           threadId,
           fromId: CURRENT_USER_ID,
-          toIds: [],
+          toIds: opts.toIds ?? [],
+          ccIds: opts.ccIds ?? [],
+          bccIds: [],
           body: trimmed,
           createdAt: at,
           attachments: attachments.map((file, index) => ({
@@ -70,7 +90,20 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
       setThreads((current) =>
         current.map((thread) =>
           thread.id === threadId
-            ? { ...thread, updatedAt: at, folder: thread.folder === "drafts" ? "sent" : thread.folder }
+            ? {
+                ...thread,
+                updatedAt: at,
+                folder: thread.folder === "drafts" ? "sent" : thread.folder,
+                // A reply can widen who's in the thread (replying to someone
+                // cc'd but not yet a full participant) — never narrow it.
+                participantIds: [
+                  ...new Set([
+                    ...thread.participantIds,
+                    ...(opts.toIds ?? []),
+                    ...(opts.ccIds ?? []),
+                  ]),
+                ],
+              }
             : thread,
         ),
       );
@@ -106,16 +139,52 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const permanentlyDelete = React.useCallback((threadId: string) => {
+    setThreads((current) => current.filter((thread) => thread.id !== threadId));
+    setMessages((current) => current.filter((message) => message.threadId !== threadId));
+  }, []);
+
+  const emptyTrash = React.useCallback(() => {
+    setThreads((current) => {
+      const trashed = new Set(
+        current.filter((thread) => thread.folder === "trash").map((thread) => thread.id),
+      );
+      setMessages((messagesCurrent) =>
+        messagesCurrent.filter((message) => !trashed.has(message.threadId)),
+      );
+      return current.filter((thread) => thread.folder !== "trash");
+    });
+  }, []);
+
+  const restoreThreads = React.useCallback(
+    (restoredThreads: MailThread[], restoredMessages: MailMessage[]) => {
+      setThreads((current) => [...restoredThreads, ...current]);
+      setMessages((current) => [...restoredMessages, ...current]);
+    },
+    [],
+  );
+
+  const bulkApply = React.useCallback(
+    (threadIds: string[], patch: Partial<Pick<MailThread, "folder" | "read" | "starred">>) => {
+      const ids = new Set(threadIds);
+      setThreads((current) =>
+        current.map((thread) => (ids.has(thread.id) ? { ...thread, ...patch } : thread)),
+      );
+    },
+    [],
+  );
+
   const compose = React.useCallback((input: NewMailInput) => {
     seq.current += 1;
     const at = new Date().toISOString();
     const id = `mail-new-${seq.current}`;
     const folder: MailFolder = input.asDraft ? "drafts" : "sent";
+    const ccIds = input.ccIds ?? [];
 
     const thread: MailThread = {
       id,
       subject: input.subject.trim() || "(no subject)",
-      participantIds: [CURRENT_USER_ID, ...input.toIds],
+      participantIds: [...new Set([CURRENT_USER_ID, ...input.toIds, ...ccIds])],
       externalParticipant: input.externalEmail
         ? { name: input.externalEmail, email: input.externalEmail }
         : null,
@@ -135,6 +204,8 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
         threadId: id,
         fromId: CURRENT_USER_ID,
         toIds: input.toIds,
+        ccIds,
+        bccIds: input.bccIds ?? [],
         body: input.body.trim(),
         createdAt: at,
         attachments: (input.attachments ?? []).map((file, index) => ({
@@ -156,9 +227,26 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
       toggleStar,
       moveToFolder,
       deleteThread,
+      permanentlyDelete,
+      emptyTrash,
+      restoreThreads,
+      bulkApply,
       compose,
     }),
-    [threads, messages, sendReply, markRead, toggleStar, moveToFolder, deleteThread, compose],
+    [
+      threads,
+      messages,
+      sendReply,
+      markRead,
+      toggleStar,
+      moveToFolder,
+      deleteThread,
+      permanentlyDelete,
+      emptyTrash,
+      restoreThreads,
+      bulkApply,
+      compose,
+    ],
   );
 
   return <MailStoreContext value={value}>{children}</MailStoreContext>;

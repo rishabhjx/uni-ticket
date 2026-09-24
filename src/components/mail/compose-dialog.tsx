@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { X } from "lucide-react";
+import { PenLine, X } from "lucide-react";
 
 import {
   Attachment as AttachmentCard,
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatBytes } from "@/lib/format";
 import { type Attachment } from "@/lib/mock";
 import { useMailStore } from "@/lib/store/mail-store";
@@ -36,31 +37,86 @@ const fieldClass =
 const labelClass =
   "mb-1 text-caption font-medium tracking-[0.07em] text-grey-500 uppercase";
 
+const SIGNATURE_KEY = "uni.mailSignature";
+
+function loadSignature() {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(SIGNATURE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function saveSignature(value: string) {
+  try {
+    window.localStorage.setItem(SIGNATURE_KEY, value);
+  } catch {
+    // Private-browsing/storage-denied: the signature just doesn't persist.
+  }
+}
+
+export type ComposeInitial = {
+  subject?: string;
+  body?: string;
+  attachments?: Draft[];
+};
+
 export function ComposeDialog({
   open,
   onOpenChange,
   onSent,
+  initial,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSent?: (threadId: string, folder: "sent" | "drafts") => void;
+  /** Seeds the dialog for Forward — a fresh subject/body/attachments rather
+   *  than a blank compose. */
+  initial?: ComposeInitial;
 }) {
   const { compose } = useMailStore();
   const [toIds, setToIds] = React.useState<string[]>([]);
+  const [ccIds, setCcIds] = React.useState<string[]>([]);
+  const [bccIds, setBccIds] = React.useState<string[]>([]);
+  const [showCcBcc, setShowCcBcc] = React.useState(false);
   const [externalEmail, setExternalEmail] = React.useState("");
   const [subject, setSubject] = React.useState("");
   const [body, setBody] = React.useState("");
   const [drafts, setDrafts] = React.useState<Draft[]>([]);
+  const [signature, setSignature] = React.useState(loadSignature);
+  const [editingSignature, setEditingSignature] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
   const pending = React.useRef<string[]>([]);
 
   const reset = () => {
     setToIds([]);
+    setCcIds([]);
+    setBccIds([]);
+    setShowCcBcc(false);
     setExternalEmail("");
     setSubject("");
     setBody("");
     setDrafts([]);
   };
+
+  // Loads a fresh draft (blank, or Forward's seed + the signature) every
+  // time the dialog opens — not on every render, so typing isn't clobbered.
+  const [lastOpen, setLastOpen] = React.useState(open);
+  if (open !== lastOpen) {
+    setLastOpen(open);
+    if (open) {
+      setToIds([]);
+      setCcIds([]);
+      setBccIds([]);
+      setShowCcBcc(false);
+      setExternalEmail("");
+      setSubject(initial?.subject ?? "");
+      const quoted = initial?.body ?? "";
+      setBody(signature ? `\n\n${signature}\n\n${quoted}` : quoted);
+      setDrafts(initial?.attachments ?? []);
+    }
+  }
 
   React.useEffect(() => {
     const urls = pending.current;
@@ -99,6 +155,8 @@ export function ComposeDialog({
       subject,
       body,
       toIds,
+      ccIds,
+      bccIds,
       externalEmail: externalEmail.trim() || undefined,
       attachments: attachmentsPayload(),
     });
@@ -113,6 +171,8 @@ export function ComposeDialog({
       subject,
       body,
       toIds,
+      ccIds,
+      bccIds,
       externalEmail: externalEmail.trim() || undefined,
       attachments: attachmentsPayload(),
       asDraft: true,
@@ -132,14 +192,38 @@ export function ComposeDialog({
     >
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>New email</DialogTitle>
+          <DialogTitle>{initial ? "Forward" : "New email"}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-2.5">
           <div>
-            <Label className={labelClass}>To</Label>
+            <div className="flex items-center justify-between">
+              <Label className={labelClass}>To</Label>
+              {!showCcBcc ? (
+                <button
+                  type="button"
+                  onClick={() => setShowCcBcc(true)}
+                  className="text-caption text-grey-500 hover:text-grey-900 hover:underline"
+                >
+                  Cc/Bcc
+                </button>
+              ) : null}
+            </div>
             <MemberPicker value={toIds} onChange={setToIds} placeholder="Add recipients" />
           </div>
+
+          {showCcBcc ? (
+            <>
+              <div>
+                <Label className={labelClass}>Cc</Label>
+                <MemberPicker value={ccIds} onChange={setCcIds} placeholder="Add cc" />
+              </div>
+              <div>
+                <Label className={labelClass}>Bcc</Label>
+                <MemberPicker value={bccIds} onChange={setBccIds} placeholder="Add bcc" />
+              </div>
+            </>
+          ) : null}
 
           <div>
             <Label className={labelClass}>External (optional)</Label>
@@ -189,7 +273,10 @@ export function ComposeDialog({
                       <AttachmentAction
                         onClick={() => {
                           const gone = drafts[index];
-                          if (gone.url) {
+                          // Only revoke a URL this dialog created itself —
+                          // a Forward carries over the original message's
+                          // own attachment URL, which is still in use there.
+                          if (gone.url && pending.current.includes(gone.url)) {
                             URL.revokeObjectURL(gone.url);
                             pending.current = pending.current.filter((url) => url !== gone.url);
                           }
@@ -206,23 +293,49 @@ export function ComposeDialog({
             </AttachmentGroup>
           ) : null}
 
-          <input
-            ref={fileRef}
-            type="file"
-            multiple
-            className="sr-only"
-            onChange={(event) => {
-              accept(event.target.files);
-              event.target.value = "";
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="flex h-7 w-fit items-center gap-1.5 rounded-md border border-grey-200 px-2.5 text-caption text-grey-700 transition-colors hover:border-grey-300"
-          >
-            Attach files
-          </button>
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              className="sr-only"
+              onChange={(event) => {
+                accept(event.target.files);
+                event.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex h-7 w-fit items-center gap-1.5 rounded-md border border-grey-200 px-2.5 text-caption text-grey-700 transition-colors hover:border-grey-300"
+            >
+              Attach files
+            </button>
+
+            <Popover open={editingSignature} onOpenChange={setEditingSignature}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  title="Edit signature"
+                  className="flex h-7 w-fit items-center gap-1.5 rounded-md border border-grey-200 px-2.5 text-caption text-grey-700 transition-colors hover:border-grey-300"
+                >
+                  <PenLine className="size-3" strokeWidth={1.75} />
+                  Signature
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-72 p-2.5">
+                <p className={labelClass}>Signature</p>
+                <textarea
+                  value={signature}
+                  onChange={(event) => setSignature(event.target.value)}
+                  onBlur={() => saveSignature(signature)}
+                  rows={3}
+                  placeholder="Appended to new messages and forwards"
+                  className="w-full resize-none rounded-md border border-grey-200 px-2 py-1.5 text-small text-grey-900 placeholder:text-grey-500 focus:border-accent-600 focus:outline-none"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <DialogFooter className="justify-between sm:justify-between">

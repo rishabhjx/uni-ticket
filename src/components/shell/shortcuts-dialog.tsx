@@ -40,6 +40,21 @@ const GROUPS: { name: string; items: { keys: string[]; does: string }[] }[] = [
       { keys: ["X"], does: "Select the ticket under the cursor" },
     ],
   },
+  {
+    name: "In Mail",
+    items: [
+      { keys: ["/"], does: "Focus search" },
+      { keys: ["C"], does: "Compose" },
+      { keys: ["J"], does: "Move to the next email" },
+      { keys: ["K"], does: "Move to the previous email" },
+      { keys: ["↵"], does: "Open the email under the cursor" },
+      { keys: ["E"], does: "Archive the email under the cursor" },
+      { keys: ["#"], does: "Delete the email under the cursor" },
+      { keys: ["U"], does: "Toggle read / unread" },
+      { keys: ["R"], does: "Focus the reply box" },
+      { keys: ["F"], does: "Forward" },
+    ],
+  },
 ];
 
 export function ShortcutsDialog({

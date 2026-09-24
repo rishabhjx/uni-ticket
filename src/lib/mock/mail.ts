@@ -71,6 +71,8 @@ function makeThread(
       message.fromId === CURRENT_USER_ID
         ? (opts.participantIds ?? []).filter((p) => p !== CURRENT_USER_ID)
         : [CURRENT_USER_ID],
+    ccIds: [],
+    bccIds: [],
     body: message.body,
     createdAt: new Date(
       Date.parse(createdAt) + message.hoursAfter * 36e5,

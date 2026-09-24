@@ -24,9 +24,14 @@ type ChatStoreValue = {
     body: string,
     opts?: { parentId?: string | null; attachments?: Omit<Attachment, "id">[] },
   ) => void;
+  editMessage: (messageId: string, body: string) => void;
+  deleteMessage: (messageId: string) => void;
   toggleReaction: (messageId: string, emoji: string) => void;
   markRead: (conversationId: string) => void;
   unreadCount: (conversationId: string) => number;
+  /** Finds (or silently reuses) the 1:1 with this person and returns its id. */
+  startDm: (userId: string) => string;
+  createChannel: (name: string, memberIds: string[]) => ChatConversation;
 };
 
 const ChatStoreContext = React.createContext<ChatStoreValue | null>(null);
@@ -40,7 +45,8 @@ export function ChatStoreProvider({
    *  that genuinely exists in the ticket store right now. */
   knownTicketKeys: Set<string>;
 }) {
-  const [conversations] = React.useState<ChatConversation[]>(seedConversations);
+  const [conversations, setConversations] =
+    React.useState<ChatConversation[]>(seedConversations);
   const [messages, setMessages] = React.useState<ChatMessage[]>(seedMessages);
   const [lastReadAt, setLastReadAt] = React.useState<Record<string, string>>(
     seedLastReadAt,
@@ -84,6 +90,70 @@ export function ChatStoreProvider({
     },
     [knownTicketKeys],
   );
+
+  const editMessage = React.useCallback((messageId: string, body: string) => {
+    const trimmed = body.trim();
+    if (!trimmed) return;
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId
+          ? { ...message, body: trimmed, editedAt: new Date().toISOString() }
+          : message,
+      ),
+    );
+  }, []);
+
+  const deleteMessage = React.useCallback((messageId: string) => {
+    // Replies stay — deleting the root of a thread should not orphan its
+    // conversation the way removing the row outright would.
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId
+          ? { ...message, body: "", attachments: [], reactions: {}, deleted: true }
+          : message,
+      ),
+    );
+  }, []);
+
+  const startDm = React.useCallback(
+    (userId: string) => {
+      const id = `dm-${[CURRENT_USER_ID, userId].sort().join("-")}`;
+      setConversations((current) => {
+        if (current.some((conversation) => conversation.id === id)) return current;
+        const conversation: ChatConversation = {
+          id,
+          name: "",
+          topic: "",
+          kind: "dm",
+          projectId: null,
+          memberIds: [CURRENT_USER_ID, userId],
+        };
+        return [...current, conversation];
+      });
+      return id;
+    },
+    [],
+  );
+
+  const createChannel = React.useCallback((name: string, memberIds: string[]) => {
+    seq.current += 1;
+    const slug = name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40);
+    const conversation: ChatConversation = {
+      id: `chan-local-${seq.current}`,
+      name: slug || `channel-${seq.current}`,
+      topic: "",
+      kind: "topic",
+      projectId: null,
+      memberIds: [...new Set([CURRENT_USER_ID, ...memberIds])],
+    };
+    setConversations((current) => [...current, conversation]);
+    return conversation;
+  }, []);
 
   const toggleReaction = React.useCallback((messageId: string, emoji: string) => {
     setMessages((current) =>
@@ -129,11 +199,27 @@ export function ChatStoreProvider({
       messages,
       lastReadAt,
       sendMessage,
+      editMessage,
+      deleteMessage,
       toggleReaction,
       markRead,
       unreadCount,
+      startDm,
+      createChannel,
     }),
-    [conversations, messages, lastReadAt, sendMessage, toggleReaction, markRead, unreadCount],
+    [
+      conversations,
+      messages,
+      lastReadAt,
+      sendMessage,
+      editMessage,
+      deleteMessage,
+      toggleReaction,
+      markRead,
+      unreadCount,
+      startDm,
+      createChannel,
+    ],
   );
 
   return <ChatStoreContext value={value}>{children}</ChatStoreContext>;

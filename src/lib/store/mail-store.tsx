@@ -6,6 +6,7 @@ import {
   mailThreads as seedThreads,
   mailMessages as seedMessages,
   CURRENT_USER_ID,
+  type Attachment,
   type MailFolder,
   type MailMessage,
   type MailThread,
@@ -17,15 +18,23 @@ export type NewMailInput = {
   toIds: string[];
   externalEmail?: string;
   ticketRefs?: string[];
+  attachments?: Omit<Attachment, "id">[];
+  /** Composed but not sent — lands in Drafts instead of Sent. */
+  asDraft?: boolean;
 };
 
 type MailStoreValue = {
   threads: MailThread[];
   messages: MailMessage[];
-  sendReply: (threadId: string, body: string) => void;
+  sendReply: (
+    threadId: string,
+    body: string,
+    attachments?: Omit<Attachment, "id">[],
+  ) => void;
   markRead: (threadId: string, read?: boolean) => void;
   toggleStar: (threadId: string) => void;
   moveToFolder: (threadId: string, folder: MailFolder) => void;
+  deleteThread: (threadId: string) => void;
   compose: (input: NewMailInput) => MailThread;
 };
 
@@ -36,32 +45,38 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = React.useState<MailMessage[]>(seedMessages);
   const seq = React.useRef(0);
 
-  const sendReply = React.useCallback((threadId: string, body: string) => {
-    const trimmed = body.trim();
-    if (!trimmed) return;
-    seq.current += 1;
-    const at = new Date().toISOString();
+  const sendReply = React.useCallback(
+    (threadId: string, body: string, attachments: Omit<Attachment, "id">[] = []) => {
+      const trimmed = body.trim();
+      if (!trimmed && attachments.length === 0) return;
+      seq.current += 1;
+      const at = new Date().toISOString();
 
-    setMessages((current) => [
-      ...current,
-      {
-        id: `mail-local-${seq.current}`,
-        threadId,
-        fromId: CURRENT_USER_ID,
-        toIds: [],
-        body: trimmed,
-        createdAt: at,
-        attachments: [],
-      },
-    ]);
-    setThreads((current) =>
-      current.map((thread) =>
-        thread.id === threadId
-          ? { ...thread, updatedAt: at, folder: thread.folder === "drafts" ? "sent" : thread.folder }
-          : thread,
-      ),
-    );
-  }, []);
+      setMessages((current) => [
+        ...current,
+        {
+          id: `mail-local-${seq.current}`,
+          threadId,
+          fromId: CURRENT_USER_ID,
+          toIds: [],
+          body: trimmed,
+          createdAt: at,
+          attachments: attachments.map((file, index) => ({
+            ...file,
+            id: `mail-a-${seq.current}-${index}`,
+          })),
+        },
+      ]);
+      setThreads((current) =>
+        current.map((thread) =>
+          thread.id === threadId
+            ? { ...thread, updatedAt: at, folder: thread.folder === "drafts" ? "sent" : thread.folder }
+            : thread,
+        ),
+      );
+    },
+    [],
+  );
 
   const markRead = React.useCallback((threadId: string, read = true) => {
     setThreads((current) =>
@@ -83,10 +98,19 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const deleteThread = React.useCallback((threadId: string) => {
+    setThreads((current) =>
+      current.map((thread) =>
+        thread.id === threadId ? { ...thread, folder: "trash" } : thread,
+      ),
+    );
+  }, []);
+
   const compose = React.useCallback((input: NewMailInput) => {
     seq.current += 1;
     const at = new Date().toISOString();
     const id = `mail-new-${seq.current}`;
+    const folder: MailFolder = input.asDraft ? "drafts" : "sent";
 
     const thread: MailThread = {
       id,
@@ -95,7 +119,7 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
       externalParticipant: input.externalEmail
         ? { name: input.externalEmail, email: input.externalEmail }
         : null,
-      folder: "sent",
+      folder,
       read: true,
       starred: false,
       ticketRefs: input.ticketRefs ?? [],
@@ -113,7 +137,10 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
         toIds: input.toIds,
         body: input.body.trim(),
         createdAt: at,
-        attachments: [],
+        attachments: (input.attachments ?? []).map((file, index) => ({
+          ...file,
+          id: `${id}-a${index}`,
+        })),
       },
     ]);
 
@@ -121,8 +148,17 @@ export function MailStoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = React.useMemo(
-    () => ({ threads, messages, sendReply, markRead, toggleStar, moveToFolder, compose }),
-    [threads, messages, sendReply, markRead, toggleStar, moveToFolder, compose],
+    () => ({
+      threads,
+      messages,
+      sendReply,
+      markRead,
+      toggleStar,
+      moveToFolder,
+      deleteThread,
+      compose,
+    }),
+    [threads, messages, sendReply, markRead, toggleStar, moveToFolder, deleteThread, compose],
   );
 
   return <MailStoreContext value={value}>{children}</MailStoreContext>;

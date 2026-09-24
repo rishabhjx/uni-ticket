@@ -10,33 +10,30 @@ import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { MessageList } from "@/components/chat/message-list";
 import { ThreadPanel } from "@/components/chat/thread-panel";
 import { AvatarStack } from "@/components/tickets/user-avatar";
-import {
-  chatConversationsForUser,
-  conversationName,
-  getChatConversation,
-  lastMessageOf,
-  CURRENT_USER_ID,
-} from "@/lib/mock";
+import { conversationName, CURRENT_USER_ID } from "@/lib/mock";
 import { useChatStore } from "@/lib/store/chat-store";
-
-function defaultConversationId() {
-  const all = chatConversationsForUser();
-  const withActivity = all
-    .map((conversation) => ({ conversation, last: lastMessageOf(conversation.id) }))
-    .filter((entry) => entry.last)
-    .sort((a, b) => b.last!.createdAt.localeCompare(a.last!.createdAt));
-  return withActivity[0]?.conversation.id ?? all[0]?.id ?? "chan-general";
-}
 
 export function ChatView() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const { conversations, messages, markRead } = useChatStore();
 
-  const conversationId = params.get("c") ?? defaultConversationId();
+  const defaultConversationId = React.useMemo(() => {
+    const mine = conversations.filter((c) => c.memberIds.includes(CURRENT_USER_ID));
+    const withActivity = mine
+      .map((conversation) => ({
+        conversation,
+        last: messages.findLast((m) => m.conversationId === conversation.id),
+      }))
+      .filter((entry) => entry.last)
+      .sort((a, b) => b.last!.createdAt.localeCompare(a.last!.createdAt));
+    return withActivity[0]?.conversation.id ?? mine[0]?.id ?? "chan-general";
+  }, [conversations, messages]);
+
+  const conversationId = params.get("c") ?? defaultConversationId;
   const threadId = params.get("thread");
-  const conversation = getChatConversation(conversationId);
-  const { markRead } = useChatStore();
+  const conversation = conversations.find((c) => c.id === conversationId);
 
   React.useEffect(() => {
     markRead(conversationId);

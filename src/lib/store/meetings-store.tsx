@@ -14,11 +14,18 @@ export type NewMeetingInput = {
   startsAt: string;
   endsAt: string;
   notes: string;
+  recurring?: Meeting["recurring"];
 };
+
+export type MeetingEdit = Pick<
+  Meeting,
+  "title" | "kind" | "attendeeIds" | "projectId" | "startsAt" | "endsAt" | "notes" | "recurring"
+>;
 
 type MeetingsStoreValue = {
   meetings: Meeting[];
   scheduleMeeting: (input: NewMeetingInput) => Meeting;
+  updateMeeting: (id: string, patch: MeetingEdit) => void;
   cancelMeeting: (id: string) => void;
   /** Undoes a cancellation — the one-level-back every destructive action here gets. */
   uncancelMeeting: (id: string) => void;
@@ -48,7 +55,7 @@ export function MeetingsStoreProvider({ children }: { children: React.ReactNode 
       ticketRefs: input.ticketRefs,
       startsAt: input.startsAt,
       endsAt: input.endsAt,
-      recurring: "none",
+      recurring: input.recurring ?? "none",
       notes: input.notes,
       cancelled: false,
     };
@@ -56,6 +63,24 @@ export function MeetingsStoreProvider({ children }: { children: React.ReactNode 
       [...current, meeting].sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
     );
     return meeting;
+  }, []);
+
+  const updateMeeting = React.useCallback((id: string, patch: MeetingEdit) => {
+    setMeetings((current) =>
+      current
+        .map((meeting) =>
+          meeting.id === id
+            ? {
+                ...meeting,
+                ...patch,
+                // The organizer always stays invited to their own meeting,
+                // even if they didn't re-add themselves while editing.
+                attendeeIds: [...new Set([meeting.organizerId, ...patch.attendeeIds])],
+              }
+            : meeting,
+        )
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+    );
   }, []);
 
   const cancelMeeting = React.useCallback((id: string) => {
@@ -81,6 +106,7 @@ export function MeetingsStoreProvider({ children }: { children: React.ReactNode 
     () => ({
       meetings,
       scheduleMeeting,
+      updateMeeting,
       cancelMeeting,
       uncancelMeeting,
       joinedMeetingId,
@@ -90,6 +116,7 @@ export function MeetingsStoreProvider({ children }: { children: React.ReactNode 
     [
       meetings,
       scheduleMeeting,
+      updateMeeting,
       cancelMeeting,
       uncancelMeeting,
       joinedMeetingId,

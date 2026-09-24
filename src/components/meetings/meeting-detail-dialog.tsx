@@ -1,8 +1,10 @@
 "use client";
 
-import { Ticket as TicketIcon, Video, X } from "lucide-react";
+import * as React from "react";
+import { Pencil, Ticket as TicketIcon, Video, X } from "lucide-react";
 
 import { MEETING_KIND_ICON, MEETING_KIND_LABEL } from "@/components/meetings/meeting-icon";
+import { ScheduleDialog } from "@/components/meetings/schedule-dialog";
 import { ProjectIcon } from "@/components/shared/entity-icon";
 import { useCelebrate } from "@/components/shared/celebrate";
 import {
@@ -31,16 +33,20 @@ export function MeetingDetailDialog({
   const { openTicket } = useTicketPanel();
   const celebrate = useCelebrate();
   const meeting = meetingId ? meetings.find((item) => item.id === meetingId) : undefined;
+  const [editOpen, setEditOpen] = React.useState(false);
 
   if (!meeting) return null;
 
   const project = meeting.projectId ? getProject(meeting.projectId) : undefined;
   const sprint = meeting.sprintId ? getSprint(meeting.sprintId) : undefined;
   const Icon = MEETING_KIND_ICON[meeting.kind];
-  const canCancel = meeting.organizerId === CURRENT_USER_ID && !meeting.cancelled;
+  const isOrganizer = meeting.organizerId === CURRENT_USER_ID;
+  const canCancel = isOrganizer && !meeting.cancelled;
+  const canEdit = isOrganizer && !meeting.cancelled;
 
   return (
-    <Dialog open={Boolean(meetingId)} onOpenChange={(open) => !open && onClose()}>
+    <>
+    <Dialog open={Boolean(meetingId) && !editOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle
@@ -149,6 +155,16 @@ export function MeetingDetailDialog({
             <span />
           )}
           <div className="flex items-center gap-2">
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={() => setEditOpen(true)}
+                className="flex h-8 items-center gap-1.5 rounded-md border border-grey-200 px-2.5 text-small text-grey-700 transition-colors hover:border-grey-300"
+              >
+                <Pencil className="size-3.5" strokeWidth={1.75} />
+                Edit
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={onClose}
@@ -173,5 +189,8 @@ export function MeetingDetailDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ScheduleDialog open={editOpen} onOpenChange={setEditOpen} editing={meeting} />
+    </>
   );
 }

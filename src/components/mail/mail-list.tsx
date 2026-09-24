@@ -1,6 +1,6 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { MailOpen, Star, Trash2 } from "lucide-react";
 
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import { formatRelative } from "@/lib/format";
@@ -17,7 +17,7 @@ export function MailList({
   activeId: string | null;
   onSelect: (id: string) => void;
 }) {
-  const { messages, toggleStar } = useMailStore();
+  const { messages, toggleStar, markRead, deleteThread } = useMailStore();
 
   if (threads.length === 0) {
     return (
@@ -42,7 +42,7 @@ export function MailList({
           <div
             key={thread.id}
             className={cn(
-              "hairline-b flex items-start gap-2.5 px-3 py-2.5 transition-colors",
+              "group/thread hairline-b flex items-start gap-2.5 px-3 py-2.5 transition-colors",
               thread.id === activeId ? "bg-grey-150" : "hover:bg-grey-50",
             )}
           >
@@ -102,6 +102,27 @@ export function MailList({
                 ) : null}
               </div>
             </button>
+
+            <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/thread:opacity-100">
+              <button
+                type="button"
+                onClick={() => markRead(thread.id, !thread.read)}
+                aria-label={thread.read ? "Mark as unread" : "Mark as read"}
+                title={thread.read ? "Mark as unread" : "Mark as read"}
+                className="flex size-6 items-center justify-center rounded-md text-grey-400 hover:bg-grey-150 hover:text-grey-700"
+              >
+                <MailOpen className="size-3.5" strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteThread(thread.id)}
+                aria-label="Delete"
+                title="Delete"
+                className="flex size-6 items-center justify-center rounded-md text-grey-400 hover:bg-grey-150 hover:text-[color:var(--danger)]"
+              >
+                <Trash2 className="size-3.5" strokeWidth={1.75} />
+              </button>
+            </div>
           </div>
         );
       })}

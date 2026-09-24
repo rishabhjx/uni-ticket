@@ -20,6 +20,10 @@ type FilesStoreValue = {
   linkToTicket: (fileId: string, ticketKey: string) => void;
   unlinkFromTicket: (fileId: string, ticketKey: string) => void;
   deleteFile: (fileId: string) => void;
+  renameFile: (fileId: string, name: string) => void;
+  /** null moves it to the drive's root. */
+  moveFile: (fileId: string, parentId: string | null) => void;
+  setSharedWith: (fileId: string, userIds: string[]) => void;
 };
 
 const FilesStoreContext = React.createContext<FilesStoreValue | null>(null);
@@ -111,7 +115,45 @@ export function FilesStoreProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const deleteFile = React.useCallback((fileId: string) => {
-    setFiles((current) => current.filter((file) => file.id !== fileId));
+    // A folder's children lose their home the moment it disappears, so they
+    // are removed with it rather than left pointing at a parent that no
+    // longer exists.
+    setFiles((current) => {
+      const toRemove = new Set([fileId]);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const file of current) {
+          if (file.parentId && toRemove.has(file.parentId) && !toRemove.has(file.id)) {
+            toRemove.add(file.id);
+            grew = true;
+          }
+        }
+      }
+      return current.filter((file) => !toRemove.has(file.id));
+    });
+  }, []);
+
+  const renameFile = React.useCallback((fileId: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setFiles((current) =>
+      current.map((file) => (file.id === fileId ? { ...file, name: trimmed } : file)),
+    );
+  }, []);
+
+  const moveFile = React.useCallback((fileId: string, parentId: string | null) => {
+    setFiles((current) =>
+      current.map((file) => (file.id === fileId ? { ...file, parentId } : file)),
+    );
+  }, []);
+
+  const setSharedWith = React.useCallback((fileId: string, userIds: string[]) => {
+    setFiles((current) =>
+      current.map((file) =>
+        file.id === fileId ? { ...file, sharedWithIds: userIds } : file,
+      ),
+    );
   }, []);
 
   const value = React.useMemo(
@@ -123,8 +165,22 @@ export function FilesStoreProvider({ children }: { children: React.ReactNode }) 
       linkToTicket,
       unlinkFromTicket,
       deleteFile,
+      renameFile,
+      moveFile,
+      setSharedWith,
     }),
-    [files, createFolder, uploadFiles, toggleStar, linkToTicket, unlinkFromTicket, deleteFile],
+    [
+      files,
+      createFolder,
+      uploadFiles,
+      toggleStar,
+      linkToTicket,
+      unlinkFromTicket,
+      deleteFile,
+      renameFile,
+      moveFile,
+      setSharedWith,
+    ],
   );
 
   return <FilesStoreContext value={value}>{children}</FilesStoreContext>;

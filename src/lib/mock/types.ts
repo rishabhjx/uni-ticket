@@ -457,9 +457,13 @@ export type ChatMessage = {
   attachments: Attachment[];
   /** Ticket keys mentioned in the body, e.g. "APO-142". */
   ticketRefs: string[];
+  /** Body/attachments/reactions are cleared, but the row stays — the same
+   *  "this message was deleted" shape every chat product renders, so a
+   *  thread's reply count and a reaction's context don't silently vanish. */
+  deleted?: boolean;
 };
 
-export const MAIL_FOLDERS = ["inbox", "sent", "drafts", "archive"] as const;
+export const MAIL_FOLDERS = ["inbox", "sent", "drafts", "archive", "trash"] as const;
 export type MailFolder = (typeof MAIL_FOLDERS)[number];
 
 export type MailThread = {

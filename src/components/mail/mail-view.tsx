@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Archive, FileEdit, Inbox as InboxIcon, PenSquare, Send, Star } from "lucide-react";
+import { Archive, FileEdit, Inbox as InboxIcon, PenSquare, Send, Star, Trash2 } from "lucide-react";
 
 import { ComposeDialog } from "@/components/mail/compose-dialog";
 import { MailList } from "@/components/mail/mail-list";
@@ -18,6 +18,7 @@ const FOLDERS: { id: MailFolder | "starred"; label: string; icon: typeof InboxIc
   { id: "sent", label: "Sent", icon: Send },
   { id: "drafts", label: "Drafts", icon: FileEdit },
   { id: "archive", label: "Archive", icon: Archive },
+  { id: "trash", label: "Trash", icon: Trash2 },
 ];
 
 export function MailView() {
@@ -109,9 +110,9 @@ export function MailView() {
       <ComposeDialog
         open={composeOpen}
         onOpenChange={setComposeOpen}
-        onSent={(id) => {
+        onSent={(id, sentFolder) => {
           const query = new URLSearchParams();
-          query.set("folder", "sent");
+          query.set("folder", sentFolder);
           query.set("t", id);
           router.push(`${pathname}?${query.toString()}`, { scroll: false });
         }}

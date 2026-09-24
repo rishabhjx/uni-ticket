@@ -27,12 +27,20 @@ import {
   MEETING_KINDS,
   projects,
   users,
+  type Meeting,
   type MeetingKind,
 } from "@/lib/mock";
 import { useMeetingsStore } from "@/lib/store/meetings-store";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { MEETING_KIND_LABEL } from "@/components/meetings/meeting-icon";
 import { cn } from "@/lib/utils";
+
+const RECURRING_OPTIONS = ["none", "daily", "weekly"] as const;
+const RECURRING_LABEL: Record<(typeof RECURRING_OPTIONS)[number], string> = {
+  none: "Does not repeat",
+  daily: "Repeats daily",
+  weekly: "Repeats weekly",
+};
 
 // Matches the field treatment create-ticket/-project/-workspace dialogs use,
 // so this dialog's inputs hover and focus the same way theirs do.
@@ -52,37 +60,91 @@ function toLocalInputValue(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function durationOf(meeting: Meeting) {
+  return Math.max(
+    Math.round((Date.parse(meeting.endsAt) - Date.parse(meeting.startsAt)) / 60_000),
+    15,
+  );
+}
+
 export function ScheduleDialog({
   open,
   onOpenChange,
   onScheduled,
+  editing = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onScheduled?: (meetingId: string) => void;
+  /** Present to edit/reschedule this meeting instead of creating a new one. */
+  editing?: Meeting | null;
 }) {
-  const { scheduleMeeting } = useMeetingsStore();
+  const { scheduleMeeting, updateMeeting } = useMeetingsStore();
   const { tickets } = useTicketStore();
 
-  const [title, setTitle] = React.useState("");
-  const [kind, setKind] = React.useState<MeetingKind>("sync");
-  const [attendeeIds, setAttendeeIds] = React.useState<string[]>([]);
-  const [projectId, setProjectId] = React.useState<string>("none");
-  const [ticketKey, setTicketKey] = React.useState("");
-  const [start, setStart] = React.useState(() => toLocalInputValue(defaultStart()));
-  const [duration, setDuration] = React.useState(30);
-  const [notes, setNotes] = React.useState("");
+  const blank = {
+    title: "",
+    kind: "sync" as MeetingKind,
+    attendeeIds: [] as string[],
+    projectId: "none",
+    ticketKey: "",
+    start: toLocalInputValue(defaultStart()),
+    duration: 30,
+    notes: "",
+    recurring: "none" as Meeting["recurring"],
+  };
+
+  const fromMeeting = (meeting: Meeting) => ({
+    title: meeting.title,
+    kind: meeting.kind,
+    attendeeIds: meeting.attendeeIds.filter((id) => id !== CURRENT_USER_ID),
+    projectId: meeting.projectId ?? "none",
+    ticketKey: meeting.ticketRefs[0] ?? "",
+    start: toLocalInputValue(new Date(meeting.startsAt)),
+    duration: durationOf(meeting),
+    notes: meeting.notes,
+    recurring: meeting.recurring,
+  });
+
+  const [title, setTitle] = React.useState(blank.title);
+  const [kind, setKind] = React.useState<MeetingKind>(blank.kind);
+  const [attendeeIds, setAttendeeIds] = React.useState<string[]>(blank.attendeeIds);
+  const [projectId, setProjectId] = React.useState<string>(blank.projectId);
+  const [ticketKey, setTicketKey] = React.useState(blank.ticketKey);
+  const [start, setStart] = React.useState(blank.start);
+  const [duration, setDuration] = React.useState(blank.duration);
+  const [notes, setNotes] = React.useState(blank.notes);
+  const [recurring, setRecurring] = React.useState<Meeting["recurring"]>(blank.recurring);
 
   const reset = () => {
-    setTitle("");
-    setKind("sync");
-    setAttendeeIds([]);
-    setProjectId("none");
-    setTicketKey("");
-    setStart(toLocalInputValue(defaultStart()));
-    setDuration(30);
-    setNotes("");
+    setTitle(blank.title);
+    setKind(blank.kind);
+    setAttendeeIds(blank.attendeeIds);
+    setProjectId(blank.projectId);
+    setTicketKey(blank.ticketKey);
+    setStart(blank.start);
+    setDuration(blank.duration);
+    setNotes(blank.notes);
+    setRecurring(blank.recurring);
   };
+
+  // Opening the dialog on a different meeting to edit (or switching from
+  // "new" to "edit") should load that meeting's own values, not whatever the
+  // form last held.
+  const [lastEditingId, setLastEditingId] = React.useState(editing?.id ?? null);
+  if ((editing?.id ?? null) !== lastEditingId) {
+    setLastEditingId(editing?.id ?? null);
+    const next = editing ? fromMeeting(editing) : blank;
+    setTitle(next.title);
+    setKind(next.kind);
+    setAttendeeIds(next.attendeeIds);
+    setProjectId(next.projectId);
+    setTicketKey(next.ticketKey);
+    setStart(next.start);
+    setDuration(next.duration);
+    setNotes(next.notes);
+    setRecurring(next.recurring);
+  }
 
   const toggleAttendee = (id: string) => {
     setAttendeeIds((current) =>
@@ -101,6 +163,23 @@ export function ScheduleDialog({
     const startsAt = new Date(start).toISOString();
     const endsAt = new Date(new Date(start).getTime() + duration * 60_000).toISOString();
 
+    if (editing) {
+      updateMeeting(editing.id, {
+        title,
+        kind,
+        attendeeIds,
+        projectId: projectId === "none" ? null : projectId,
+        startsAt,
+        endsAt,
+        notes,
+        recurring,
+      });
+      reset();
+      onOpenChange(false);
+      onScheduled?.(editing.id);
+      return;
+    }
+
     const meeting = scheduleMeeting({
       title,
       kind,
@@ -111,6 +190,7 @@ export function ScheduleDialog({
       startsAt,
       endsAt,
       notes,
+      recurring,
     });
 
     reset();
@@ -129,10 +209,11 @@ export function ScheduleDialog({
     <Dialog open={open} onOpenChange={closeAndReset}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Schedule a meeting</DialogTitle>
+          <DialogTitle>{editing ? "Edit meeting" : "Schedule a meeting"}</DialogTitle>
           <DialogDescription className="text-small text-grey-500">
-            Invites go out to everyone you add below, and it opens in Meetings
-            when its time comes.
+            {editing
+              ? "Changes apply to this meeting for everyone invited."
+              : "Invites go out to everyone you add below, and it opens in Meetings when its time comes."}
           </DialogDescription>
         </DialogHeader>
 
@@ -206,19 +287,40 @@ export function ScheduleDialog({
           </div>
 
           <div>
-            <Input
-              value={ticketKey}
-              onChange={(event) => setTicketKey(event.target.value)}
-              placeholder="Link a ticket, e.g. APO-142 (optional)"
-              aria-label="Link a ticket"
-              className={cn(fieldClass, "h-8 text-small")}
-            />
-            {ticketKey.trim() && !matchedTicket ? (
-              <p className="mt-1 text-caption text-grey-500">
-                No ticket by that key — it will not be linked.
-              </p>
-            ) : null}
+            <Label className={labelClass}>Repeats</Label>
+            <Select
+              value={recurring}
+              onValueChange={(value) => setRecurring(value as Meeting["recurring"])}
+            >
+              <SelectTrigger className="h-8 text-small">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RECURRING_OPTIONS.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {RECURRING_LABEL[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          {editing ? null : (
+            <div>
+              <Input
+                value={ticketKey}
+                onChange={(event) => setTicketKey(event.target.value)}
+                placeholder="Link a ticket, e.g. APO-142 (optional)"
+                aria-label="Link a ticket"
+                className={cn(fieldClass, "h-8 text-small")}
+              />
+              {ticketKey.trim() && !matchedTicket ? (
+                <p className="mt-1 text-caption text-grey-500">
+                  No ticket by that key — it will not be linked.
+                </p>
+              ) : null}
+            </div>
+          )}
 
           <div>
             <Label className={cn(labelClass, "mb-1.5")}>
@@ -266,7 +368,7 @@ export function ScheduleDialog({
             disabled={!title.trim()}
             className="h-8 rounded-md bg-accent-600 px-3 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700 disabled:bg-grey-100 disabled:text-grey-400"
           >
-            Schedule
+            {editing ? "Save changes" : "Schedule"}
           </button>
         </DialogFooter>
       </DialogContent>

@@ -1,15 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Hash, Lock, Search, Users } from "lucide-react";
+import { Hash, Lock, SquarePen, Search, Users } from "lucide-react";
 
+import { NewConversationDialog } from "@/components/chat/new-conversation-dialog";
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import {
-  chatConversationsForUser,
   conversationName,
-  lastMessageOf,
   CURRENT_USER_ID,
   type ChatConversation,
+  type ChatMessage,
 } from "@/lib/mock";
 import { useChatStore } from "@/lib/store/chat-store";
 import { cn } from "@/lib/utils";
@@ -18,15 +18,16 @@ function ConversationRow({
   conversation,
   active,
   unread,
+  last,
   onSelect,
 }: {
   conversation: ChatConversation;
   active: boolean;
   unread: number;
+  last: ChatMessage | undefined;
   onSelect: () => void;
 }) {
   const name = conversationName(conversation);
-  const last = lastMessageOf(conversation.id);
 
   return (
     <button
@@ -82,11 +83,13 @@ function Section({
   title,
   conversations,
   activeId,
+  lastByConversation,
   onSelect,
 }: {
   title: string;
   conversations: ChatConversation[];
   activeId: string | null;
+  lastByConversation: Map<string, ChatMessage>;
   onSelect: (id: string) => void;
 }) {
   const { unreadCount } = useChatStore();
@@ -103,6 +106,7 @@ function Section({
           conversation={conversation}
           active={conversation.id === activeId}
           unread={unreadCount(conversation.id)}
+          last={lastByConversation.get(conversation.id)}
           onSelect={() => onSelect(conversation.id)}
         />
       ))}
@@ -118,7 +122,24 @@ export function ChatSidebar({
   onSelect: (id: string) => void;
 }) {
   const [query, setQuery] = React.useState("");
-  const all = chatConversationsForUser();
+  const [newOpen, setNewOpen] = React.useState(false);
+  const { conversations, messages } = useChatStore();
+
+  const all = React.useMemo(
+    () => conversations.filter((conversation) => conversation.memberIds.includes(CURRENT_USER_ID)),
+    [conversations],
+  );
+
+  const lastByConversation = React.useMemo(() => {
+    const map = new Map<string, ChatMessage>();
+    for (const message of messages) {
+      const current = map.get(message.conversationId);
+      if (!current || message.createdAt > current.createdAt) {
+        map.set(message.conversationId, message);
+      }
+    }
+    return map;
+  }, [messages]);
 
   const filtered = React.useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -132,7 +153,13 @@ export function ChatSidebar({
     (c) => c.kind === "project" || c.kind === "topic",
   );
   const teams = filtered.filter((c) => c.kind === "team");
-  const dms = filtered.filter((c) => c.kind === "dm");
+  const dms = filtered
+    .filter((c) => c.kind === "dm")
+    .sort((a, b) => {
+      const aLast = lastByConversation.get(a.id)?.createdAt ?? "";
+      const bLast = lastByConversation.get(b.id)?.createdAt ?? "";
+      return bLast.localeCompare(aLast);
+    });
 
   return (
     <div className="hairline-r flex w-[248px] shrink-0 flex-col bg-grey-50">
@@ -145,13 +172,42 @@ export function ChatSidebar({
           aria-label="Find a conversation"
           className="min-w-0 flex-1 bg-transparent text-small text-grey-900 placeholder:text-grey-500 focus:outline-none"
         />
+        <button
+          type="button"
+          onClick={() => setNewOpen(true)}
+          aria-label="New message"
+          title="New message"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md text-grey-500 transition-colors hover:bg-grey-150 hover:text-grey-900"
+        >
+          <SquarePen className="size-3.5" strokeWidth={1.75} />
+        </button>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-2 py-3">
-        <Section title="Channels" conversations={channels} activeId={activeId} onSelect={onSelect} />
-        <Section title="Teams" conversations={teams} activeId={activeId} onSelect={onSelect} />
-        <Section title="Direct messages" conversations={dms} activeId={activeId} onSelect={onSelect} />
+        <Section
+          title="Channels"
+          conversations={channels}
+          activeId={activeId}
+          lastByConversation={lastByConversation}
+          onSelect={onSelect}
+        />
+        <Section
+          title="Teams"
+          conversations={teams}
+          activeId={activeId}
+          lastByConversation={lastByConversation}
+          onSelect={onSelect}
+        />
+        <Section
+          title="Direct messages"
+          conversations={dms}
+          activeId={activeId}
+          lastByConversation={lastByConversation}
+          onSelect={onSelect}
+        />
       </div>
+
+      <NewConversationDialog open={newOpen} onOpenChange={setNewOpen} onCreated={onSelect} />
     </div>
   );
 }

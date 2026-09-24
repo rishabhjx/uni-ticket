@@ -20,6 +20,8 @@ type MeetingsStoreValue = {
   meetings: Meeting[];
   scheduleMeeting: (input: NewMeetingInput) => Meeting;
   cancelMeeting: (id: string) => void;
+  /** Undoes a cancellation — the one-level-back every destructive action here gets. */
+  uncancelMeeting: (id: string) => void;
   /** The meeting the current user is "in", for the join screen. Null when not in one. */
   joinedMeetingId: string | null;
   joinMeeting: (id: string) => void;
@@ -64,6 +66,14 @@ export function MeetingsStoreProvider({ children }: { children: React.ReactNode 
     );
   }, []);
 
+  const uncancelMeeting = React.useCallback((id: string) => {
+    setMeetings((current) =>
+      current.map((meeting) =>
+        meeting.id === id ? { ...meeting, cancelled: false } : meeting,
+      ),
+    );
+  }, []);
+
   const joinMeeting = React.useCallback((id: string) => setJoinedMeetingId(id), []);
   const leaveMeeting = React.useCallback(() => setJoinedMeetingId(null), []);
 
@@ -72,11 +82,20 @@ export function MeetingsStoreProvider({ children }: { children: React.ReactNode 
       meetings,
       scheduleMeeting,
       cancelMeeting,
+      uncancelMeeting,
       joinedMeetingId,
       joinMeeting,
       leaveMeeting,
     }),
-    [meetings, scheduleMeeting, cancelMeeting, joinedMeetingId, joinMeeting, leaveMeeting],
+    [
+      meetings,
+      scheduleMeeting,
+      cancelMeeting,
+      uncancelMeeting,
+      joinedMeetingId,
+      joinMeeting,
+      leaveMeeting,
+    ],
   );
 
   return <MeetingsStoreContext value={value}>{children}</MeetingsStoreContext>;

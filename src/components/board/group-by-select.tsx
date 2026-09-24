@@ -22,6 +22,10 @@ const options: { value: GroupBy; label: string }[] = [
   { value: "type", label: "Type" },
 ];
 
+export const GROUP_BY_LABEL: Record<GroupBy, string> = Object.fromEntries(
+  options.map((option) => [option.value, option.label]),
+) as Record<GroupBy, string>;
+
 const lanes: { value: Swimlane; label: string }[] = [
   { value: "none", label: "None" },
   { value: "assignee", label: "Assignee" },

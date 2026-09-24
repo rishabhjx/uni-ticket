@@ -6,10 +6,13 @@ import {
   CalendarDays,
   Columns3,
   FolderOpen,
+  FolderPlus,
   Hash,
+  Layers,
   Mail,
   Plus,
   Rows3,
+  Search,
   UserRound,
   Users,
 } from "lucide-react";
@@ -58,7 +61,7 @@ export function CommandPaletteProvider({
   const [query, setQuery] = React.useState("");
   const router = useRouter();
   const { projects, tickets } = useTicketStore();
-  const { openCreate } = useShell();
+  const { openCreate, openCreateProject, openCreateWorkspace } = useShell();
   const { openTicket } = useTicketPanel();
   const { conversations, messages: chatMessages } = useChatStore();
   const { threads: mailThreads } = useMailStore();
@@ -166,7 +169,12 @@ export function CommandPaletteProvider({
         />
         <CommandList>
           <CommandEmpty>
-            {query.trim() ? "🔍 No tickets match." : "Type to search tickets."}
+            <span className="flex items-center gap-1.5">
+              <Search className="size-3.5 text-grey-400" strokeWidth={1.75} />
+              {query.trim()
+                ? "Nothing matches, in tickets, chat, mail, meetings or files."
+                : "Type to search."}
+            </span>
           </CommandEmpty>
 
           {query.trim() === "" ? (
@@ -308,6 +316,22 @@ export function CommandPaletteProvider({
             >
               <Plus className="size-3.5 text-grey-400" strokeWidth={2} />
               New ticket
+            </CommandItem>
+            <CommandItem
+              value="new project create"
+              onSelect={() => run(openCreateProject)}
+              className="gap-2"
+            >
+              <FolderPlus className="size-3.5 text-grey-400" strokeWidth={1.75} />
+              New project
+            </CommandItem>
+            <CommandItem
+              value="new workspace create"
+              onSelect={() => run(openCreateWorkspace)}
+              className="gap-2"
+            >
+              <Layers className="size-3.5 text-grey-400" strokeWidth={1.75} />
+              New workspace
             </CommandItem>
             <CommandItem
               value="my work assigned to me"

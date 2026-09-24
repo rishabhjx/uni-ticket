@@ -139,6 +139,39 @@ function cellClass(id: ColumnId) {
   );
 }
 
+/**
+ * Bulk actions only pay off once a selection is more than a few rows, and
+ * building one by hand-clicking each of fifty tickets defeats the point.
+ */
+function SelectAllHeader({
+  table,
+}: HeaderContext<DataGridFeatures, Ticket, unknown>) {
+  const { selection, setSelection } = useViewState();
+  const ids = React.useMemo(
+    () => table.getRowModel().rows.map((row) => row.original.id),
+    [table],
+  );
+  const selectedHere = ids.filter((id) => selection.includes(id));
+  const allSelected = ids.length > 0 && selectedHere.length === ids.length;
+  const someSelected = selectedHere.length > 0 && !allSelected;
+
+  return (
+    <span className="flex items-center">
+      <Checkbox
+        checked={allSelected ? true : someSelected ? "indeterminate" : false}
+        onCheckedChange={() =>
+          setSelection(
+            allSelected
+              ? selection.filter((id) => !ids.includes(id))
+              : Array.from(new Set([...selection, ...ids])),
+          )
+        }
+        aria-label={allSelected ? "Clear selection" : `Select all ${ids.length}`}
+      />
+    </span>
+  );
+}
+
 function SelectCell({ ticket }: { ticket: Ticket }) {
   const { selection, toggleSelected } = useViewState();
 
@@ -179,7 +212,7 @@ function buildColumns(visible: Set<ColumnId>): Column[] {
     select: {
       id: "select",
       enableSorting: false,
-      header: () => <span className="sr-only">Select</span>,
+      header: SelectAllHeader,
       cell: ({ row }) => <SelectCell ticket={row.original} />,
     },
     key: {
@@ -528,6 +561,11 @@ export function TicketTable({
           "transition-colors hover:bg-grey-50",
           "has-[[data-selected=true]]:bg-[var(--selected-bg)]",
           "has-[[data-selected=true]]:shadow-[inset_2px_0_0_var(--selected-edge)]",
+          // j/k keyboard navigation marks the row it is on via a
+          // data-cursor attribute set directly on this element; see
+          // list-view.tsx's showCursor.
+          "data-[cursor=true]:bg-grey-50",
+          "data-[cursor=true]:shadow-[inset_2px_0_0_var(--accent-500)]",
         ),
       }}
     >

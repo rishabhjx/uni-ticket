@@ -93,6 +93,9 @@ export function InsightsView() {
   );
 
   // Taken once per render pass so every number below agrees with the others.
+  // The dependency is deliberate: `scoped` never appears in the body, but its
+  // identity is what should invalidate `now` on the next data refresh.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const now = React.useMemo(() => new Date(), [scoped]);
 
   const metrics = React.useMemo(

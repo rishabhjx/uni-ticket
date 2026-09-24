@@ -3,7 +3,8 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { MEETING_KIND_ICON, MEETING_KIND_LABEL } from "@/components/meetings/meeting-icon";
+import { MEETING_KIND_ICON } from "@/components/meetings/meeting-icon";
+import { formatTime } from "@/lib/format";
 import { getProject, meetingStatus, startOfWeek, TODAY, type Meeting } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
@@ -99,12 +100,19 @@ function MeetingBlock({
 }) {
   const start = new Date(meeting.startsAt);
   const end = new Date(meeting.endsAt);
-  const top = (minutesSinceGridStart(start) / 60) * HOUR_HEIGHT;
+  const rawTop = (minutesSinceGridStart(start) / 60) * HOUR_HEIGHT;
   const durationMinutes = Math.max(
     (end.getTime() - start.getTime()) / 60_000,
     15,
   );
-  const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 22);
+  const rawHeight = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 22);
+  // A meeting before GRID_START_HOUR or after GRID_END_HOUR would otherwise
+  // draw with a negative top (behind the sticky day header) or past the
+  // bottom of the grid, both unreachable. Clamped into the visible grid, it
+  // stays a click away instead of vanishing off either edge.
+  const top = Math.min(Math.max(rawTop, 0), GRID_HEIGHT - 4);
+  const height = Math.min(rawHeight, GRID_HEIGHT - top);
+  const timeRange = `${formatTime(meeting.startsAt)} – ${formatTime(meeting.endsAt)}`;
   const status = meetingStatus(meeting);
   const Icon = MEETING_KIND_ICON[meeting.kind];
   const project = meeting.projectId ? getProject(meeting.projectId) : undefined;
@@ -114,11 +122,13 @@ function MeetingBlock({
     <button
       type="button"
       onClick={onOpen}
+      aria-label={`${meeting.title}, ${timeRange}${status === "cancelled" ? ", cancelled" : ""}`}
       style={{
         top,
         height,
         left: `calc(${(lane / totalLanes) * 100}% + 2px)`,
         width: `calc(${100 / totalLanes}% - 4px)`,
+        minWidth: 46,
       }}
       className={cn(
         "absolute flex flex-col overflow-hidden rounded-md border px-1.5 py-1 text-left transition-colors",
@@ -142,8 +152,8 @@ function MeetingBlock({
       </span>
       {!short ? (
         <span className="truncate text-[10px] text-current opacity-80">
-          {project ? `${project.name} · ` : ""}
-          {MEETING_KIND_LABEL[meeting.kind]}
+          {timeRange}
+          {project ? ` · ${project.name}` : ""}
         </span>
       ) : null}
     </button>

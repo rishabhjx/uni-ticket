@@ -18,6 +18,7 @@ import {
   TICKET_PRIORITIES,
   TICKET_STATUSES,
   users,
+  type Ticket,
   type TicketPriority,
   type TicketStatus,
 } from "@/lib/mock";
@@ -31,19 +32,48 @@ import { useViewState } from "@/lib/store/view-state";
  */
 export function BulkBar() {
   const { selection, clearSelection } = useViewState();
-  const { updateMany, undo } = useTicketStore();
+  const { tickets, updateMany } = useTicketStore();
   const celebrate = useCelebrate();
-  // Read at click time, since undo only exists after the change is applied.
-  const undoRef = React.useRef(undo);
-  React.useEffect(() => {
-    undoRef.current = undo;
-  }, [undo]);
 
   if (selection.length === 0) return null;
 
-  const apply = (patch: Parameters<typeof updateMany>[1]) => {
+  /**
+   * Only "Mark done" used to offer a way back — reassigning or bulk-changing
+   * the status/priority of a dozen tickets is just as hard to eyeball your
+   * way out of, and got no undo at all. Each ticket keeps its OWN prior
+   * value, snapshotted here before the patch lands: a mixed selection
+   * restores to what it actually was, not to whatever the first ticket in it
+   * happened to hold.
+   */
+  const applyWithUndo = (patch: Partial<Ticket>) => {
+    const keys = Object.keys(patch) as (keyof Ticket)[];
+    const before = tickets
+      .filter((ticket) => selection.includes(ticket.id))
+      .map((ticket) => ({
+        id: ticket.id,
+        prior: Object.fromEntries(
+          keys.map((key) => [key, ticket[key]]),
+        ) as Partial<Ticket>,
+      }));
+    const count = selection.length;
+
     updateMany(selection, patch);
     clearSelection();
+    return {
+      count,
+      restore: () => {
+        for (const entry of before) updateMany([entry.id], entry.prior);
+      },
+    };
+  };
+
+  const apply = (patch: Partial<Ticket>, label: string) => {
+    const { count, restore } = applyWithUndo(patch);
+    celebrate(
+      "→",
+      `${label} · ${count} ${count === 1 ? "ticket" : "tickets"}`,
+      restore,
+    );
   };
 
   const triggerClass =
@@ -77,7 +107,12 @@ export function BulkBar() {
             {TICKET_STATUSES.map((status) => (
               <DropdownMenuItem
                 key={status}
-                onClick={() => apply({ status: status as TicketStatus })}
+                onClick={() =>
+                  apply(
+                    { status: status as TicketStatus },
+                    `Moved to ${STATUS_LABEL[status]}`,
+                  )
+                }
               >
                 <StatusBadge status={status} />
               </DropdownMenuItem>
@@ -95,7 +130,12 @@ export function BulkBar() {
             {TICKET_PRIORITIES.map((priority) => (
               <DropdownMenuItem
                 key={priority}
-                onClick={() => apply({ priority: priority as TicketPriority })}
+                onClick={() =>
+                  apply(
+                    { priority: priority as TicketPriority },
+                    "Priority changed",
+                  )
+                }
               >
                 <PriorityBadge priority={priority} />
               </DropdownMenuItem>
@@ -110,7 +150,7 @@ export function BulkBar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="max-h-72 overflow-y-auto">
-            <DropdownMenuItem onClick={() => apply({ assigneeIds: [] })}>
+            <DropdownMenuItem onClick={() => apply({ assigneeIds: [] }, "Unassigned")}>
               <span className="flex items-center gap-2">
                 <UserAvatar userId={null} />
                 Unassigned
@@ -122,7 +162,12 @@ export function BulkBar() {
                 // A bulk action sets the whole list rather than adding to it:
                 // "assign these twelve to Priya" should not silently keep
                 // whoever happened to be on each one.
-                onClick={() => apply({ assigneeIds: [user.id] })}
+                onClick={() =>
+                  apply(
+                    { assigneeIds: [user.id] },
+                    `Assigned to ${getUser(user.id)?.name ?? user.id}`,
+                  )
+                }
               >
                 <span className="flex items-center gap-2">
                   <UserAvatar userId={user.id} />
@@ -136,13 +181,12 @@ export function BulkBar() {
         <button
           type="button"
           onClick={() => {
-            const count = selection.length;
-            apply({ status: "done" });
+            const { count, restore } = applyWithUndo({ status: "done" });
             celebrate(
               randomCheer(),
               count === 1 ? "One down" : `${count} tickets closed`,
               // Closing twenty tickets with no way back is not a safe action.
-              () => undoRef.current?.(),
+              restore,
             );
           }}
           className="flex h-7 items-center gap-1.5 rounded-md bg-accent-600 px-2.5 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"

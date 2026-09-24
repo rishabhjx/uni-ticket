@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
+import { X } from "lucide-react";
 
 import { PriorityBadge, SeverityBadge, TypeIcon } from "@/components/tickets/badges";
 import { AssigneePicker } from "@/components/tickets/assignee-picker";
@@ -41,7 +42,6 @@ import {
   isDefect,
   labels,
   sprintsForProject,
-  SEVERITY_LABEL,
   STATUS_DISCIPLINE,
   STATUS_LABEL,
   statusesForDiscipline,
@@ -159,7 +159,14 @@ export function CreateTicketDialog({
   const [lastRouteProject, setLastRouteProject] = React.useState(routeProject?.id);
   if (routeProject?.id !== lastRouteProject) {
     setLastRouteProject(routeProject?.id);
-    if (routeProject) setProjectId(routeProject.id);
+    if (routeProject) {
+      setProjectId(routeProject.id);
+      // A sprint or epic picked under the old project does not exist under
+      // the new one, so carrying the id over would silently mis-link the
+      // ticket to a cycle or epic the dropdown no longer even shows.
+      setSprintId("none");
+      setParentId("none");
+    }
   }
 
   const project = getProject(projectId);
@@ -197,9 +204,17 @@ export function CreateTicketDialog({
   };
   const canSubmit = title.trim().length > 0;
 
+  // Everything resets to its declared default except `type`, which is
+  // deliberately sticky (see the comment above where it is declared).
   const reset = () => {
     setTitle("");
     setDescription("");
+    setPriority("medium");
+    setSeverity("s3");
+    setEnvironment("production");
+    setStatus("backlog");
+    setSprintId("none");
+    setParentId("none");
     setLabelIds([]);
     setDueAt("");
     setRequesterId("none");
@@ -208,6 +223,13 @@ export function CreateTicketDialog({
     setAssigneeTouched(false);
     setInheritStages(true);
     setStageAssignees({});
+  };
+
+  // A dialog abandoned via Cancel, Escape or the overlay must not leave its
+  // draft behind for the next "New ticket" — only a submit should persist.
+  const closeAndReset = (next: boolean) => {
+    if (!next) reset();
+    onOpenChange(next);
   };
 
   const submit = (event: React.FormEvent) => {
@@ -244,7 +266,7 @@ export function CreateTicketDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={closeAndReset}>
       <DialogContent className="max-w-xl gap-0 p-0">
         <DialogHeader className="hairline-b px-5 py-4">
           <DialogTitle className="text-heading font-semibold">
@@ -286,7 +308,18 @@ export function CreateTicketDialog({
             <Section title="Where it goes" />
 
             <Row label="Project">
-              <Select value={projectId} onValueChange={setProjectId}>
+              <Select
+                value={projectId}
+                onValueChange={(next) => {
+                  setProjectId(next);
+                  // A sprint or epic picked under the old project does not
+                  // exist under the new one; carrying the id over would
+                  // silently mis-link the ticket to a cycle or epic the
+                  // dropdown below no longer even shows.
+                  setSprintId("none");
+                  setParentId("none");
+                }}
+              >
                 <SelectTrigger className="h-8 text-small">
                   <SelectValue />
                 </SelectTrigger>
@@ -633,9 +666,7 @@ export function CreateTicketDialog({
                           <span className="max-w-[160px] truncate">
                             {file.name}
                           </span>
-                          <span aria-hidden className="text-grey-500">
-                            ×
-                          </span>
+                          <X aria-hidden className="size-3 text-grey-500" strokeWidth={2} />
                         </button>
                       </li>
                     ))}
@@ -648,7 +679,7 @@ export function CreateTicketDialog({
           <DialogFooter className="hairline-t px-5 py-3">
             <button
               type="button"
-              onClick={() => onOpenChange(false)}
+              onClick={() => closeAndReset(false)}
               className="h-8 rounded-md px-3 text-small text-grey-600 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
               Cancel

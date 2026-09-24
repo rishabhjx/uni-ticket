@@ -24,7 +24,7 @@ import { projects } from "./projects";
 import { createRandom, type Random } from "./random";
 import { sprintsForProject } from "./sprints";
 import { titlesByProject } from "./titles";
-import { LINK_INVERSE, REACTIONS, STATUS_DISCIPLINE } from "./types";
+import { LINK_INVERSE, REACTIONS } from "./types";
 import { TICKET_STATUSES } from "./types";
 import {
   ENVIRONMENTS,
@@ -51,15 +51,6 @@ const severityWeights: Record<TicketSeverity, number> = {
   s4: 26,
 };
 
-const branchPrefix: Record<string, string> = {
-  bug: "fix",
-  incident: "hotfix",
-  feature: "feat",
-  task: "chore",
-  chore: "chore",
-  request: "ops",
-};
-
 const attachmentPool: { name: string; kind: "image" | "log" | "video" | "document" }[] = [
   { name: "screenshot-failure.png", kind: "image" },
   { name: "console-output.log", kind: "log" },
@@ -69,16 +60,6 @@ const attachmentPool: { name: string; kind: "image" | "log" | "video" | "documen
   { name: "before-after.png", kind: "image" },
   { name: "stacktrace.txt", kind: "log" },
 ];
-
-function slugifyTitle(title: string) {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .split("-")
-    .slice(0, 5)
-    .join("-");
-}
 
 const statusWeights: Record<TicketStatus, number> = {
   backlog: 22,

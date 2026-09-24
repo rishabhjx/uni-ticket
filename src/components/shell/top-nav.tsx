@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChartLine,
+  Check,
   ChevronDown,
   ChevronRight,
   Columns3,
@@ -235,9 +236,7 @@ function WorkspacePicker({ current }: { current: string | null }) {
               <WorkspaceIcon workspace={workspace} size="xs" />
               <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
               {workspace.id === current ? (
-                <span aria-hidden className="text-accent-600">
-                  ✓
-                </span>
+                <Check aria-hidden className="size-3.5 text-accent-600" strokeWidth={2.25} />
               ) : null}
             </Link>
           </DropdownMenuItem>
@@ -301,9 +300,7 @@ function ProjectPicker({
                 <ProjectIcon project={project} size="xs" />
                 <span className="min-w-0 flex-1 truncate">{project.name}</span>
                 {project.id === current ? (
-                  <span aria-hidden className="text-accent-600">
-                    ✓
-                  </span>
+                  <Check aria-hidden className="size-3.5 text-accent-600" strokeWidth={2.25} />
                 ) : null}
               </Link>
             </DropdownMenuItem>

@@ -50,9 +50,9 @@ export function InCallOverlay() {
   const Icon = MEETING_KIND_ICON[meeting.kind];
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-[#161513]">
-      <header className="flex h-topbar shrink-0 items-center gap-2 px-5 text-grey-0">
-        <Icon className="size-4 text-grey-300" strokeWidth={1.75} />
+    <div className="fixed inset-0 z-[60] flex flex-col bg-[var(--call-bg)]">
+      <header className="flex h-topbar shrink-0 items-center gap-2 px-5 text-[var(--call-fg)]">
+        <Icon className="size-4 text-[var(--call-fg-muted)]" strokeWidth={1.75} />
         <h1 className="text-small font-medium">{meeting.title}</h1>
         <CallTimer key={meeting.id} />
         {meeting.ticketRefs.map((key) => (
@@ -60,7 +60,7 @@ export function InCallOverlay() {
             key={key}
             type="button"
             onClick={() => openTicket(key)}
-            className="tnum ml-2 flex items-center gap-1 rounded-md bg-grey-0/10 px-1.5 py-0.5 text-caption font-medium text-grey-0 hover:bg-grey-0/20"
+            className="tnum ml-2 flex items-center gap-1 rounded-md bg-[var(--call-fg)]/10 px-1.5 py-0.5 text-caption font-medium text-[var(--call-fg)] hover:bg-[var(--call-fg)]/20"
           >
             <TicketIcon className="size-3" strokeWidth={2} />
             {key}
@@ -74,12 +74,12 @@ export function InCallOverlay() {
           return (
             <div
               key={id}
-              className="flex aspect-video flex-col items-center justify-center gap-2 rounded-md bg-grey-800"
+              className="flex aspect-video flex-col items-center justify-center gap-2 rounded-md bg-[var(--call-surface)]"
             >
-              <span className="flex size-12 items-center justify-center rounded-full bg-grey-700 text-heading font-semibold text-grey-0">
+              <span className="flex size-12 items-center justify-center rounded-full bg-[var(--call-surface-2)] text-heading font-semibold text-[var(--call-fg)]">
                 {user?.initials}
               </span>
-              <span className="text-small text-grey-300">{user?.name}</span>
+              <span className="text-small text-[var(--call-fg-muted)]">{user?.name}</span>
             </div>
           );
         })}
@@ -92,7 +92,9 @@ export function InCallOverlay() {
           aria-label={muted ? "Unmute" : "Mute"}
           className={cn(
             "flex size-10 items-center justify-center rounded-full transition-colors",
-            muted ? "bg-grey-0 text-grey-900" : "bg-grey-0/15 text-grey-0 hover:bg-grey-0/25",
+            muted
+              ? "bg-[var(--call-fg)] text-[var(--call-fg-on-light)]"
+              : "bg-[var(--call-fg)]/15 text-[var(--call-fg)] hover:bg-[var(--call-fg)]/25",
           )}
         >
           {muted ? <MicOff className="size-4" strokeWidth={1.75} /> : <Mic className="size-4" strokeWidth={1.75} />}
@@ -103,7 +105,9 @@ export function InCallOverlay() {
           aria-label={videoOff ? "Turn camera on" : "Turn camera off"}
           className={cn(
             "flex size-10 items-center justify-center rounded-full transition-colors",
-            videoOff ? "bg-grey-0 text-grey-900" : "bg-grey-0/15 text-grey-0 hover:bg-grey-0/25",
+            videoOff
+              ? "bg-[var(--call-fg)] text-[var(--call-fg-on-light)]"
+              : "bg-[var(--call-fg)]/15 text-[var(--call-fg)] hover:bg-[var(--call-fg)]/25",
           )}
         >
           {videoOff ? (
@@ -116,7 +120,7 @@ export function InCallOverlay() {
           type="button"
           onClick={leaveMeeting}
           aria-label="Leave call"
-          className="flex h-10 items-center gap-2 rounded-full bg-[var(--priority-urgent-fg)] px-4 text-small font-medium text-grey-0 transition-colors hover:opacity-90"
+          className="flex h-10 items-center gap-2 rounded-full bg-[var(--call-danger)] px-4 text-small font-medium text-[var(--call-fg-on-light)] transition-colors hover:opacity-90"
         >
           <PhoneOff className="size-4" strokeWidth={1.75} />
           Leave

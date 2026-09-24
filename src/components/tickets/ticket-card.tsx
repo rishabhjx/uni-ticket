@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { CalendarClock, GitPullRequest, Hourglass, Paperclip } from "lucide-react";
+import { CalendarClock, Hourglass, Paperclip } from "lucide-react";
 
 import {
   AlertChip,
@@ -18,7 +18,6 @@ import { AvatarStack } from "@/components/tickets/user-avatar";
 import { formatDueDate } from "@/lib/format";
 import {
   daysInColumn,
-  getProject,
   getLabel,
   isOverdue,
   isSlaBreached,
@@ -96,8 +95,8 @@ export function TicketCard({
             {cardFields.map(({ field, text }) => (
               <span
                 key={field.id}
-                title={field.name}
-                className="rounded-md bg-grey-100 px-1.5 py-0.5 text-caption text-grey-600"
+                title={`${field.name}: ${text}`}
+                className="max-w-[140px] truncate rounded-md bg-grey-100 px-1.5 py-0.5 text-caption text-grey-600"
               >
                 {text}
               </span>
@@ -107,7 +106,14 @@ export function TicketCard({
 
         {ticket.labelIds.slice(0, 2).map((id) => {
           const label = getLabel(id);
-          return label ? <LabelChip key={id} name={label.name} /> : null;
+          return label ? (
+            <LabelChip
+              key={id}
+              name={label.name}
+              title={label.name}
+              className="max-w-[120px] truncate"
+            />
+          ) : null;
         })}
         {ticket.labelIds.length > 2 ? (
           <span className="tnum text-caption text-grey-500">

@@ -31,6 +31,15 @@ const GROUPS: { name: string; items: { keys: string[]; does: string }[] }[] = [
       { keys: ["⌘", "↵"], does: "Send a comment" },
     ],
   },
+  {
+    name: "In a list",
+    items: [
+      { keys: ["J"], does: "Move to the next ticket" },
+      { keys: ["K"], does: "Move to the previous ticket" },
+      { keys: ["↵"], does: "Open the ticket under the cursor" },
+      { keys: ["X"], does: "Select the ticket under the cursor" },
+    ],
+  },
 ];
 
 export function ShortcutsDialog({

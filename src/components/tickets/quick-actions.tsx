@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Check } from "lucide-react";
 
 import { useCelebrate } from "@/components/shared/celebrate";
 import { PriorityBadge, StatusBadge } from "@/components/tickets/badges";
@@ -85,9 +86,7 @@ export function QuickAssign({
                 <UserAvatar userId={id} />
                 <span className="flex-1">{getUser(id)?.name}</span>
                 {picked ? (
-                  <span aria-hidden className="text-accent-600">
-                    ✓
-                  </span>
+                  <Check aria-hidden className="size-3.5 text-accent-600" strokeWidth={2.25} />
                 ) : null}
               </span>
             </DropdownMenuItem>

@@ -26,6 +26,23 @@ const DEFAULT_COLUMNS: ColumnId[] = [
   "updatedAt",
 ];
 
+const COLUMNS_KEY = "uni.listColumns";
+
+/** Read once, lazily — the same shape `density` already persists in. */
+function loadVisibleColumns(fallback: ColumnId[]): Set<ColumnId> {
+  if (typeof window === "undefined") return new Set(fallback);
+  try {
+    const stored = window.localStorage.getItem(COLUMNS_KEY);
+    if (!stored) return new Set(fallback);
+    const parsed = JSON.parse(stored) as ColumnId[];
+    return Array.isArray(parsed) && parsed.length > 0
+      ? new Set(parsed)
+      : new Set(fallback);
+  } catch {
+    return new Set(fallback);
+  }
+}
+
 export function ListView({
   project,
   tickets: provided,
@@ -42,11 +59,26 @@ export function ListView({
   const { filters, selection, setSelection, clearFilters } = useViewState();
   const projectFields = useProjectFields(project?.id);
 
-  const [visibleColumns, setVisibleColumns] = React.useState<Set<ColumnId>>(
-    () =>
-      new Set(
-        showProject ? [...DEFAULT_COLUMNS, "project"] : DEFAULT_COLUMNS,
-      ),
+  const defaultColumns = React.useMemo<ColumnId[]>(
+    () => (showProject ? [...DEFAULT_COLUMNS, "project"] : DEFAULT_COLUMNS),
+    [showProject],
+  );
+  const [visibleColumns, setVisibleColumnsState] = React.useState<Set<ColumnId>>(
+    () => loadVisibleColumns(defaultColumns),
+  );
+  const setVisibleColumns = React.useCallback(
+    (next: Set<ColumnId>) => {
+      setVisibleColumnsState(next);
+      try {
+        window.localStorage.setItem(
+          COLUMNS_KEY,
+          JSON.stringify(Array.from(next)),
+        );
+      } catch {
+        // Not being able to remember column choices is not worth failing over.
+      }
+    },
+    [],
   );
 
   const scoped = React.useMemo(() => {
@@ -63,12 +95,30 @@ export function ListView({
   );
 
   // J/K to move, Enter to open, X to select — developers do not want a mouse.
-  const [cursor, setCursor] = React.useState(0);
+  // The value itself is read only inside the keydown handler's own closures
+  // below (via the setCursor updater); nothing here re-renders off it, since
+  // the current row is marked directly on its DOM node by showCursor.
+  const [, setCursor] = React.useState(0);
   const filteredRef = React.useRef(filtered);
 
   React.useEffect(() => {
     filteredRef.current = filtered;
   }, [filtered]);
+
+  // The grid's real row element for the ticket at `cursor`, so j/k can scroll
+  // it into view and mark it as current — found by data-row-id, which
+  // DataGridTableRenderedRow already renders per row keyed to `ticket.id`.
+  const cursorRowRef = React.useRef<HTMLElement | null>(null);
+
+  const showCursor = React.useCallback((ticketId: string) => {
+    cursorRowRef.current?.removeAttribute("data-cursor");
+    const row = document.querySelector<HTMLElement>(
+      `[data-row-id="${CSS.escape(ticketId)}"]`,
+    );
+    row?.setAttribute("data-cursor", "true");
+    row?.scrollIntoView({ block: "nearest" });
+    cursorRowRef.current = row;
+  }, []);
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -93,15 +143,15 @@ export function ListView({
             0,
             Math.min(rows.length - 1, current + (key === "j" ? 1 : -1)),
           );
-          document
-            .querySelector(`[data-ticket-row="${rows[next].id}"]`)
-            ?.scrollIntoView({ block: "nearest" });
+          showCursor(rows[next].id);
           return next;
         });
       } else if (event.key === "Enter") {
         event.preventDefault();
         setCursor((current) => {
-          openTicket(rows[Math.min(current, rows.length - 1)].id);
+          const ticket = rows[Math.min(current, rows.length - 1)];
+          // By KEY, not id: openTicket resolves ?ticket= against ticket.key.
+          openTicket(ticket.key);
           return current;
         });
       } else if (key === "x") {
@@ -120,9 +170,7 @@ export function ListView({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [openTicket, selection, setSelection]);
-
-  void cursor;
+  }, [openTicket, selection, setSelection, showCursor]);
 
   if (isLoading) {
     return (

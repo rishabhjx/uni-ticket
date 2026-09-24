@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -31,6 +32,14 @@ import {
 import { useMeetingsStore } from "@/lib/store/meetings-store";
 import { useTicketStore } from "@/lib/store/ticket-store";
 import { MEETING_KIND_LABEL } from "@/components/meetings/meeting-icon";
+import { cn } from "@/lib/utils";
+
+// Matches the field treatment create-ticket/-project/-workspace dialogs use,
+// so this dialog's inputs hover and focus the same way theirs do.
+const fieldClass =
+  "border-grey-200 shadow-none transition-colors placeholder:text-grey-500 hover:border-grey-300 focus-visible:border-accent-600 focus-visible:ring-0";
+const labelClass =
+  "mb-1 text-caption font-medium tracking-[0.07em] text-grey-500 uppercase";
 
 function defaultStart() {
   const in30 = new Date(Date.now() + 30 * 60_000);
@@ -81,13 +90,16 @@ export function ScheduleDialog({
     );
   };
 
+  // Read here rather than only inside submit(), so a typo that matches
+  // nothing can tell the person before they schedule, not after.
+  const matchedTicket = tickets.find(
+    (ticket) => ticket.key.toLowerCase() === ticketKey.trim().toLowerCase(),
+  );
+
   const submit = () => {
     if (!title.trim()) return;
     const startsAt = new Date(start).toISOString();
     const endsAt = new Date(new Date(start).getTime() + duration * 60_000).toISOString();
-    const matchedTicket = tickets.find(
-      (ticket) => ticket.key.toLowerCase() === ticketKey.trim().toLowerCase(),
-    );
 
     const meeting = scheduleMeeting({
       title,
@@ -106,25 +118,32 @@ export function ScheduleDialog({
     onScheduled?.(meeting.id);
   };
 
+  // A dialog abandoned via Cancel, Escape or the overlay must not leave its
+  // draft behind for the next "Schedule a meeting".
+  const closeAndReset = (next: boolean) => {
+    onOpenChange(next);
+    if (!next) reset();
+  };
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        onOpenChange(next);
-        if (!next) reset();
-      }}
-    >
+    <Dialog open={open} onOpenChange={closeAndReset}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Schedule a meeting</DialogTitle>
+          <DialogDescription className="text-small text-grey-500">
+            Invites go out to everyone you add below, and it opens in Meetings
+            when its time comes.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
           <Input
+            autoFocus
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Meeting title"
-            className="h-8 text-small"
+            aria-label="Meeting title"
+            className={cn(fieldClass, "h-8 text-small")}
           />
 
           <div className="grid grid-cols-2 gap-2">
@@ -161,16 +180,16 @@ export function ScheduleDialog({
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="mb-1 text-caption text-grey-500">Starts</Label>
+              <Label className={labelClass}>Starts</Label>
               <Input
                 type="datetime-local"
                 value={start}
                 onChange={(event) => setStart(event.target.value)}
-                className="h-8 text-small"
+                className={cn(fieldClass, "h-8 text-small")}
               />
             </div>
             <div>
-              <Label className="mb-1 text-caption text-grey-500">Duration</Label>
+              <Label className={labelClass}>Duration</Label>
               <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
                 <SelectTrigger className="h-8 text-small">
                   <SelectValue />
@@ -186,15 +205,23 @@ export function ScheduleDialog({
             </div>
           </div>
 
-          <Input
-            value={ticketKey}
-            onChange={(event) => setTicketKey(event.target.value)}
-            placeholder="Link a ticket, e.g. APO-142 (optional)"
-            className="h-8 text-small"
-          />
+          <div>
+            <Input
+              value={ticketKey}
+              onChange={(event) => setTicketKey(event.target.value)}
+              placeholder="Link a ticket, e.g. APO-142 (optional)"
+              aria-label="Link a ticket"
+              className={cn(fieldClass, "h-8 text-small")}
+            />
+            {ticketKey.trim() && !matchedTicket ? (
+              <p className="mt-1 text-caption text-grey-500">
+                No ticket by that key — it will not be linked.
+              </p>
+            ) : null}
+          </div>
 
           <div>
-            <Label className="mb-1.5 text-caption text-grey-500">
+            <Label className={cn(labelClass, "mb-1.5")}>
               Attendees {attendeeIds.length > 0 ? `(${attendeeIds.length})` : ""}
             </Label>
             <div className="grid max-h-36 grid-cols-2 gap-1 overflow-y-auto rounded-md border border-grey-200 p-1.5">
@@ -226,6 +253,13 @@ export function ScheduleDialog({
         </div>
 
         <DialogFooter>
+          <button
+            type="button"
+            onClick={() => closeAndReset(false)}
+            className="h-8 rounded-md px-3 text-small text-grey-600 transition-colors hover:bg-grey-100 hover:text-grey-900"
+          >
+            Cancel
+          </button>
           <button
             type="button"
             onClick={submit}

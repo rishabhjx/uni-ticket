@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CircleCheck, Users } from "lucide-react";
+import { Users } from "lucide-react";
 
 import { ListView } from "@/components/list/list-view";
 import { EmptyState } from "@/components/shared/empty-state";

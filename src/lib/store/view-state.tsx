@@ -6,14 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { matchesSearch, parseSearch } from "@/lib/search";
 import { countRules, matchesQuery } from "@/lib/ticket-query";
 import type { FilterQuery } from "@/components/reui/filters/filters-types";
-import {
-  isOverdue,
-  isSlaBreached,
-  isStale,
-  STATUS_DISCIPLINE,
-  type Ticket,
-  type TicketStatus,
-} from "@/lib/mock";
+import { STATUS_DISCIPLINE, type Ticket, type TicketStatus } from "@/lib/mock";
 
 /**
  * Filters used to be a flat bag of arrays, ANDed together. That shape cannot
@@ -55,33 +48,6 @@ export type GroupBy =
 /** A second dimension, drawn as rows while the columns stay the grouping. */
 export type Swimlane = "none" | "assignee" | "priority" | "epic";
 export type Density = "comfortable" | "compact";
-
-const listKeys = [
-  "statuses",
-  "assignees",
-  "priorities",
-  "severities",
-  "types",
-  "labels",
-  "environments",
-] as const;
-
-const flagKeys = ["overdueOnly", "staleOnly", "breachedOnly"] as const;
-
-/** Short query keys, because these URLs get pasted into chat. */
-const queryKey: Record<string, string> = {
-  search: "q",
-  statuses: "status",
-  assignees: "assignee",
-  priorities: "priority",
-  severities: "severity",
-  types: "type",
-  labels: "label",
-  environments: "env",
-  overdueOnly: "overdue",
-  staleOnly: "stale",
-  breachedOnly: "breached",
-};
 
 /**
  * The query tree rides in the URL as compact JSON under `q`. Not a bespoke
@@ -382,6 +348,7 @@ export function ViewStateProvider({ children }: { children: React.ReactNode }) {
       setFilters,
       clearFilters,
       groupBy,
+      setGroupBy,
       swimlane,
       density,
       setDensity,

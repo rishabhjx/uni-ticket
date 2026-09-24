@@ -204,6 +204,11 @@ export function TypeIcon({
     <Icon
       className={cn("size-3.5 shrink-0 text-grey-400", className)}
       strokeWidth={1.75}
+      // Lucide marks every icon aria-hidden by default, same gap PriorityDot
+      // above fixes: without this override, an icon carrying the ticket's
+      // type reaches a screen reader as nothing at all.
+      role="img"
+      aria-hidden={false}
       aria-label={TYPE_LABEL[type]}
     />
   );

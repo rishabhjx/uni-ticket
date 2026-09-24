@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Check } from "lucide-react";
 
 import {
   Command,
@@ -32,6 +33,7 @@ export function LabelPicker({
   align?: "start" | "end";
 }) {
   const [open, setOpen] = React.useState(false);
+  const listId = React.useId();
 
   const toggle = (id: string) =>
     onChange(
@@ -45,6 +47,7 @@ export function LabelPicker({
           type="button"
           role="combobox"
           aria-expanded={open}
+          aria-controls={listId}
           aria-label="Labels"
           className={cn(
             "flex min-h-7 w-full flex-wrap items-center gap-1 rounded-md px-1.5 py-1 text-left text-small transition-colors hover:bg-grey-100 data-[state=open]:bg-grey-100",
@@ -61,7 +64,7 @@ export function LabelPicker({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align={align} className="w-56 p-0">
+      <PopoverContent id={listId} align={align} className="w-56 p-0">
         <Command>
           <CommandInput placeholder="Find a label…" />
           <CommandList>
@@ -78,9 +81,11 @@ export function LabelPicker({
                   >
                     <LabelChip name={label.name} />
                     {picked ? (
-                      <span aria-hidden className="ml-auto text-accent-600">
-                        ✓
-                      </span>
+                      <Check
+                        aria-hidden
+                        className="ml-auto size-3.5 text-accent-600"
+                        strokeWidth={2.25}
+                      />
                     ) : null}
                   </CommandItem>
                 );

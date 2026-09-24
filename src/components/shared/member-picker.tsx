@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, X } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 
 import { UserAvatar } from "@/components/tickets/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ export function MemberPicker({
   className?: string;
 }) {
   const [open, setOpen] = React.useState(false);
+  const listId = React.useId();
 
   const toggle = (id: string) => {
     if (lockedIds.includes(id)) return;
@@ -85,13 +86,14 @@ export function MemberPicker({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-controls={listId}
             className="h-7 w-fit justify-start gap-1.5 px-2 text-small font-normal text-grey-600 shadow-none hover:bg-grey-100"
           >
             <Plus className="size-3.5" strokeWidth={2} />
             {placeholder}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-64 p-0">
+        <PopoverContent id={listId} align="start" className="w-64 p-0">
           <Command>
             <CommandInput placeholder="Search people…" />
             <CommandList className="max-h-64">
@@ -112,9 +114,11 @@ export function MemberPicker({
                         {user.role}
                       </span>
                       {picked ? (
-                        <span aria-hidden className="text-accent-600">
-                          ✓
-                        </span>
+                        <Check
+                          aria-hidden
+                          className="size-3.5 text-accent-600"
+                          strokeWidth={2.25}
+                        />
                       ) : null}
                     </CommandItem>
                   );

@@ -87,7 +87,7 @@ export function AiAssistant() {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div aria-live="polite" className="flex flex-col gap-3">
                 {turns.map((turn, index) => (
                   <div
                     key={index}
@@ -124,6 +124,7 @@ export function AiAssistant() {
             className="hairline-t flex items-center gap-2 p-3"
           >
             <input
+              autoFocus
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder="Ask about a ticket, channel or project"

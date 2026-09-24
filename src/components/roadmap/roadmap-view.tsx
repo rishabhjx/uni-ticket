@@ -224,21 +224,22 @@ export function RoadmapView({ project }: { project: Project }) {
         than a roadmap-only one.
       */}
       <div className="hairline-b flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-2 sm:px-6">
-        {DISCIPLINES.filter((discipline) => discipline !== "closed").map(
-          (discipline) => (
+        {/* Every discipline barColour can actually produce, "Closed" (done
+            tickets) included — a legend that leaves one of six bar colours
+            unexplained is worse than no legend for that colour. */}
+        {DISCIPLINES.map((discipline) => (
+          <span
+            key={discipline}
+            className="flex items-center gap-1.5 text-caption text-grey-600"
+          >
             <span
-              key={discipline}
-              className="flex items-center gap-1.5 text-caption text-grey-600"
-            >
-              <span
-                aria-hidden
-                className="size-2 shrink-0 rounded-full"
-                style={{ backgroundColor: `var(--discipline-${discipline}-fg)` }}
-              />
-              {DISCIPLINE_LABEL[discipline]}
-            </span>
-          ),
-        )}
+              aria-hidden
+              className="size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: `var(--discipline-${discipline}-fg)` }}
+            />
+            {DISCIPLINE_LABEL[discipline]}
+          </span>
+        ))}
       </div>
       <GanttView
         className={cn(

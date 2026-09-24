@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { TriangleAlert } from "lucide-react";
 
-import { GroupBySelect } from "@/components/board/group-by-select";
+import { GROUP_BY_LABEL, GroupBySelect } from "@/components/board/group-by-select";
 import { FilterBar } from "@/components/list/filter-bar";
 import { ProjectActions } from "@/components/projects/project-actions";
 import { randomCheer, useCelebrate } from "@/components/shared/celebrate";
@@ -38,6 +39,7 @@ import {
   type Discipline,
   type Project,
   type Ticket,
+  type TicketPriority,
   type TicketStatus,
 } from "@/lib/mock";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
@@ -51,6 +53,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const noop = () => {};
+
+const priorityRank = new Map(
+  TICKET_PRIORITIES.map((priority, index) => [priority, index]),
+);
 
 /** Columns depend on what the board is grouped by. */
 function columnsFor(groupBy: GroupBy, project: Project) {
@@ -275,10 +281,67 @@ export function BoardView({ project }: { project: Project }) {
 
     return [...buckets.entries()]
       .map(([id, items]) => ({ id, name: nameOf(id), items }))
-      .sort((a, b) => b.items.length - a.items.length);
+      .sort((a, b) => {
+        // A priority swimlane reads top-to-bottom as urgent-to-low, the same
+        // order the rest of the app ranks priority in — not by which lane
+        // happens to have the most cards, which would put Low above Urgent
+        // on a quiet week.
+        if (swimlane === "priority") {
+          return (
+            (priorityRank.get(a.id as TicketPriority) ?? 99) -
+            (priorityRank.get(b.id as TicketPriority) ?? 99)
+          );
+        }
+        return b.items.length - a.items.length;
+      });
   }, [filtered, swimlane, tickets]);
 
   if (isLoading) return <BoardSkeleton />;
+
+  // Drag-to-move only knows how to write a status back to the store (see
+  // handleMove above); grouping by anything else made every card look
+  // draggable while a drop silently did nothing. Those groupings get the
+  // same static, non-draggable column layout swimlanes already use.
+  const draggable = groupBy === "status" || groupBy === "discipline";
+  const showLaneHeaders = lanes.length > 1;
+  const effectiveLanes = showLaneHeaders
+    ? lanes
+    : [{ id: "all", name: project.name, items: filtered }];
+
+  const staticColumns = (items: Ticket[]) => (
+    <div className="flex gap-3 overflow-x-auto pb-1">
+      {columns.map((column) => {
+        const columnItems = items.filter(
+          (ticket) => groupKeyOf(ticket, groupBy) === column.id,
+        );
+        return (
+          <div
+            key={column.id}
+            className="glass-soft shadow-card flex min-w-[288px] flex-1 shrink-0 basis-0 flex-col overflow-hidden rounded-xl border border-grey-200 xl:max-w-[400px]"
+          >
+            {columnHeader(column, columnItems.length)}
+            <div className="flex flex-col gap-2 p-3">
+              {columnItems.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  className="glass-soft shadow-card rounded-lg border border-grey-200"
+                >
+                  <TicketCard
+                    ticket={ticket}
+                    onOpen={openTicket}
+                    showStatus={groupBy !== "status"}
+                  />
+                </div>
+              ))}
+              {columnItems.length === 0 ? (
+                <p className="pb-1 text-caption text-grey-500">—</p>
+              ) : null}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   const columnHeader = (column: { id: string; name: string }, count: number) => (
     <div className="flex h-10 shrink-0 items-center gap-2 border-b border-grey-200 px-3">
@@ -286,18 +349,20 @@ export function BoardView({ project }: { project: Project }) {
         {column.name}
       </span>
       <span
-        className={cn("tnum text-caption", !overLimit(column.id) && "text-grey-500")}
-        style={
-          overLimit(column.id) ? { color: "var(--priority-urgent-fg)" } : undefined
-        }
+        className={cn(
+          "tnum text-caption",
+          overLimit(column.id) ? "text-[color:var(--danger)]" : "text-grey-500",
+        )}
       >
         {count}
         {wipLimit(column.id) ? ` / ${wipLimit(column.id)}` : ""}
       </span>
       {overLimit(column.id) ? (
-        <span title="Over the work-in-progress limit" className="text-caption">
-          ⚠️
-        </span>
+        <TriangleAlert
+          aria-label="Over the work-in-progress limit"
+          className="size-3.5 text-[color:var(--danger)]"
+          strokeWidth={2}
+        />
       ) : null}
       {stageOwner(column.id) ? (
         <span
@@ -345,53 +410,37 @@ export function BoardView({ project }: { project: Project }) {
             action={{ label: "Clear filters", onClick: clearFilters }}
           />
         )
-      ) : lanes.length > 1 ? (
+      ) : !draggable || showLaneHeaders ? (
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
-          {lanes.map((lane) => (
-            <section key={lane.id}>
-              <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
-                {lane.name}
-                <span className="tnum font-normal text-grey-500">
-                  {lane.items.length}
-                </span>
-              </h3>
-              <div className="flex gap-3 overflow-x-auto pb-1">
-                {columns.map((column) => {
-                  const items = lane.items.filter(
-                    (ticket) => groupKeyOf(ticket, groupBy) === column.id,
-                  );
-                  return (
-                    <div
-                      key={column.id}
-                      className="glass-soft shadow-card flex min-w-[288px] flex-1 shrink-0 basis-0 flex-col gap-2 rounded-xl border border-grey-200 p-3 xl:max-w-[400px]"
-                    >
-                      <span className="text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
-                        {column.name}
-                        <span className="tnum ml-1.5 font-normal text-grey-500">
-                          {items.length}
-                        </span>
-                      </span>
-                      {items.map((ticket) => (
-                        <div
-                          key={ticket.id}
-                          className="glass-soft shadow-card rounded-lg border border-grey-200"
-                        >
-                          <TicketCard
-                            ticket={ticket}
-                            onOpen={openTicket}
-                            showStatus={groupBy !== "status"}
-                          />
-                        </div>
-                      ))}
-                      {items.length === 0 ? (
-                        <p className="pb-1 text-caption text-grey-500">—</p>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+          {!draggable ? (
+            <p className="text-caption text-grey-500">
+              Grouped by {GROUP_BY_LABEL[groupBy]} — dragging a card here does
+              not move it. Group by Status or Stage to reorder by drag, or
+              open a ticket to change its {GROUP_BY_LABEL[groupBy].toLowerCase()}.
+            </p>
+          ) : showLaneHeaders ? (
+            <p className="text-caption text-grey-500">
+              Lanes on — dragging a card here does not move it. Turn Lanes off
+              to reorder by drag.
+            </p>
+          ) : null}
+          {effectiveLanes.map((lane) =>
+            showLaneHeaders ? (
+              <section key={lane.id}>
+                <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold tracking-[0.07em] text-grey-600 uppercase">
+                  {lane.name}
+                  <span className="tnum font-normal text-grey-500">
+                    {lane.items.length}
+                  </span>
+                </h3>
+                {staticColumns(lane.items)}
+              </section>
+            ) : (
+              <React.Fragment key={lane.id}>
+                {staticColumns(lane.items)}
+              </React.Fragment>
+            ),
+          )}
         </div>
       ) : (
         <div className="min-h-0 flex-1 px-6 py-4">

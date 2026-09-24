@@ -162,6 +162,23 @@
   --avatar-7-bg: oklch(0.3 0.035 295);  --avatar-7-fg: oklch(0.82 0.08 295);
   --avatar-8-bg: oklch(0.3 0.035 340);  --avatar-8-fg: oklch(0.82 0.08 340);
 
+  /* --- Call surface ---------------------------------------------------------
+     A call screen reads the same whether the rest of the app is in light or
+     dark mode — the same reason Zoom and Meet never re-skin for your OS
+     theme. These are declared once, here, and never redefined under
+     `html.light`, on purpose: InCallOverlay is the one place that must not
+     inherit the --grey-* ramp, because that ramp INVERTS between themes and
+     would put near-black text on this surface's near-black background. Use
+     these only inside InCallOverlay; everywhere else the themed tokens above
+     are the right ones.                                                       */
+  --call-bg: oklch(0.129 0.004 60);
+  --call-surface: oklch(0.24 0.006 60);
+  --call-surface-2: oklch(0.315 0.008 60);
+  --call-fg: oklch(0.97 0.008 60);
+  --call-fg-muted: oklch(0.73 0.012 60);
+  --call-fg-on-light: oklch(0.155 0.004 60);
+  --call-danger: oklch(0.645 0.135 33);
+
   /* Native controls, scrollbars and form widgets follow the theme. */
   color-scheme: dark;
 

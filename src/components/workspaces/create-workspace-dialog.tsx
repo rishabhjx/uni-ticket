@@ -60,6 +60,20 @@ export function CreateWorkspaceDialog({
   const taken = workspaces.some((workspace) => workspace.slug === slug);
   const canSubmit = name.trim().length > 0 && slug.length > 1 && !taken;
 
+  const reset = () => {
+    setName("");
+    setDescription("");
+    setEmoji("🏗️");
+    setMemberIds([CURRENT_USER_ID]);
+  };
+
+  // A dialog abandoned via Cancel, Escape or the overlay must not leave its
+  // draft behind for the next "New workspace".
+  const closeAndReset = (next: boolean) => {
+    if (!next) reset();
+    onOpenChange(next);
+  };
+
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!canSubmit) return;
@@ -72,16 +86,14 @@ export function CreateWorkspaceDialog({
       memberIds,
     });
 
-    setName("");
-    setDescription("");
-    setMemberIds([CURRENT_USER_ID]);
+    reset();
     onOpenChange(false);
     // Creating something should land you in it.
     router.push(`/workspaces/${workspace.slug}`);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={closeAndReset}>
       <DialogContent className="max-w-lg gap-0 p-0">
         <DialogHeader className="hairline-b px-5 py-4">
           <DialogTitle className="text-heading font-semibold">
@@ -142,7 +154,7 @@ export function CreateWorkspaceDialog({
           <DialogFooter className="hairline-t px-5 py-3">
             <button
               type="button"
-              onClick={() => onOpenChange(false)}
+              onClick={() => closeAndReset(false)}
               className="h-8 rounded-md px-3 text-small text-grey-600 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
               Cancel

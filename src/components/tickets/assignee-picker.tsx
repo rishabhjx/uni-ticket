@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Check } from "lucide-react";
 
 import { AvatarStack, UserAvatar } from "@/components/tickets/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export function AssigneePicker({
 }) {
   const [open, setOpen] = React.useState(false);
   const [showAll, setShowAll] = React.useState(false);
+  const listId = React.useId();
 
   const toggle = (id: string) => {
     onChange(
@@ -101,9 +103,7 @@ export function AssigneePicker({
           <span className="text-caption text-grey-500">lead</span>
         ) : null}
         {picked ? (
-          <span aria-hidden className="text-accent-600">
-            ✓
-          </span>
+          <Check aria-hidden className="size-3.5 text-accent-600" strokeWidth={2.25} />
         ) : null}
       </CommandItem>
     );
@@ -116,6 +116,7 @@ export function AssigneePicker({
           variant="ghost"
           role="combobox"
           aria-expanded={open}
+          aria-controls={listId}
           aria-label="Assignees"
           className={cn(
             "h-7 w-full justify-start gap-2 px-1.5 text-small font-normal hover:bg-grey-100 data-[state=open]:bg-grey-100",
@@ -126,7 +127,7 @@ export function AssigneePicker({
           <span className="min-w-0 truncate">{label}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align={align} className="w-72 p-0">
+      <PopoverContent id={listId} align={align} className="w-72 p-0">
         <Command>
           <CommandInput placeholder="Search people, or a stage…" />
           <CommandList className="max-h-[340px]">

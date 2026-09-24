@@ -31,7 +31,6 @@ import {
   isDefect,
   isSlaBreached,
   isStale,
-  SEVERITY_LABEL,
   TICKET_SEVERITIES,
   getLabel,
   getProject,

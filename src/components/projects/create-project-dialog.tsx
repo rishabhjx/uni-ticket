@@ -94,14 +94,36 @@ export function CreateProjectDialog({
     name.trim().length > 0 &&
     effectiveKey.trim().length >= 2 &&
     !taken &&
-    workspaceId.length > 0;
+    workspaceId.length > 0 &&
+    // A field with no name is a column nobody can identify.
+    customFields.every((field) => field.name.trim().length > 0);
+
+  const defaultTeam: Partial<Record<Discipline, string>> = {
+    intake: CURRENT_USER_ID,
+    design: CURRENT_USER_ID,
+    development: CURRENT_USER_ID,
+    qa: CURRENT_USER_ID,
+    product: CURRENT_USER_ID,
+  };
 
   const reset = () => {
     setName("");
     setKey("");
     setKeyTouched(false);
     setDescription("");
+    setEmoji("🚀");
+    setKind("software");
     setMemberIds([CURRENT_USER_ID]);
+    setWorkspaceId(workspaces[0]?.id ?? "");
+    setCustomFields([]);
+    setTeam(defaultTeam);
+  };
+
+  // A dialog abandoned via Cancel, Escape or the overlay must not leave its
+  // draft behind for the next "New project".
+  const closeAndReset = (next: boolean) => {
+    if (!next) reset();
+    onOpenChange(next);
   };
 
   const submit = (event: React.FormEvent) => {
@@ -126,7 +148,7 @@ export function CreateProjectDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={closeAndReset}>
       <DialogContent className="max-w-lg gap-0 p-0">
         <DialogHeader className="hairline-b px-5 py-4">
           <DialogTitle className="text-heading font-semibold">
@@ -330,7 +352,7 @@ export function CreateProjectDialog({
               />
               <p className="mt-1 text-caption text-grey-500">
                 {taken ? (
-                  <span style={{ color: "var(--priority-urgent-fg)" }}>
+                  <span className="text-[color:var(--danger)]">
                     {effectiveKey} is already used by another project.
                   </span>
                 ) : (
@@ -382,7 +404,7 @@ export function CreateProjectDialog({
           <DialogFooter className="hairline-t px-5 py-3">
             <button
               type="button"
-              onClick={() => onOpenChange(false)}
+              onClick={() => closeAndReset(false)}
               className="h-8 rounded-md px-3 text-small text-grey-600 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
               Cancel

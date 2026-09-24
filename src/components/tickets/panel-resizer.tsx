@@ -114,6 +114,11 @@ export function PanelResizer({
       aria-label="Resize the ticket panel"
       aria-valuenow={width}
       aria-valuemin={PANEL_MIN}
+      aria-valuemax={
+        typeof window === "undefined"
+          ? undefined
+          : Math.max(PANEL_MIN, window.innerWidth - PANEL_MAX_MARGIN)
+      }
       tabIndex={disabled ? -1 : 0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

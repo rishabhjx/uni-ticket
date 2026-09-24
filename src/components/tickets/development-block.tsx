@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { GitBranch, GitPullRequest, Paperclip, Upload, X } from "lucide-react";
+import { Paperclip, Upload, X } from "lucide-react";
 
 import {
   // Aliased: `Attachment` is also this app's model type for a stored file.
@@ -35,12 +35,11 @@ export function AttachmentsBlock({
   const { openAsset } = useMediaViewer();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = React.useState(false);
+  // Counts dragenter/dragleave pairs; see the drop zone below.
+  const dragDepth = React.useRef(0);
 
   // A heading over nothing, on a ticket you have no way to add to.
   if (attachments.length === 0 && !canEdit) return null;
-
-  // Counts dragenter/dragleave pairs; see the drop zone below.
-  const dragDepth = React.useRef(0);
 
   const accept = (files: FileList | null) => {
     if (!files) return;

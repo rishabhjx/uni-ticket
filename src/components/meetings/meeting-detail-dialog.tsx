@@ -4,9 +4,11 @@ import { Ticket as TicketIcon, Video, X } from "lucide-react";
 
 import { MEETING_KIND_ICON, MEETING_KIND_LABEL } from "@/components/meetings/meeting-icon";
 import { ProjectIcon } from "@/components/shared/entity-icon";
+import { useCelebrate } from "@/components/shared/celebrate";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -16,6 +18,7 @@ import { formatDateTime, formatTime } from "@/lib/format";
 import { getProject, getSprint, getUser, CURRENT_USER_ID } from "@/lib/mock";
 import { useMeetingsStore } from "@/lib/store/meetings-store";
 import { useTicketPanel } from "@/lib/store/ticket-panel";
+import { cn } from "@/lib/utils";
 
 export function MeetingDetailDialog({
   meetingId,
@@ -24,8 +27,9 @@ export function MeetingDetailDialog({
   meetingId: string | null;
   onClose: () => void;
 }) {
-  const { meetings, cancelMeeting, joinMeeting } = useMeetingsStore();
+  const { meetings, cancelMeeting, uncancelMeeting, joinMeeting } = useMeetingsStore();
   const { openTicket } = useTicketPanel();
+  const celebrate = useCelebrate();
   const meeting = meetingId ? meetings.find((item) => item.id === meetingId) : undefined;
 
   if (!meeting) return null;
@@ -39,18 +43,29 @@ export function MeetingDetailDialog({
     <Dialog open={Boolean(meetingId)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle
+            className={cn(
+              "flex items-center gap-2",
+              meeting.cancelled && "text-grey-500 line-through",
+            )}
+          >
             <Icon className="size-4 text-grey-500" strokeWidth={1.75} />
             {meeting.title}
           </DialogTitle>
+          <DialogDescription className="text-small text-grey-500">
+            {meeting.cancelled
+              ? "This meeting was cancelled."
+              : `${formatDateTime(meeting.startsAt)} – ${formatTime(meeting.endsAt)}`}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3 text-small">
-          <p className="text-grey-700">
-            {formatDateTime(meeting.startsAt)} – {formatTime(meeting.endsAt)}
-          </p>
-
           <div className="flex flex-wrap items-center gap-1.5 text-caption text-grey-500">
+            {meeting.cancelled ? (
+              <span className="rounded-md bg-[var(--danger-bg)] px-1.5 py-0.5 font-medium text-[color:var(--danger)]">
+                Cancelled
+              </span>
+            ) : null}
             <span className="rounded-md bg-grey-100 px-1.5 py-0.5">
               {MEETING_KIND_LABEL[meeting.kind]}
             </span>
@@ -93,7 +108,7 @@ export function MeetingDetailDialog({
 
           <div>
             <p className="mb-1.5 text-caption font-medium tracking-[0.07em] text-grey-500 uppercase">
-              Attendees {meeting.attendeeIds.length}
+              Attendees ({meeting.attendeeIds.length})
             </p>
             <ul className="flex flex-wrap gap-1.5">
               {meeting.attendeeIds.map((id) => (
@@ -119,6 +134,11 @@ export function MeetingDetailDialog({
               onClick={() => {
                 cancelMeeting(meeting.id);
                 onClose();
+                // Cancelling drops it from everyone's calendar; a slip of the
+                // mouse should not need re-scheduling from scratch to undo.
+                celebrate("🗑", `"${meeting.title}" cancelled`, () =>
+                  uncancelMeeting(meeting.id),
+                );
               }}
               className="flex h-8 items-center gap-1.5 rounded-md px-2.5 text-small text-grey-600 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
@@ -128,19 +148,28 @@ export function MeetingDetailDialog({
           ) : (
             <span />
           )}
-          {!meeting.cancelled ? (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => {
-                joinMeeting(meeting.id);
-                onClose();
-              }}
-              className="flex h-8 items-center gap-1.5 rounded-md bg-accent-600 px-3 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"
+              onClick={onClose}
+              className="h-8 rounded-md px-3 text-small text-grey-600 transition-colors hover:bg-grey-100 hover:text-grey-900"
             >
-              <Video className="size-3.5" strokeWidth={1.75} />
-              Join
+              Close
             </button>
-          ) : null}
+            {!meeting.cancelled ? (
+              <button
+                type="button"
+                onClick={() => {
+                  joinMeeting(meeting.id);
+                  onClose();
+                }}
+                className="flex h-8 items-center gap-1.5 rounded-md bg-accent-600 px-3 text-small font-medium text-grey-0 transition-colors hover:bg-accent-700"
+              >
+                <Video className="size-3.5" strokeWidth={1.75} />
+                Join
+              </button>
+            ) : null}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
